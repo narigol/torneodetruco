@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "TdT",
+    "slug": "tdt",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "tdt",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#dc2626"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ar.com.torneodetruco.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#dc2626"
+      },
+      "package": "ar.com.torneodetruco.app"
+    },
+    "plugins": ["expo-router", "expo-secure-store"]
+  }
+}

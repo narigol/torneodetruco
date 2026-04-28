@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PLAYER
+}
+
+enum TournamentFormat {
+  GROUPS_AND_KNOCKOUT
+  SINGLE_ELIMINATION
+}
+
+enum TournamentStatus {
+  DRAFT
+  REGISTRATION
+  IN_PROGRESS
+  FINISHED
+}
+
+enum MatchStatus {
+  PENDING
+  IN_PROGRESS
+  FINISHED
+}
+
+enum Phase {
+  GROUP
+  ROUND_OF_16
+  QUARTERFINAL
+  SEMIFINAL
+  FINAL
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(PLAYER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player     Player?
+  tournaments Tournament[] @relation("TournamentAdmin")
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id])
+
+  teamPlayers TeamPlayer[]
+}
+
+model Tournament {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  format      TournamentFormat
+  status      TournamentStatus @default(DRAFT)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  adminId String
+  admin   User   @relation("TournamentAdmin", fields: [adminId], references: [id])
+
+  teams  Team[]
+  groups Group[]
+  matches Match[]
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  teamPlayers   TeamPlayer[]
+  groupStandings GroupStanding[]
+  homeMatches   Match[]        @relation("MatchHome")
+  awayMatches   Match[]        @relation("MatchAway")
+  wonMatches    Match[]        @relation("MatchWinner")
+}
+
+model TeamPlayer {
+  id       String @id @default(cuid())
+  teamId   String
+  playerId String
+
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([teamId, playerId])
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  standings GroupStanding[]
+  matches   Match[]
+}
+
+model GroupStanding {
+  id      String @id @default(cuid())
+  points  Int    @default(0)
+  wins    Int    @default(0)
+  losses  Int    @default(0)
+  draws   Int    @default(0)
+  scored  Int    @default(0)
+  against Int    @default(0)
+
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teamId  String
+  team    Team   @relation(fields: [teamId], references: [id])
+
+  @@unique([groupId, teamId])
+}
+
+model Match {
+  id        String      @id @default(cuid())
+  phase     Phase
+  status    MatchStatus @default(PENDING)
+  homeScore Int?
+  awayScore Int?
+  round     Int?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  groupId String?
+  group   Group?  @relation(fields: [groupId], references: [id])
+
+  homeTeamId String
+  homeTeam   Team   @relation("MatchHome", fields: [homeTeamId], references: [id])
+
+  awayTeamId String
+  awayTeam   Team   @relation("MatchAway", fields: [awayTeamId], references: [id])
+
+  winnerId String?
+  winner   Team?   @relation("MatchWinner", fields: [winnerId], references: [id])
+}
