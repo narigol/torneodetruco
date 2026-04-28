@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs wc *)",
+      "Bash(docker compose *)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5432/tdt\" npm run db:migrate)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5432/tdt\" npx prisma migrate dev --name init)",
+      "Bash(npx prisma *)",
+      "Bash(docker exec *)",
+      "Bash(DATABASE_URL=postgresql://tdt:tdt1234@127.0.0.1:5432/tdt npx prisma migrate dev --name init)",
+      "Bash(docker run *)",
+      "Bash(netstat -ano)",
+      "Bash(npm install *)",
+      "Bash(node -e \"const {version} = require\\('c:/torneodetruco/node_modules/npm/package.json'\\); console.log\\(version\\)\")",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000/api/torneos)"
+    ]
+  }
+}

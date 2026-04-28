@@ -12,7 +12,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="torneos"
-        options={{ title: "Torneos", tabBarLabel: "Torneos" }}
+        options={{ title: "Torneos", tabBarLabel: "Torneos", headerShown: false }}
       />
       <Tabs.Screen
         name="equipos"
