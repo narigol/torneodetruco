@@ -26,62 +26,67 @@ type Group = {
   matches: Match[];
 };
 
-type Props = {
-  groups: Group[];
-  isAdmin?: boolean;
-};
+type Props = { groups: Group[]; isAdmin?: boolean };
 
 export function GroupStandingsTable({ groups, isAdmin }: Props) {
+  if (groups.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="text-4xl mb-3">📋</div>
+        <p className="text-gray-400 text-sm">Los grupos se generan al iniciar el torneo</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {groups.map((group) => (
         <div key={group.id}>
-          <h3 className="text-base font-semibold text-gray-700 mb-3">
-            {group.name}
-          </h3>
+          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3">{group.name}</h3>
 
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-4">
+          {/* Tabla de standings */}
+          <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-4">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                  <th className="text-left px-4 py-2 font-medium">Equipo</th>
-                  <th className="px-3 py-2 font-medium text-center">PJ</th>
-                  <th className="px-3 py-2 font-medium text-center">G</th>
-                  <th className="px-3 py-2 font-medium text-center">E</th>
-                  <th className="px-3 py-2 font-medium text-center">P</th>
-                  <th className="px-3 py-2 font-medium text-center">Pts</th>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Equipo</th>
+                  <th className="px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">PJ</th>
+                  <th className="px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">G</th>
+                  <th className="px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">E</th>
+                  <th className="px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">P</th>
+                  <th className="px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Pts</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {group.standings.map((s, i) => (
-                  <tr
-                    key={s.team.id}
-                    className={i < 2 ? "bg-green-50/40" : ""}
-                  >
-                    <td className="px-4 py-2.5 font-medium text-gray-900">
-                      <span className="text-gray-400 mr-2">{i + 1}.</span>
-                      {s.team.name}
-                    </td>
-                    <td className="px-3 py-2.5 text-center text-gray-600">
-                      {s.wins + s.losses + s.draws}
-                    </td>
-                    <td className="px-3 py-2.5 text-center text-gray-600">
-                      {s.wins}
-                    </td>
-                    <td className="px-3 py-2.5 text-center text-gray-600">
-                      {s.draws}
-                    </td>
-                    <td className="px-3 py-2.5 text-center text-gray-600">
-                      {s.losses}
-                    </td>
-                    <td className="px-3 py-2.5 text-center font-bold text-gray-900">
-                      {s.points}
-                    </td>
-                  </tr>
-                ))}
+              <tbody>
+                {group.standings.map((s, i) => {
+                  const pj = s.wins + s.losses + s.draws;
+                  const qualifies = i < 2;
+                  return (
+                    <tr key={s.team.id} className={`border-b border-gray-50 last:border-0 ${qualifies ? "bg-green-50/30" : ""}`}>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className={`text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ${qualifies ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
+                            {i + 1}
+                          </span>
+                          <span className="font-medium text-gray-900">{s.team.name}</span>
+                          {qualifies && (
+                            <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium">Clasifica</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-center text-gray-500 tabular-nums">{pj}</td>
+                      <td className="px-3 py-3 text-center text-gray-500 tabular-nums">{s.wins}</td>
+                      <td className="px-3 py-3 text-center text-gray-500 tabular-nums">{s.draws}</td>
+                      <td className="px-3 py-3 text-center text-gray-500 tabular-nums">{s.losses}</td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="font-bold text-gray-900 tabular-nums">{s.points}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {group.standings.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-4 text-center text-gray-400 text-sm">
+                    <td colSpan={6} className="px-5 py-6 text-center text-gray-400 text-sm">
                       Sin posiciones todavía
                     </td>
                   </tr>
@@ -90,11 +95,10 @@ export function GroupStandingsTable({ groups, isAdmin }: Props) {
             </table>
           </div>
 
+          {/* Partidos del grupo */}
           {group.matches.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-gray-400 uppercase font-medium mb-2">
-                Partidos
-              </p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Partidos</p>
               {group.matches.map((m) => (
                 <MatchRow key={m.id} match={m} isAdmin={isAdmin} />
               ))}
@@ -102,12 +106,6 @@ export function GroupStandingsTable({ groups, isAdmin }: Props) {
           )}
         </div>
       ))}
-
-      {groups.length === 0 && (
-        <p className="text-gray-400 text-sm text-center py-8">
-          Los grupos se generan al iniciar el torneo
-        </p>
-      )}
     </div>
   );
 }
@@ -116,18 +114,12 @@ function MatchRow({ match, isAdmin }: { match: Match; isAdmin?: boolean }) {
   const finished = match.status === "FINISHED";
 
   return (
-    <div className="bg-white border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-3 text-sm">
-      <span className="flex-1 text-right font-medium text-gray-800">
-        {match.homeTeam.name}
+    <div className="bg-white border border-gray-100 rounded-xl px-5 py-3 flex items-center gap-4 text-sm hover:border-gray-200 transition-colors">
+      <span className="flex-1 text-right font-medium text-gray-800 truncate">{match.homeTeam.name}</span>
+      <span className={`text-center font-mono text-xs px-3 py-1 rounded-lg tabular-nums min-w-[52px] ${finished ? "bg-gray-900 text-white font-bold" : "bg-gray-100 text-gray-500"}`}>
+        {finished ? `${match.homeScore} – ${match.awayScore}` : "vs"}
       </span>
-      <span className="text-gray-400 font-mono text-xs w-16 text-center">
-        {finished
-          ? `${match.homeScore} - ${match.awayScore}`
-          : "vs"}
-      </span>
-      <span className="flex-1 font-medium text-gray-800">
-        {match.awayTeam.name}
-      </span>
+      <span className="flex-1 font-medium text-gray-800 truncate">{match.awayTeam.name}</span>
       {isAdmin && !finished && (
         <ResultadoModal
           matchId={match.id}

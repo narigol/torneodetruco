@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma, TournamentFormat } from "@tdt/db";
@@ -67,7 +67,6 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const hasGroupFormat = tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT;
   const hasGroups = tournament.groups.length > 0;
   const hasBracket = tournament.matches.length > 0;
-  const knockoutMatches = tournament.matches;
 
   const availableTabs: Tab[] = [
     "equipos",
@@ -78,69 +77,79 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const rawTab = searchParams.tab as Tab | undefined;
   const activeTab: Tab = rawTab && availableTabs.includes(rawTab) ? rawTab : "equipos";
 
+  const tabLabels: Record<Tab, string> = {
+    equipos: `Equipos (${tournament.teams.length})`,
+    grupos: "Grupos",
+    llave: "Llave",
+  };
+
+  const formatLabel: Record<string, string> = {
+    GROUPS_AND_KNOCKOUT: "Grupos + Eliminatoria",
+    SINGLE_ELIMINATION: "Eliminación directa",
+  };
+
   return (
     <div className="max-w-5xl">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <Link
-              href="/torneos"
-              className="text-gray-400 hover:text-gray-600 text-sm"
-            >
-              ← Torneos
-            </Link>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">{tournament.name}</h1>
-          {tournament.description && (
-            <p className="text-gray-500 text-sm mt-1">{tournament.description}</p>
-          )}
-          <div className="flex items-center gap-3 mt-2">
-            <TournamentStatusBadge status={tournament.status} />
-            <span className="text-xs text-gray-400">
-              {tournament._count.teams} equipos
-            </span>
-            {tournament.startDate && (
-              <span className="text-xs text-gray-400">
-                Inicio:{" "}
-                {new Date(tournament.startDate).toLocaleDateString("es-AR")}
-              </span>
-            )}
-          </div>
-        </div>
+      {/* Breadcrumb */}
+      <Link href="/torneos" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-5 transition-colors">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Torneos
+      </Link>
 
-        {isAdmin && (
-          <TournamentActions
-            tournamentId={tournament.id}
-            status={tournament.status}
-            format={tournament.format}
-            teamCount={tournament._count.teams}
-            hasGroups={hasGroups}
-            hasBracket={hasBracket}
-          />
-        )}
+      {/* Header */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <TournamentStatusBadge status={tournament.status} />
+              <span className="text-xs text-gray-400">{formatLabel[tournament.format]}</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 leading-tight">{tournament.name}</h1>
+            {tournament.description && (
+              <p className="text-gray-500 text-sm mt-1.5">{tournament.description}</p>
+            )}
+            <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
+              <span>{tournament._count.teams} equipos</span>
+              <span>{tournament._count.matches} partidos</span>
+              {tournament.startDate && (
+                <span>Inicio: {new Date(tournament.startDate).toLocaleDateString("es-AR")}</span>
+              )}
+              <span>Por {tournament.admin.name}</span>
+            </div>
+          </div>
+
+          {isAdmin && (
+            <div className="shrink-0">
+              <TournamentActions
+                tournamentId={tournament.id}
+                status={tournament.status}
+                format={tournament.format}
+                teamCount={tournament._count.teams}
+                hasGroups={hasGroups}
+                hasBracket={hasBracket}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
+      <div className="flex gap-1 mb-6 bg-white border border-gray-100 rounded-xl p-1 w-fit">
         {availableTabs.map((tab) => {
-          const labels: Record<Tab, string> = {
-            equipos: `Equipos (${tournament.teams.length})`,
-            grupos: "Grupos",
-            llave: "Llave",
-          };
           const isActive = tab === activeTab;
           return (
             <Link
               key={tab}
               href={`/torneos/${params.id}?tab=${tab}`}
-              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                 isActive
-                  ? "border-red-600 text-red-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "bg-red-600 text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
             >
-              {labels[tab]}
+              {tabLabels[tab]}
             </Link>
           );
         })}
@@ -150,10 +159,10 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       {activeTab === "equipos" && (
         <section>
           {isAdmin && (
-            <div className="flex justify-end mb-3">
+            <div className="flex justify-end mb-4">
               <Link
                 href={`/torneos/${tournament.id}/equipos/nuevo`}
-                className="text-sm text-red-600 hover:underline"
+                className="inline-flex items-center gap-1 text-sm text-red-600 hover:text-red-700 font-medium"
               >
                 + Agregar equipo
               </Link>
@@ -163,29 +172,23 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
           {tournament.teams.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {tournament.teams.map((team) => (
-                <div
-                  key={team.id}
-                  className="bg-white border border-gray-100 rounded-xl px-4 py-3"
-                >
-                  <p className="font-medium text-gray-900 text-sm">{team.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {team.teamPlayers.map((tp) => tp.player.name).join(", ")}
+                <div key={team.id} className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 hover:border-gray-200 transition-colors">
+                  <p className="font-semibold text-gray-900 text-sm">{team.name}</p>
+                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                    {team.teamPlayers.map((tp) => tp.player.name).join(" · ")}
                   </p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">
-              No hay equipos inscriptos.{" "}
+            <div className="text-center py-16">
+              <p className="text-gray-400 text-sm">No hay equipos inscriptos.</p>
               {isAdmin && (
-                <Link
-                  href={`/torneos/${tournament.id}/equipos/nuevo`}
-                  className="text-red-600 hover:underline"
-                >
-                  Agregar el primero
+                <Link href={`/torneos/${tournament.id}/equipos/nuevo`} className="mt-2 inline-block text-red-600 hover:underline text-sm font-medium">
+                  Agregar el primero →
                 </Link>
               )}
-            </p>
+            </div>
           )}
         </section>
       )}
@@ -200,7 +203,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       {/* Tab: Llave */}
       {activeTab === "llave" && (
         <section>
-          <Bracket matches={knockoutMatches} isAdmin={isAdmin} />
+          <Bracket matches={tournament.matches} isAdmin={isAdmin} />
         </section>
       )}
     </div>
