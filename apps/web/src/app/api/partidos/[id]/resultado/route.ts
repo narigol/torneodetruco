@@ -122,7 +122,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const winnerId =
     homeScore > awayScore ? match.homeTeamId :
-    awayScore > homeScore ? match.awayTeamId : null;
+    awayScore > homeScore ? (match.awayTeamId ?? null) : null;
 
   await prisma.$transaction(async (tx) => {
     await tx.match.update({
@@ -149,15 +149,17 @@ export async function PATCH(req: Request, { params }: Params) {
         },
       });
 
-      await tx.groupStanding.update({
-        where: { groupId_teamId: { groupId: match.groupId, teamId: match.awayTeamId } },
-        data: {
-          wins: { increment: homeWin ? 0 : 1 },
-          losses: { increment: homeWin ? 1 : 0 },
-          scored: { increment: awayScore },
-          against: { increment: homeScore },
-        },
-      });
+      if (match.awayTeamId) {
+        await tx.groupStanding.update({
+          where: { groupId_teamId: { groupId: match.groupId, teamId: match.awayTeamId } },
+          data: {
+            wins: { increment: homeWin ? 0 : 1 },
+            losses: { increment: homeWin ? 1 : 0 },
+            scored: { increment: awayScore },
+            against: { increment: homeScore },
+          },
+        });
+      }
 
       return;
     }

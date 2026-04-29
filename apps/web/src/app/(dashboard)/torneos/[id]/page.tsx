@@ -8,6 +8,7 @@ import { MapaPreview } from "@/components/ui/MapaPreview";
 import { Bracket } from "@/components/tournament/Bracket";
 import { TournamentStatusBadge } from "@/components/tournament/TournamentStatusBadge";
 import { TournamentActions } from "@/components/tournament/TournamentActions";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -226,6 +227,15 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                   <p className="text-xs text-gray-400 mt-1 leading-relaxed">
                     {team.teamPlayers.map((tp) => tp.player.name).join(" · ")}
                   </p>
+                  {isAdmin && ["DRAFT", "REGISTRATION"].includes(tournament.status) && (
+                    <div className="mt-2 pt-2 border-t border-gray-50">
+                      <DeleteButton
+                        url={`/api/equipos/${team.id}`}
+                        label="Eliminar"
+                        confirmText="¿Eliminar equipo?"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

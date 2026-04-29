@@ -18,6 +18,10 @@ export default function TabsLayout() {
         name="equipos"
         options={{ title: "Equipos", tabBarLabel: "Equipos" }}
       />
+      <Tabs.Screen
+        name="perfil"
+        options={{ title: "Mi perfil", tabBarLabel: "Perfil" }}
+      />
     </Tabs>
   );
 }

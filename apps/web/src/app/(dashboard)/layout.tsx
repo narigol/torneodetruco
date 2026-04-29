@@ -16,7 +16,7 @@ export default async function DashboardLayout({
       <Sidebar
         role={session.user.role as string}
         name={session.user.name ?? "Usuario"}
-        plan={(session.user as any).plan ?? "FREE"}
+        plan={session.user.plan ?? "FREE"}
       />
       <main className="flex-1 overflow-auto">
         <div className="p-8 max-w-6xl">{children}</div>

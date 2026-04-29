@@ -57,7 +57,7 @@ export async function POST(_req: Request, { params }: Params) {
   if (tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT) {
     const standings = await prisma.groupStanding.findMany({
       where: { group: { tournamentId: id } },
-      orderBy: [{ points: "desc" }, { wins: "desc" }],
+      orderBy: [{ wins: "desc" }],
       include: { group: true },
     });
 

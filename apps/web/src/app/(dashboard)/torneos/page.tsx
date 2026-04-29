@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import Link from "next/link";
 import { FREE_TOURNAMENT_LIMIT } from "@/lib/tournament-auth";
+import { TorneosFilter } from "@/components/ui/TorneosFilter";
 
 export default async function TorneosPage() {
   const session = await getServerSession(authOptions);

@@ -13,7 +13,7 @@ type BracketMatch = {
   homeScore: number | null;
   awayScore: number | null;
   winner: { id: string; name: string } | null;
-  games?: GameScore[] | null;
+  games?: unknown;
 };
 
 const PHASE_ORDER: Phase[] = ["ROUND_OF_16", "QUARTERFINAL", "SEMIFINAL", "FINAL"];
@@ -141,9 +141,9 @@ function BracketCard({
       />
       <div className="h-px bg-gray-100 mx-3" />
       <BracketTeamRow
-        name={match.awayTeam.name}
+        name={match.awayTeam!.name}
         score={match.awayScore}
-        isWinner={match.winner?.id === match.awayTeam.id}
+        isWinner={match.winner?.id === match.awayTeam!.id}
         finished={finished}
         isBest3={isBest3}
       />
@@ -170,7 +170,7 @@ function BracketCard({
           <ResultadoModal
             matchId={match.id}
             homeTeam={match.homeTeam.name}
-            awayTeam={match.awayTeam.name}
+            awayTeam={match.awayTeam!.name}
             isKnockout
             seriesFormat={seriesFormat}
             matchPoints={matchPoints}
