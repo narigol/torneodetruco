@@ -4,13 +4,13 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import Link from "next/link";
 import { EditarTorneoForm } from "@/components/ui/EditarTorneoForm";
+import { canManageTournament } from "@/lib/tournament-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
 export default async function EditarTorneoPage({ params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") redirect(`/torneos/${id}`);
 
   const torneo = await prisma.tournament.findUnique({
     where: { id },
@@ -21,20 +21,24 @@ export default async function EditarTorneoPage({ params }: Params) {
       format: true,
       status: true,
       startDate: true,
+      startTime: true,
+      location: true,
       matchPoints: true,
       qualifyPerGroup: true,
       playersPerTeam: true,
       seriesFormat: true,
       regularGamePoints: true,
       tiebreakerPoints: true,
+      adminId: true,
     },
   });
 
   if (!torneo) notFound();
+  if (!canManageTournament(session, torneo.adminId)) redirect(`/torneos/${id}`);
   if (torneo.status === "FINISHED") redirect(`/torneos/${id}`);
 
   return (
-    <div className="max-w-lg">
+    <div className="max-w-4xl">
       <div className="mb-6">
         <Link href={`/torneos/${id}`} className="text-gray-400 hover:text-gray-600 text-sm">
           ← {torneo.name}
@@ -45,8 +49,9 @@ export default async function EditarTorneoPage({ params }: Params) {
       <EditarTorneoForm
         torneo={{
           ...torneo,
-          description: torneo.description,
           startDate: torneo.startDate ? torneo.startDate.toISOString() : null,
+          startTime: torneo.startTime,
+          location: torneo.location,
           seriesFormat: torneo.seriesFormat,
         }}
       />

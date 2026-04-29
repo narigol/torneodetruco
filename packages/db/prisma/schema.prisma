@@ -86,6 +86,8 @@ model Tournament {
   status      TournamentStatus @default(DRAFT)
   startDate       DateTime?
   endDate         DateTime?
+  startTime       String?
+  location        String?
   matchPoints       Int              @default(30)
   qualifyPerGroup   Int              @default(2)
   playersPerTeam    Int              @default(2)

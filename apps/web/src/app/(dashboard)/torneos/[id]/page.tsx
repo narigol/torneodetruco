@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma, TournamentFormat } from "@tdt/db";
 import Link from "next/link";
 import { GroupStandingsTable } from "@/components/tournament/GroupStandingsTable";
+import { MapaPreview } from "@/components/ui/MapaPreview";
 import { Bracket } from "@/components/tournament/Bracket";
 import { TournamentStatusBadge } from "@/components/tournament/TournamentStatusBadge";
 import { TournamentActions } from "@/components/tournament/TournamentActions";
@@ -134,10 +135,29 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 <span>Clasifican {tournament.qualifyPerGroup} por grupo</span>
               )}
               {tournament.startDate && (
-                <span>Inicio: {new Date(tournament.startDate).toLocaleDateString("es-AR")}</span>
+                <span>
+                  {new Date(tournament.startDate).toLocaleDateString("es-AR")}
+                  {tournament.startTime && ` · ${tournament.startTime}`}
+                </span>
+              )}
+              {!tournament.startDate && tournament.startTime && (
+                <span>{tournament.startTime}</span>
               )}
               <span>Por {tournament.admin.name}</span>
             </div>
+
+            {tournament.location && (
+              <div className="mt-2">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
+                  <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{tournament.location}</span>
+                </div>
+                <MapaPreview location={tournament.location} />
+              </div>
+            )}
           </div>
 
           {isAdmin && (

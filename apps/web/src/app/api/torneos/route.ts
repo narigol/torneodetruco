@@ -14,6 +14,8 @@ const createSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   format: z.enum(["GROUPS_AND_KNOCKOUT", "SINGLE_ELIMINATION"]),
   startDate: z.string().optional().nullable(),
+  startTime: z.string().max(50).optional().nullable(),
+  location: z.string().max(500).optional().nullable(),
   matchPoints: evenNumber.default(30),
   qualifyPerGroup: z.number().int().min(1).max(8).default(2),
   playersPerTeam: z.number().int().min(1).max(3).default(2),
@@ -59,7 +61,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { name, description, format, startDate, matchPoints, qualifyPerGroup, playersPerTeam, seriesFormat, regularGamePoints, tiebreakerPoints } = parsed.data;
+  const { name, description, format, startDate, startTime, location, matchPoints, qualifyPerGroup, playersPerTeam, seriesFormat, regularGamePoints, tiebreakerPoints } = parsed.data;
 
   const tournament = await prisma.tournament.create({
     data: {
@@ -67,6 +69,8 @@ export async function POST(req: Request) {
       description,
       format,
       startDate: startDate ? new Date(startDate) : null,
+      startTime: startTime || null,
+      location: location || null,
       matchPoints,
       qualifyPerGroup,
       playersPerTeam,

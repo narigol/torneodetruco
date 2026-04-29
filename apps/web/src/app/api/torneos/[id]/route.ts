@@ -64,6 +64,8 @@ const updateSchema = z.object({
   status: z.enum(["DRAFT", "REGISTRATION", "IN_PROGRESS", "FINISHED"]).optional(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
+  startTime: z.string().max(50).nullable().optional(),
+  location: z.string().max(500).nullable().optional(),
   matchPoints: evenNumber.optional(),
   qualifyPerGroup: z.number().int().min(1).max(8).optional(),
   playersPerTeam: z.number().int().min(1).max(3).optional(),
@@ -91,7 +93,7 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
   }
 
-  const { startDate, endDate, ...rest } = parsed.data;
+  const { startDate, endDate, startTime, location, ...rest } = parsed.data;
 
   const updated = await prisma.tournament.update({
     where: { id },
@@ -99,6 +101,8 @@ export async function PATCH(req: Request, { params }: Params) {
       ...rest,
       ...(startDate !== undefined ? { startDate: startDate ? new Date(startDate) : null } : {}),
       ...(endDate !== undefined ? { endDate: endDate ? new Date(endDate) : null } : {}),
+      ...(startTime !== undefined ? { startTime: startTime ?? null } : {}),
+      ...(location !== undefined ? { location: location ?? null } : {}),
     },
   });
 
