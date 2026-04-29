@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
 import { canManageTournament } from "@/lib/tournament-auth";
+import { notifyFollowers } from "@/lib/notifications";
+import type { NotificationType } from "@tdt/db";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -54,10 +56,6 @@ export async function GET(_req: Request, { params }: Params) {
   return NextResponse.json(tournament);
 }
 
-const evenNumber = z.number().int().min(2).refine((n) => n % 2 === 0, {
-  message: "Los puntos deben ser un número par",
-});
-
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
@@ -66,12 +64,7 @@ const updateSchema = z.object({
   endDate: z.string().nullable().optional(),
   startTime: z.string().max(50).nullable().optional(),
   location: z.string().max(500).nullable().optional(),
-  matchPoints: evenNumber.optional(),
-  qualifyPerGroup: z.number().int().min(1).max(8).optional(),
   playersPerTeam: z.number().int().min(1).max(3).optional(),
-  seriesFormat: z.enum(["SINGLE", "BEST_OF_3"]).optional(),
-  regularGamePoints: evenNumber.optional(),
-  tiebreakerPoints: evenNumber.optional(),
 });
 
 export async function PATCH(req: Request, { params }: Params) {
@@ -80,7 +73,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
-    select: { adminId: true },
+    select: { adminId: true, status: true },
   });
   if (!tournament) return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
   if (!canManageTournament(session, tournament.adminId)) {
@@ -105,6 +98,18 @@ export async function PATCH(req: Request, { params }: Params) {
       ...(location !== undefined ? { location: location ?? null } : {}),
     },
   });
+
+  const STATUS_NOTIF: Partial<Record<string, NotificationType>> = {
+    REGISTRATION: "REGISTRATION_OPEN",
+    IN_PROGRESS:  "TOURNAMENT_STARTED",
+    FINISHED:     "TOURNAMENT_FINISHED",
+  };
+  if (rest.status && rest.status !== tournament.status) {
+    const notifType = STATUS_NOTIF[rest.status];
+    if (notifType) {
+      notifyFollowers(tournament.adminId, id, notifType).catch(() => {});
+    }
+  }
 
   return NextResponse.json(updated);
 }

@@ -23,6 +23,7 @@ type UserInfo = {
 export default function PerfilScreen() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetchUser();
@@ -44,7 +45,7 @@ export default function PerfilScreen() {
       }
       setUser(await res.json());
     } catch {
-      // sin conexión, mostrar datos vacíos
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -69,6 +70,17 @@ export default function PerfilScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator color="#dc2626" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>No se pudo cargar el perfil.</Text>
+        <TouchableOpacity onPress={fetchUser} style={styles.retryButton}>
+          <Text style={styles.retryText}>Reintentar</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -208,5 +220,21 @@ const styles = StyleSheet.create({
     color: "#dc2626",
     fontWeight: "600",
     fontSize: 15,
+  },
+  errorText: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: 12,
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#dc2626",
+    borderRadius: 10,
+  },
+  retryText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
   },
 });

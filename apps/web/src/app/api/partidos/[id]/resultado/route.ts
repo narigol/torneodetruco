@@ -12,15 +12,24 @@ const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
   SEMIFINAL: "FINAL",
 };
 
+const evenNumber = z.number().int().min(0);
+
 const singleSchema = z.object({
+  seriesFormat: z.literal("SINGLE").optional(),
+  matchPoints: z.number().int().min(1).optional(),
   homeScore: z.number().int().min(0),
   awayScore: z.number().int().min(0),
 });
 
 const gameSchema = z.object({ home: z.number().int().min(0), away: z.number().int().min(0) });
 const best3Schema = z.object({
+  seriesFormat: z.literal("BEST_OF_3"),
+  regularGamePoints: evenNumber.optional(),
+  tiebreakerPoints: evenNumber.optional(),
   games: z.array(gameSchema).min(2).max(3),
 });
+
+const bodySchema = z.union([best3Schema, singleSchema]);
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -32,10 +41,14 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 
   const body = await req.json();
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+  }
 
   const match = await prisma.match.findUnique({
     where: { id },
-    include: { tournament: { select: { adminId: true, matchPoints: true, seriesFormat: true, regularGamePoints: true, tiebreakerPoints: true } } },
+    include: { tournament: { select: { adminId: true } } },
   });
   if (!match) return NextResponse.json({ error: "Partido no encontrado" }, { status: 404 });
   if (match.status === "FINISHED") return NextResponse.json({ error: "El partido ya fue finalizado" }, { status: 400 });
@@ -43,36 +56,35 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const { seriesFormat, matchPoints, regularGamePoints, tiebreakerPoints } = match.tournament;
-
   let homeScore: number;
   let awayScore: number;
   let gamesData: { home: number; away: number }[] | null = null;
 
-  if (seriesFormat === "BEST_OF_3") {
-    const parsed = best3Schema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
-    }
-    const games = parsed.data.games;
+  const data = parsed.data;
 
-    // Validar puntajes objetivo por juego
+  if ("seriesFormat" in data && data.seriesFormat === "BEST_OF_3") {
+    const games = data.games;
+    const regularPts = data.regularGamePoints;
+    const tiebreakerPts = data.tiebreakerPoints;
+
+    // Validate scores if points are provided
     for (let i = 0; i < games.length; i++) {
-      const target = i < 2 ? regularGamePoints : tiebreakerPoints;
+      const target = i < 2 ? regularPts : tiebreakerPts;
       const { home, away } = games[i];
-      const maxScore = Math.max(home, away);
-      if (maxScore !== target) {
-        return NextResponse.json(
-          { error: `El juego ${i + 1} debe tener ${target} puntos el ganador` },
-          { status: 400 }
-        );
-      }
       if (home === away) {
         return NextResponse.json({ error: `El juego ${i + 1} no puede terminar en empate` }, { status: 400 });
       }
+      if (target !== undefined) {
+        const maxScore = Math.max(home, away);
+        if (maxScore !== target) {
+          return NextResponse.json(
+            { error: `El juego ${i + 1} debe tener ${target} puntos el ganador` },
+            { status: 400 }
+          );
+        }
+      }
     }
 
-    // Contar victorias por juego
     let homeWins = 0;
     let awayWins = 0;
     for (const g of games) {
@@ -80,18 +92,14 @@ export async function PATCH(req: Request, { params }: Params) {
       else awayWins++;
     }
 
-    // Validar consistencia de la serie
     if (games.length === 2) {
       if (homeWins !== 2 && awayWins !== 2) {
         return NextResponse.json({ error: "Con 2 juegos debe haber un ganador claro (2-0)" }, { status: 400 });
       }
     } else {
-      // 3 juegos: los primeros 2 deben estar empatados (1-1)
-      const after2home = games[0].home > games[0].away ? 1 : 0;
-      const after2away = games[0].home < games[0].away ? 1 : 0;
-      const after2home2 = after2home + (games[1].home > games[1].away ? 1 : 0);
-      const after2away2 = after2away + (games[1].home < games[1].away ? 1 : 0);
-      if (after2home2 === 2 || after2away2 === 2) {
+      const after2home = (games[0].home > games[0].away ? 1 : 0) + (games[1].home > games[1].away ? 1 : 0);
+      const after2away = (games[0].away > games[0].home ? 1 : 0) + (games[1].away > games[1].home ? 1 : 0);
+      if (after2home === 2 || after2away === 2) {
         return NextResponse.json({ error: "El juego 3 no es necesario: un equipo ya ganó 2-0" }, { status: 400 });
       }
     }
@@ -100,24 +108,23 @@ export async function PATCH(req: Request, { params }: Params) {
     awayScore = awayWins;
     gamesData = games;
   } else {
-    const parsed = singleSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
-    }
-    homeScore = parsed.data.homeScore;
-    awayScore = parsed.data.awayScore;
+    const d = data as z.infer<typeof singleSchema>;
+    homeScore = d.homeScore;
+    awayScore = d.awayScore;
 
-    const maxScore = Math.max(homeScore, awayScore);
-    if (maxScore !== matchPoints) {
-      return NextResponse.json(
-        { error: `El ganador debe tener exactamente ${matchPoints} puntos` },
-        { status: 400 }
-      );
+    if (homeScore === awayScore) {
+      return NextResponse.json({ error: "No puede haber empate en truco" }, { status: 400 });
     }
-  }
 
-  if (homeScore === awayScore) {
-    return NextResponse.json({ error: "No puede haber empate en truco" }, { status: 400 });
+    if (d.matchPoints !== undefined) {
+      const maxScore = Math.max(homeScore, awayScore);
+      if (maxScore !== d.matchPoints) {
+        return NextResponse.json(
+          { error: `El ganador debe tener exactamente ${d.matchPoints} puntos` },
+          { status: 400 }
+        );
+      }
+    }
   }
 
   const winnerId =

@@ -29,10 +29,6 @@ type Props = {
   groups: Group[];
   isAdmin?: boolean;
   qualifyPerGroup?: number;
-  seriesFormat?: "SINGLE" | "BEST_OF_3";
-  matchPoints?: number;
-  regularGamePoints?: number;
-  tiebreakerPoints?: number;
 };
 
 function sortStandings(standings: Standing[], matches: MatchWithWinner[]): { standing: Standing; h2h: boolean }[] {
@@ -83,10 +79,6 @@ export function GroupStandingsTable({
   groups,
   isAdmin,
   qualifyPerGroup = 2,
-  seriesFormat = "SINGLE",
-  matchPoints = 30,
-  regularGamePoints = 24,
-  tiebreakerPoints = 30,
 }: Props) {
   if (groups.length === 0) {
     return (
@@ -183,15 +175,7 @@ export function GroupStandingsTable({
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Partidos</p>
                 {group.matches.map((m) => (
-                  <MatchRow
-                    key={m.id}
-                    match={m}
-                    isAdmin={isAdmin}
-                    seriesFormat={seriesFormat}
-                    matchPoints={matchPoints}
-                    regularGamePoints={regularGamePoints}
-                    tiebreakerPoints={tiebreakerPoints}
-                  />
+                  <MatchRow key={m.id} match={m} isAdmin={isAdmin} />
                 ))}
               </div>
             )}
@@ -202,21 +186,7 @@ export function GroupStandingsTable({
   );
 }
 
-function MatchRow({
-  match,
-  isAdmin,
-  seriesFormat,
-  matchPoints,
-  regularGamePoints,
-  tiebreakerPoints,
-}: {
-  match: MatchWithWinner;
-  isAdmin?: boolean;
-  seriesFormat?: "SINGLE" | "BEST_OF_3";
-  matchPoints?: number;
-  regularGamePoints?: number;
-  tiebreakerPoints?: number;
-}) {
+function MatchRow({ match, isAdmin }: { match: MatchWithWinner; isAdmin?: boolean }) {
   const finished = match.status === "FINISHED";
 
   return (
@@ -225,16 +195,14 @@ function MatchRow({
       <span className={`text-center font-mono text-xs px-3 py-1 rounded-lg tabular-nums min-w-[52px] ${finished ? "bg-gray-900 text-white font-bold" : "bg-gray-100 text-gray-500"}`}>
         {finished ? `${match.homeScore} – ${match.awayScore}` : "vs"}
       </span>
-      <span className="flex-1 font-medium text-gray-800 truncate">{match.awayTeam?.name ?? ""}</span>
+      <span className={`flex-1 font-medium truncate ${match.awayTeam ? "text-gray-800" : "text-gray-300 italic"}`}>
+        {match.awayTeam?.name ?? "Equipo libre"}
+      </span>
       {isAdmin && !finished && (
         <ResultadoModal
           matchId={match.id}
           homeTeam={match.homeTeam.name}
           awayTeam={match.awayTeam?.name ?? ""}
-          seriesFormat={seriesFormat}
-          matchPoints={matchPoints}
-          regularGamePoints={regularGamePoints}
-          tiebreakerPoints={tiebreakerPoints}
         />
       )}
     </div>

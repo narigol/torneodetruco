@@ -29,13 +29,9 @@ const PHASE_LABEL: Record<Phase, string> = {
 type Props = {
   matches: BracketMatch[];
   isAdmin?: boolean;
-  seriesFormat?: "SINGLE" | "BEST_OF_3";
-  matchPoints?: number;
-  regularGamePoints?: number;
-  tiebreakerPoints?: number;
 };
 
-export function Bracket({ matches, isAdmin, seriesFormat = "SINGLE", matchPoints = 30, regularGamePoints = 24, tiebreakerPoints = 30 }: Props) {
+export function Bracket({ matches, isAdmin }: Props) {
   const phases = PHASE_ORDER.filter((p) => matches.some((m) => m.phase === p));
   const final = matches.find((m) => m.phase === "FINAL" && m.status === "FINISHED");
   const champion = final?.winner ?? null;
@@ -72,15 +68,7 @@ export function Bracket({ matches, isAdmin, seriesFormat = "SINGLE", matchPoints
                 </div>
                 <div className="flex flex-col justify-around gap-4 flex-1">
                   {phaseMatches.map((m) => (
-                    <BracketCard
-                      key={m.id}
-                      match={m}
-                      isAdmin={isAdmin}
-                      seriesFormat={seriesFormat}
-                      matchPoints={matchPoints}
-                      regularGamePoints={regularGamePoints}
-                      tiebreakerPoints={tiebreakerPoints}
-                    />
+                    <BracketCard key={m.id} match={m} isAdmin={isAdmin} />
                   ))}
                 </div>
               </div>
@@ -92,24 +80,10 @@ export function Bracket({ matches, isAdmin, seriesFormat = "SINGLE", matchPoints
   );
 }
 
-function BracketCard({
-  match,
-  isAdmin,
-  seriesFormat,
-  matchPoints,
-  regularGamePoints,
-  tiebreakerPoints,
-}: {
-  match: BracketMatch;
-  isAdmin?: boolean;
-  seriesFormat: "SINGLE" | "BEST_OF_3";
-  matchPoints: number;
-  regularGamePoints: number;
-  tiebreakerPoints: number;
-}) {
+function BracketCard({ match, isAdmin }: { match: BracketMatch; isAdmin?: boolean }) {
   const finished = match.status === "FINISHED";
-  const isBest3 = seriesFormat === "BEST_OF_3";
   const games = (match.games as GameScore[] | null) ?? null;
+  const isBest3 = Array.isArray(games) && games.length > 0;
   const isBye = match.awayTeam === null;
 
   if (isBye) {
@@ -149,7 +123,7 @@ function BracketCard({
       />
 
       {/* Detalle de juegos en mejor de 3 */}
-      {finished && isBest3 && games && games.length > 0 && (
+      {finished && isBest3 && games && (
         <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 space-y-1">
           {games.map((g, i) => {
             const homeWon = g.home > g.away;
@@ -171,11 +145,6 @@ function BracketCard({
             matchId={match.id}
             homeTeam={match.homeTeam.name}
             awayTeam={match.awayTeam!.name}
-            isKnockout
-            seriesFormat={seriesFormat}
-            matchPoints={matchPoints}
-            regularGamePoints={regularGamePoints}
-            tiebreakerPoints={tiebreakerPoints}
           />
         </div>
       )}

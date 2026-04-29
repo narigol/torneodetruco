@@ -44,6 +44,22 @@ async function main() {
     "Eduardo Juárez", "Felipe Leal", "Guillermo Moya", "Hugo Noriega",
     "Israel Ojeda", "Jorge Palma", "Kristian Quiroga", "Luis Rosales",
     "Manuel Salazar", "Norberto Tapia", "Oscar Urbina", "Pedro Villareal",
+    // 60 jugadores adicionales
+    "Claudio Benitez", "Darío Cáceres", "Ernesto Domínguez", "Fabián Estrada",
+    "Gabriel Figueroa", "Horacio Gutiérrez", "Ismael Heredia", "Julio Ibarra",
+    "Lautaro Jiménez", "Marco Kramer", "Nicolás Ledesma", "Osvaldo Mansilla",
+    "Pablo Núñez", "Raúl Oviedo", "Sergio Prieto", "Tomás Quiroz",
+    "Ulises Rincón", "Víctor Sandoval", "Waldo Trujillo", "Axel Uribe",
+    "Yamil Valenzuela", "Zenón Wiedemann", "Álvaro Acevedo", "Bautista Bravo",
+    "Camilo Cano", "Dario Dávila", "Emilio Echeverría", "Fausto Ferreyra",
+    "Gerardo Godoy", "Hernán Hidalgo", "Iván Irrazábal", "Joel Jaimes",
+    "Karim Khalil", "Leonardo Lucero", "Mauricio Macedo", "Néstor Nieto",
+    "Orlando Ojeda", "Patricio Paredes", "Quico Quintero", "Ramiro Restrepo",
+    "Salvador Sosa", "Tito Tamayo", "Ursino Ugarte", "Valentín Velarde",
+    "Wilson Waiss", "Xabier Xaubet", "Yonatan Yañez", "Zenón Zárate",
+    "Andrés Almonacid", "Bernardo Bustamante", "Carmelo Contreras", "Denis Durán",
+    "Eligio Elizondo", "Florencio Funes", "Gregorio Gamboa", "Heriberto Huanca",
+    "Ignacio Iribarne", "Jonás Jurado", "Leandro Leguizamón", "Mateo Meléndez",
   ];
 
   const jugadores = await Promise.all(

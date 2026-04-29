@@ -51,10 +51,6 @@ type TournamentDetail = {
   description: string | null;
   format: string;
   status: string;
-  seriesFormat: string;
-  matchPoints: number;
-  regularGamePoints: number;
-  tiebreakerPoints: number;
   qualifyPerGroup: number;
   startDate: string | null;
   admin: { id: string; name: string };
@@ -108,6 +104,7 @@ export default function TorneoDetailScreen() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [adminLoading, setAdminLoading] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -172,46 +169,33 @@ export default function TorneoDetailScreen() {
     );
   }
 
-  async function handleGenerarGrupos() {
+  async function handleGenerarGrupos(numGroups: number, qualifyPerGroup: number) {
     if (!torneo || !token) return;
-    const numGroups = Math.ceil(torneo.teams.length / 3);
-    Alert.alert(
-      "Generar grupos",
-      `¿Generar ${numGroups} grupos con ${torneo.teams.length} equipos?`,
-      [
-        { text: "Cancelar", style: "cancel" },
+    setAdminLoading(true);
+    try {
+      const res = await fetch(
+        `${API_URL}/api/torneos/${torneo.id}/generar-grupos`,
         {
-          text: "Generar",
-          onPress: async () => {
-            setAdminLoading(true);
-            try {
-              const res = await fetch(
-                `${API_URL}/api/torneos/${torneo.id}/generar-grupos`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({ numGroups }),
-                }
-              );
-              if (!res.ok) {
-                const d = await res.json();
-                Alert.alert("Error", d.error ?? "No se pudieron generar los grupos");
-              } else {
-                await load();
-                setActiveTab("grupos");
-              }
-            } catch {
-              Alert.alert("Error", "Error de conexión");
-            } finally {
-              setAdminLoading(false);
-            }
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        },
-      ]
-    );
+          body: JSON.stringify({ numGroups, qualifyPerGroup }),
+        }
+      );
+      if (!res.ok) {
+        const d = await res.json();
+        Alert.alert("Error", d.error ?? "No se pudieron generar los grupos");
+      } else {
+        await load();
+        setActiveTab("grupos");
+      }
+    } catch {
+      Alert.alert("Error", "Error de conexión");
+    } finally {
+      setAdminLoading(false);
+    }
   }
 
   async function handleGenerarBracket() {
@@ -296,7 +280,7 @@ export default function TorneoDetailScreen() {
             {canGenerarGrupos && (
               <AdminBtn
                 label="Generar grupos"
-                onPress={handleGenerarGrupos}
+                onPress={() => setShowGroupModal(true)}
                 loading={adminLoading}
               />
             )}
@@ -318,6 +302,18 @@ export default function TorneoDetailScreen() {
           </View>
         )}
       </View>
+
+      {/* Modal: Generar grupos */}
+      {showGroupModal && torneo && (
+        <GenerarGruposModal
+          teamCount={torneo.teams.length}
+          onClose={() => setShowGroupModal(false)}
+          onConfirm={(numGroups, qualifyPerGroup) => {
+            setShowGroupModal(false);
+            handleGenerarGrupos(numGroups, qualifyPerGroup);
+          }}
+        />
+      )}
 
       {/* Tabs */}
       <View style={styles.tabBar}>
@@ -349,10 +345,6 @@ export default function TorneoDetailScreen() {
             qualifyPerGroup={torneo.qualifyPerGroup}
             isAdmin={isAdmin}
             token={token}
-            seriesFormat={torneo.seriesFormat}
-            matchPoints={torneo.matchPoints}
-            regularGamePoints={torneo.regularGamePoints}
-            tiebreakerPoints={torneo.tiebreakerPoints}
             onResultLoaded={load}
           />
         )}
@@ -361,10 +353,6 @@ export default function TorneoDetailScreen() {
             matches={torneo.matches}
             isAdmin={isAdmin}
             token={token}
-            seriesFormat={torneo.seriesFormat}
-            matchPoints={torneo.matchPoints}
-            regularGamePoints={torneo.regularGamePoints}
-            tiebreakerPoints={torneo.tiebreakerPoints}
             onResultLoaded={load}
           />
         )}
@@ -401,6 +389,85 @@ function AdminBtn({
   );
 }
 
+function GenerarGruposModal({
+  teamCount,
+  onClose,
+  onConfirm,
+}: {
+  teamCount: number;
+  onClose: () => void;
+  onConfirm: (numGroups: number, qualifyPerGroup: number) => void;
+}) {
+  const [numGroups, setNumGroups] = useState(2);
+  const [qualifyPerGroup, setQualifyPerGroup] = useState(2);
+  const perGroup = Math.ceil(teamCount / numGroups);
+
+  return (
+    <Modal transparent animationType="slide" onRequestClose={onClose}>
+      <View style={modal.overlay}>
+        <View style={modal.card}>
+          <Text style={modal.title}>Generar grupos</Text>
+          <Text style={modal.subtitle}>
+            Esta acción es irreversible. Los grupos se fijarán con los {teamCount} equipos actuales.
+          </Text>
+
+          <View>
+            <Text style={modal.fieldLabel}>Cantidad de grupos</Text>
+            <View style={modal.stepper}>
+              <TouchableOpacity
+                style={modal.stepBtn}
+                onPress={() => setNumGroups((v) => Math.max(2, v - 1))}
+              >
+                <Text style={modal.stepBtnText}>−</Text>
+              </TouchableOpacity>
+              <Text style={modal.stepValue}>{numGroups}</Text>
+              <TouchableOpacity
+                style={modal.stepBtn}
+                onPress={() => setNumGroups((v) => Math.min(Math.floor(teamCount / 2), v + 1))}
+              >
+                <Text style={modal.stepBtnText}>+</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={modal.hint}>~{perGroup} equipo{perGroup !== 1 ? "s" : ""} por grupo</Text>
+          </View>
+
+          <View>
+            <Text style={modal.fieldLabel}>Clasificados por grupo</Text>
+            <View style={modal.stepper}>
+              <TouchableOpacity
+                style={modal.stepBtn}
+                onPress={() => setQualifyPerGroup((v) => Math.max(1, v - 1))}
+              >
+                <Text style={modal.stepBtnText}>−</Text>
+              </TouchableOpacity>
+              <Text style={modal.stepValue}>{qualifyPerGroup}</Text>
+              <TouchableOpacity
+                style={modal.stepBtn}
+                onPress={() => setQualifyPerGroup((v) => Math.min(perGroup - 1, v + 1))}
+              >
+                <Text style={modal.stepBtnText}>+</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={modal.hint}>Máx {perGroup - 1} por grupo</Text>
+          </View>
+
+          <View style={modal.actions}>
+            <TouchableOpacity style={modal.cancelBtn} onPress={onClose}>
+              <Text style={modal.cancelText}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={modal.submitBtn}
+              onPress={() => onConfirm(numGroups, qualifyPerGroup)}
+            >
+              <Text style={modal.submitText}>Generar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function EquiposTab({ teams }: { teams: TournamentDetail["teams"] }) {
   if (teams.length === 0) {
     return <Text style={styles.empty}>No hay equipos inscriptos</Text>;
@@ -424,20 +491,12 @@ function GruposTab({
   qualifyPerGroup,
   isAdmin,
   token,
-  seriesFormat,
-  matchPoints,
-  regularGamePoints,
-  tiebreakerPoints,
   onResultLoaded,
 }: {
   groups: GroupDetail[];
   qualifyPerGroup: number;
   isAdmin: boolean;
   token: string | null;
-  seriesFormat: string;
-  matchPoints: number;
-  regularGamePoints: number;
-  tiebreakerPoints: number;
   onResultLoaded: () => void;
 }) {
   if (groups.length === 0) {
@@ -490,10 +549,6 @@ function GruposTab({
                     match={m}
                     isAdmin={isAdmin}
                     token={token}
-                    seriesFormat={seriesFormat}
-                    matchPoints={matchPoints}
-                    regularGamePoints={regularGamePoints}
-                    tiebreakerPoints={tiebreakerPoints}
                     onResultLoaded={onResultLoaded}
                   />
                 ))}
@@ -510,19 +565,11 @@ function LlaveTab({
   matches,
   isAdmin,
   token,
-  seriesFormat,
-  matchPoints,
-  regularGamePoints,
-  tiebreakerPoints,
   onResultLoaded,
 }: {
   matches: MatchDetail[];
   isAdmin: boolean;
   token: string | null;
-  seriesFormat: string;
-  matchPoints: number;
-  regularGamePoints: number;
-  tiebreakerPoints: number;
   onResultLoaded: () => void;
 }) {
   if (matches.length === 0) {
@@ -550,10 +597,6 @@ function LlaveTab({
                 match={m}
                 isAdmin={isAdmin}
                 token={token}
-                seriesFormat={seriesFormat}
-                matchPoints={matchPoints}
-                regularGamePoints={regularGamePoints}
-                tiebreakerPoints={tiebreakerPoints}
                 onResultLoaded={onResultLoaded}
               />
             ))}
@@ -568,19 +611,11 @@ function MatchRow({
   match,
   isAdmin,
   token,
-  seriesFormat,
-  matchPoints,
-  regularGamePoints,
-  tiebreakerPoints,
   onResultLoaded,
 }: {
   match: MatchDetail;
   isAdmin: boolean;
   token: string | null;
-  seriesFormat: string;
-  matchPoints: number;
-  regularGamePoints: number;
-  tiebreakerPoints: number;
   onResultLoaded: () => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -623,18 +658,14 @@ function MatchRow({
           ]}
           numberOfLines={1}
         >
-          {match.awayTeam?.name ?? ""}
-        </Text>
+          {match.awayTeam?.name ?? "Equipo libre"}
+</Text>
       </TouchableOpacity>
 
       {modalOpen && (
         <ResultadoModal
           match={match}
           token={token}
-          seriesFormat={seriesFormat}
-          matchPoints={matchPoints}
-          regularGamePoints={regularGamePoints}
-          tiebreakerPoints={tiebreakerPoints}
           onClose={() => setModalOpen(false)}
           onSaved={() => {
             setModalOpen(false);
@@ -649,23 +680,15 @@ function MatchRow({
 function ResultadoModal({
   match,
   token,
-  seriesFormat,
-  matchPoints,
-  regularGamePoints,
-  tiebreakerPoints,
   onClose,
   onSaved,
 }: {
   match: MatchDetail;
   token: string | null;
-  seriesFormat: string;
-  matchPoints: number;
-  regularGamePoints: number;
-  tiebreakerPoints: number;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const isBest3 = seriesFormat === "BEST_OF_3";
+  const [seriesFormat, setSeriesFormat] = useState<"SINGLE" | "BEST_OF_3">("SINGLE");
   const [homeScore, setHomeScore] = useState("");
   const [awayScore, setAwayScore] = useState("");
   const [games, setGames] = useState([
@@ -676,11 +699,12 @@ function ResultadoModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const isBest3 = seriesFormat === "BEST_OF_3";
   const homeWins = isBest3
-    ? games.filter((g) => parseInt(g.home) > parseInt(g.away)).length
+    ? games.slice(0, 2).filter((g) => parseInt(g.home) > parseInt(g.away)).length
     : 0;
   const awayWins = isBest3
-    ? games.filter((g) => parseInt(g.away) > parseInt(g.home)).length
+    ? games.slice(0, 2).filter((g) => parseInt(g.away) > parseInt(g.home)).length
     : 0;
   const needsGame3 = isBest3 && homeWins === 1 && awayWins === 1;
   const game3Locked = isBest3 && !needsGame3;
@@ -693,9 +717,27 @@ function ResultadoModal({
 
       if (isBest3) {
         const activeGames = needsGame3 ? games.slice(0, 3) : games.slice(0, 2);
-        body = { games: activeGames.map((g) => ({ home: parseInt(g.home), away: parseInt(g.away) })) };
+        const payload = activeGames.map((g) => ({ home: parseInt(g.home), away: parseInt(g.away) }));
+        if (payload.some((g) => isNaN(g.home) || isNaN(g.away))) {
+          setError("Completá todos los puntajes");
+          setLoading(false);
+          return;
+        }
+        body = { seriesFormat: "BEST_OF_3", games: payload };
       } else {
-        body = { homeScore: parseInt(homeScore), awayScore: parseInt(awayScore) };
+        const h = parseInt(homeScore);
+        const a = parseInt(awayScore);
+        if (isNaN(h) || isNaN(a)) {
+          setError("Ingresá puntajes válidos");
+          setLoading(false);
+          return;
+        }
+        if (h === a) {
+          setError("No puede haber empate");
+          setLoading(false);
+          return;
+        }
+        body = { homeScore: h, awayScore: a };
       }
 
       const res = await fetch(`${API_URL}/api/partidos/${match.id}/resultado`, {
@@ -729,15 +771,30 @@ function ResultadoModal({
             {match.homeTeam.name} vs {match.awayTeam?.name}
           </Text>
 
+          {/* Formato */}
+          <View style={modal.formatRow}>
+            {(["SINGLE", "BEST_OF_3"] as const).map((f) => (
+              <TouchableOpacity
+                key={f}
+                style={[modal.formatBtn, seriesFormat === f && modal.formatBtnActive]}
+                onPress={() => setSeriesFormat(f)}
+              >
+                <Text style={[modal.formatBtnText, seriesFormat === f && modal.formatBtnTextActive]}>
+                  {f === "SINGLE" ? "Único" : "Mejor de 3"}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           {isBest3 ? (
             <View style={{ gap: 12 }}>
               {[0, 1, 2].map((i) => {
                 const locked = i === 2 && game3Locked;
-                const pts = i < 2 ? regularGamePoints : tiebreakerPoints;
                 return (
                   <View key={i} style={modal.gameRow}>
                     <Text style={modal.gameLabel}>
-                      {i === 2 ? `J3 (desempate · ${pts} pts)` : `J${i + 1} · ${pts} pts`}
+                      {i === 2 ? "J3 — Desempate" : `Juego ${i + 1}`}
+                      {i === 2 && !locked ? "  (Serie 1-1)" : ""}
                     </Text>
                     <View style={modal.scoreRow}>
                       <TextInput
@@ -794,10 +851,6 @@ function ResultadoModal({
                 />
               </View>
             </View>
-          )}
-
-          {!isBest3 && (
-            <Text style={modal.hint}>El ganador debe tener {matchPoints} puntos</Text>
           )}
 
           {error ? <Text style={modal.error}>{error}</Text> : null}
@@ -945,8 +998,35 @@ const modal = StyleSheet.create({
   },
   title: { fontSize: 18, fontWeight: "700", color: "#111827" },
   subtitle: { fontSize: 13, color: "#6b7280", marginTop: -8 },
-  hint: { fontSize: 12, color: "#9ca3af" },
+  hint: { fontSize: 12, color: "#9ca3af", marginTop: 4 },
   error: { fontSize: 13, color: "#dc2626" },
+  fieldLabel: { fontSize: 13, color: "#374151", fontWeight: "600", marginBottom: 8 },
+
+  stepper: { flexDirection: "row", alignItems: "center", gap: 16 },
+  stepBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepBtnText: { fontSize: 18, color: "#374151", fontWeight: "600" },
+  stepValue: { fontSize: 20, fontWeight: "700", color: "#111827", minWidth: 32, textAlign: "center" },
+
+  formatRow: { flexDirection: "row", gap: 8 },
+  formatBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    alignItems: "center",
+  },
+  formatBtnActive: { backgroundColor: "#dc2626", borderColor: "#dc2626" },
+  formatBtnText: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
+  formatBtnTextActive: { color: "#fff" },
 
   singleScoreRow: {
     flexDirection: "row",

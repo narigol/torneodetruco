@@ -38,6 +38,7 @@ export function TournamentActions({
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [showBracketModal, setShowBracketModal] = useState(false);
   const [numGroups, setNumGroups] = useState(2);
+  const [qualifyPerGroup, setQualifyPerGroup] = useState(2);
 
   const nextStatus = NEXT_STATUS[status];
   const nextLabel = NEXT_STATUS_LABEL[status];
@@ -70,7 +71,7 @@ export function TournamentActions({
     await fetch(`/api/torneos/${tournamentId}/generar-grupos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ numGroups }),
+      body: JSON.stringify({ numGroups, qualifyPerGroup }),
     });
     setLoading(false);
     router.refresh();
@@ -141,6 +142,20 @@ export function TournamentActions({
             />
             <p className="text-xs text-gray-400 mb-4">
               {teamCount} equipos → ~{Math.ceil(teamCount / numGroups)} por grupo
+            </p>
+            <label className="block text-sm text-gray-600 mb-2">
+              Clasificados por grupo
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={Math.ceil(teamCount / numGroups) - 1}
+              value={qualifyPerGroup}
+              onChange={(e) => setQualifyPerGroup(Number(e.target.value))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-1"
+            />
+            <p className="text-xs text-gray-400 mb-4">
+              Máx {Math.ceil(teamCount / numGroups) - 1} (menos que los equipos por grupo)
             </p>
             <div className="flex gap-2">
               <button

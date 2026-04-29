@@ -8,27 +8,36 @@ export function MapaPreview({ location }: Props) {
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
 
-  if (apiKey) {
-    const src = `https://www.google.com/maps/embed/v1/search?key=${apiKey}&q=${encodeURIComponent(query)}&language=es`;
-    return (
-      <div className="rounded-xl overflow-hidden border border-gray-100 h-48 mt-3">
-        <iframe
-          src={src}
-          width="100%"
-          height="100%"
-          loading="lazy"
-          allowFullScreen
-          referrerPolicy="no-referrer-when-downgrade"
-          className="w-full h-full"
-        />
-      </div>
-    );
-  }
-
-  // Sin key: botón que abre Google Maps en nueva pestaña
   const mapsUrl = query.startsWith("http")
     ? query
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+
+  if (apiKey) {
+    const src = `https://www.google.com/maps/embed/v1/search?key=${apiKey}&q=${encodeURIComponent(query)}&language=es`;
+    return (
+      <div>
+        <div className="rounded-xl overflow-hidden border border-gray-100 h-48 mt-3">
+          <iframe
+            src={src}
+            width="100%"
+            height="100%"
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+            className="w-full h-full"
+          />
+        </div>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium"
+        >
+          Ver en Google Maps →
+        </a>
+      </div>
+    );
+  }
 
   return (
     <a

@@ -4,10 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
 import { FREE_TOURNAMENT_LIMIT } from "@/lib/tournament-auth";
-
-const evenNumber = z.number().int().min(2).refine((n) => n % 2 === 0, {
-  message: "Los puntos deben ser un número par",
-});
+import { notifyFollowers } from "@/lib/notifications";
 
 const createSchema = z.object({
   name: z.string().min(1).max(100),
@@ -16,12 +13,7 @@ const createSchema = z.object({
   startDate: z.string().optional().nullable(),
   startTime: z.string().max(50).optional().nullable(),
   location: z.string().max(500).optional().nullable(),
-  matchPoints: evenNumber.default(30),
-  qualifyPerGroup: z.number().int().min(1).max(8).default(2),
   playersPerTeam: z.number().int().min(1).max(3).default(2),
-  seriesFormat: z.enum(["SINGLE", "BEST_OF_3"]).default("SINGLE"),
-  regularGamePoints: evenNumber.default(24),
-  tiebreakerPoints: evenNumber.default(30),
 });
 
 export async function GET() {
@@ -61,7 +53,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { name, description, format, startDate, startTime, location, matchPoints, qualifyPerGroup, playersPerTeam, seriesFormat, regularGamePoints, tiebreakerPoints } = parsed.data;
+  const { name, description, format, startDate, startTime, location, playersPerTeam } = parsed.data;
 
   const tournament = await prisma.tournament.create({
     data: {
@@ -71,15 +63,12 @@ export async function POST(req: Request) {
       startDate: startDate ? new Date(startDate) : null,
       startTime: startTime || null,
       location: location || null,
-      matchPoints,
-      qualifyPerGroup,
       playersPerTeam,
-      seriesFormat,
-      regularGamePoints,
-      tiebreakerPoints,
       adminId: session.user.id,
     },
   });
+
+  notifyFollowers(session.user.id, tournament.id, "TOURNAMENT_CREATED").catch(() => {});
 
   return NextResponse.json(tournament, { status: 201 });
 }

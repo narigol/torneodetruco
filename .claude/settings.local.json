@@ -14,7 +14,8 @@
       "Bash(node -e \"const {version} = require\\('c:/torneodetruco/node_modules/npm/package.json'\\); console.log\\(version\\)\")",
       "Bash(npm run *)",
       "Bash(curl -s http://localhost:3000/api/torneos)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "PowerShell(cd C:\\\\torneodetruco\\\\packages\\\\db; $env:PRISMA_MIGRATE_SKIP_GENERATE=\"false\"; echo \"y\" | npx prisma migrate dev --name follow_notifications 2>&1)"
     ]
   }
 }

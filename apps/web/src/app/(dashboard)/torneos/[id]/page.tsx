@@ -9,6 +9,7 @@ import { Bracket } from "@/components/tournament/Bracket";
 import { TournamentStatusBadge } from "@/components/tournament/TournamentStatusBadge";
 import { TournamentActions } from "@/components/tournament/TournamentActions";
 import { DeleteButton } from "@/components/ui/DeleteButton";
+import { FollowButton } from "@/components/ui/FollowButton";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -127,11 +128,6 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             <div className="flex items-center gap-4 mt-3 text-xs text-gray-400 flex-wrap">
               <span>{tournament._count.teams} equipos</span>
               <span>{tournament._count.matches} partidos</span>
-              {tournament.seriesFormat === "SINGLE" ? (
-                <span>{tournament.matchPoints} pts ({tournament.matchPoints / 2} malas + {tournament.matchPoints / 2} buenas)</span>
-              ) : (
-                <span>Mejor de 3 · J1/J2: {tournament.regularGamePoints} pts · Desempate: {tournament.tiebreakerPoints} pts</span>
-              )}
               {hasGroupFormat && (
                 <span>Clasifican {tournament.qualifyPerGroup} por grupo</span>
               )}
@@ -145,17 +141,16 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 <span>{tournament.startTime}</span>
               )}
               <span>Por {tournament.admin.name}</span>
+              {!isAdmin && (
+                <FollowButton
+                  organizerId={tournament.admin.id}
+                  organizerName={tournament.admin.name}
+                />
+              )}
             </div>
 
             {tournament.location && (
               <div className="mt-2">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
-                  <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span>{tournament.location}</span>
-                </div>
                 <MapaPreview location={tournament.location} />
               </div>
             )}
@@ -259,10 +254,6 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             groups={tournament.groups}
             isAdmin={isAdmin}
             qualifyPerGroup={tournament.qualifyPerGroup}
-            seriesFormat={tournament.seriesFormat as "SINGLE" | "BEST_OF_3"}
-            matchPoints={tournament.matchPoints}
-            regularGamePoints={tournament.regularGamePoints}
-            tiebreakerPoints={tournament.tiebreakerPoints}
           />
         </section>
       )}
@@ -270,14 +261,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       {/* Tab: Llave */}
       {activeTab === "llave" && (
         <section>
-          <Bracket
-            matches={tournament.matches}
-            isAdmin={isAdmin}
-            seriesFormat={tournament.seriesFormat as "SINGLE" | "BEST_OF_3"}
-            matchPoints={tournament.matchPoints}
-            regularGamePoints={tournament.regularGamePoints}
-            tiebreakerPoints={tournament.tiebreakerPoints}
-          />
+          <Bracket matches={tournament.matches} isAdmin={isAdmin} />
         </section>
       )}
     </div>

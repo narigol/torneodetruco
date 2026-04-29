@@ -23,12 +23,7 @@ export default async function EditarTorneoPage({ params }: Params) {
       startDate: true,
       startTime: true,
       location: true,
-      matchPoints: true,
-      qualifyPerGroup: true,
       playersPerTeam: true,
-      seriesFormat: true,
-      regularGamePoints: true,
-      tiebreakerPoints: true,
       adminId: true,
     },
   });
@@ -50,9 +45,6 @@ export default async function EditarTorneoPage({ params }: Params) {
         torneo={{
           ...torneo,
           startDate: torneo.startDate ? torneo.startDate.toISOString() : null,
-          startTime: torneo.startTime,
-          location: torneo.location,
-          seriesFormat: torneo.seriesFormat,
         }}
       />
     </div>

@@ -43,9 +43,11 @@ enum Phase {
   FINAL
 }
 
-enum SeriesFormat {
-  SINGLE
-  BEST_OF_3
+enum NotificationType {
+  TOURNAMENT_CREATED
+  REGISTRATION_OPEN
+  TOURNAMENT_STARTED
+  TOURNAMENT_FINISHED
 }
 
 model User {
@@ -61,6 +63,10 @@ model User {
 
   player     Player?
   tournaments Tournament[] @relation("TournamentAdmin")
+
+  followers     Follow[]       @relation("Following")
+  following     Follow[]       @relation("Follower")
+  notifications Notification[]
 }
 
 model Player {
@@ -88,12 +94,8 @@ model Tournament {
   endDate         DateTime?
   startTime       String?
   location        String?
-  matchPoints       Int              @default(30)
   qualifyPerGroup   Int              @default(2)
   playersPerTeam    Int              @default(2)
-  seriesFormat      SeriesFormat     @default(SINGLE)
-  regularGamePoints Int              @default(24)
-  tiebreakerPoints  Int              @default(30)
   createdAt       DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -103,6 +105,32 @@ model Tournament {
   teams  Team[]
   groups Group[]
   matches Match[]
+  notifications Notification[]
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower",  fields: [followerId],  references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+}
+
+model Notification {
+  id           String           @id @default(cuid())
+  type         NotificationType
+  read         Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+
+  userId       String
+  user         User        @relation(fields: [userId],       references: [id], onDelete: Cascade)
+
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 
 model Team {
