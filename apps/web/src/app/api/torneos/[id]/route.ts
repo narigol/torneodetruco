@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
+import { canManageTournament } from "@/lib/tournament-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -74,7 +75,13 @@ const updateSchema = z.object({
 export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") {
+
+  const tournament = await prisma.tournament.findUnique({
+    where: { id },
+    select: { adminId: true },
+  });
+  if (!tournament) return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
+  if (!canManageTournament(session, tournament.adminId)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
@@ -86,7 +93,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const { startDate, endDate, ...rest } = parsed.data;
 
-  const tournament = await prisma.tournament.update({
+  const updated = await prisma.tournament.update({
     where: { id },
     data: {
       ...rest,
@@ -95,13 +102,19 @@ export async function PATCH(req: Request, { params }: Params) {
     },
   });
 
-  return NextResponse.json(tournament);
+  return NextResponse.json(updated);
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") {
+
+  const tournament = await prisma.tournament.findUnique({
+    where: { id },
+    select: { adminId: true },
+  });
+  if (!tournament) return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
+  if (!canManageTournament(session, tournament.adminId)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 

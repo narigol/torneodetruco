@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma, Phase } from "@tdt/db";
 import { z } from "zod";
 import { createPhaseMatches } from "@/lib/bracket";
+import { canManageTournament } from "@/lib/tournament-auth";
 
 const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
   ROUND_OF_16: "QUARTERFINAL",
@@ -26,18 +27,21 @@ type Params = { params: Promise<{ id: string }> };
 export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   const body = await req.json();
 
   const match = await prisma.match.findUnique({
     where: { id },
-    include: { tournament: { select: { matchPoints: true, seriesFormat: true, regularGamePoints: true, tiebreakerPoints: true } } },
+    include: { tournament: { select: { adminId: true, matchPoints: true, seriesFormat: true, regularGamePoints: true, tiebreakerPoints: true } } },
   });
   if (!match) return NextResponse.json({ error: "Partido no encontrado" }, { status: 404 });
   if (match.status === "FINISHED") return NextResponse.json({ error: "El partido ya fue finalizado" }, { status: 400 });
+  if (!canManageTournament(session, match.tournament.adminId)) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
 
   const { seriesFormat, matchPoints, regularGamePoints, tiebreakerPoints } = match.tournament;
 

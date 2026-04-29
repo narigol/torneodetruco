@@ -20,7 +20,6 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const { id } = await params;
   const { tab: rawTabParam } = await searchParams;
   const session = await getServerSession(authOptions);
-  const isAdmin = session?.user?.role === "ADMIN";
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
@@ -65,6 +64,8 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   });
 
   if (!tournament) notFound();
+
+  const isAdmin = session?.user?.role === "ADMIN" || session?.user?.id === tournament.adminId;
 
   const hasGroupFormat = tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT;
   const hasGroups = tournament.groups.length > 0;

@@ -20,12 +20,12 @@ const XIcon = () => (
   </svg>
 );
 
-const benefits = [
-  { label: "Crear torneos ilimitados", pro: true, free: false },
-  { label: "Gestionar equipos y jugadores", pro: true, free: false },
-  { label: "Generar grupos y llaves eliminatorias", pro: true, free: false },
-  { label: "Cargar resultados de partidos", pro: true, free: false },
-  { label: "Ver torneos y standings", pro: true, free: true },
+const benefits: { label: string; pro: string | boolean; free: string | boolean }[] = [
+  { label: "Torneos",              pro: "Ilimitados",  free: "Hasta 5" },
+  { label: "Personas por torneo", pro: "Ilimitadas",  free: "Hasta 10" },
+  { label: "Grupos y llaves eliminatorias", pro: true, free: true },
+  { label: "Carga de resultados", pro: true,          free: true },
+  { label: "Ver torneos y standings", pro: true,      free: true },
 ];
 
 export function MembresiaClient({ plan, planExpiresAt, precio }: Props) {
@@ -90,9 +90,14 @@ export function MembresiaClient({ plan, planExpiresAt, precio }: Props) {
           <p className="text-2xl font-bold text-gray-900 mb-4">Gratis</p>
           <ul className="space-y-2.5">
             {benefits.map((b) => (
-              <li key={b.label} className="flex items-center gap-2 text-sm text-gray-600">
+              <li key={b.label} className="flex items-center gap-2 text-sm">
                 {b.free ? <CheckIcon /> : <XIcon />}
-                <span className={b.free ? "" : "text-gray-400"}>{b.label}</span>
+                <span className={b.free ? "text-gray-700" : "text-gray-400"}>
+                  {b.label}
+                  {typeof b.free === "string" && (
+                    <span className="ml-1 text-xs text-gray-400">({b.free})</span>
+                  )}
+                </span>
               </li>
             ))}
           </ul>
@@ -107,9 +112,14 @@ export function MembresiaClient({ plan, planExpiresAt, precio }: Props) {
           </p>
           <ul className="space-y-2.5">
             {benefits.map((b) => (
-              <li key={b.label} className="flex items-center gap-2 text-sm text-gray-600">
+              <li key={b.label} className="flex items-center gap-2 text-sm text-gray-700">
                 {b.pro ? <CheckIcon /> : <XIcon />}
-                {b.label}
+                <span>
+                  {b.label}
+                  {typeof b.pro === "string" && (
+                    <span className="ml-1 text-xs text-green-600 font-medium">({b.pro})</span>
+                  )}
+                </span>
               </li>
             ))}
           </ul>

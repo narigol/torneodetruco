@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
+import { canManageTournament, FREE_PEOPLE_LIMIT } from "@/lib/tournament-auth";
 
 const createSchema = z.object({
   name: z.string().min(1).max(100),
@@ -28,8 +29,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   const body = await req.json();
@@ -42,11 +43,15 @@ export async function POST(req: Request) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
-    select: { playersPerTeam: true },
+    select: { adminId: true, playersPerTeam: true },
   });
 
   if (!tournament) {
     return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
+  }
+
+  if (!canManageTournament(session, tournament.adminId)) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
   if (playerIds.length !== tournament.playersPerTeam) {
@@ -54,6 +59,18 @@ export async function POST(req: Request) {
       { error: `Este torneo requiere exactamente ${tournament.playersPerTeam} jugador${tournament.playersPerTeam !== 1 ? "es" : ""} por equipo` },
       { status: 400 }
     );
+  }
+
+  // Usuarios FREE: máximo 10 personas por torneo
+  if (session.user.role !== "ADMIN") {
+    const teamCount = await prisma.team.count({ where: { tournamentId } });
+    const currentPeople = teamCount * tournament.playersPerTeam;
+    if (currentPeople + playerIds.length > FREE_PEOPLE_LIMIT) {
+      return NextResponse.json(
+        { error: `El plan gratuito permite hasta ${FREE_PEOPLE_LIMIT} personas por torneo. Suscribite al plan Organizador para agregar más.` },
+        { status: 403 }
+      );
+    }
   }
 
   const already = await prisma.teamPlayer.findFirst({

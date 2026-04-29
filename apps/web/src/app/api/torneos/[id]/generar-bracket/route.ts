@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma, TournamentFormat, Phase } from "@tdt/db";
 import { createPhaseMatches } from "@/lib/bracket";
+import { canManageTournament } from "@/lib/tournament-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -25,9 +26,6 @@ function shuffle<T>(arr: T[]): T[] {
 export async function POST(_req: Request, { params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  }
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
@@ -36,6 +34,10 @@ export async function POST(_req: Request, { params }: Params) {
 
   if (!tournament) {
     return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
+  }
+
+  if (!canManageTournament(session, tournament.adminId)) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
   if (tournament.status !== "IN_PROGRESS") {

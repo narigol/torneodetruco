@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
+import { FREE_TOURNAMENT_LIMIT } from "@/lib/tournament-auth";
 
 const evenNumber = z.number().int().min(2).refine((n) => n % 2 === 0, {
   message: "Los puntos deben ser un número par",
@@ -34,8 +35,19 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  // Usuarios FREE: máximo 5 torneos
+  if (session.user.role !== "ADMIN") {
+    const count = await prisma.tournament.count({ where: { adminId: session.user.id } });
+    if (count >= FREE_TOURNAMENT_LIMIT) {
+      return NextResponse.json(
+        { error: `El plan gratuito permite hasta ${FREE_TOURNAMENT_LIMIT} torneos. Suscribite al plan Organizador para crear más.` },
+        { status: 403 }
+      );
+    }
   }
 
   const body = await req.json();
