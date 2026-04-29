@@ -39,6 +39,12 @@ const BellIcon = () => (
   </svg>
 );
 
+const RankingIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 17l4-4 4 4 7-9 3 3" />
+  </svg>
+);
+
 type Props = { role: string; name: string; plan: string; unreadNotifications?: number };
 
 export function Sidebar({ role, name, plan, unreadNotifications = 0 }: Props) {
@@ -47,6 +53,7 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0 }: Props) {
 
   const links = [
     { href: "/torneos", label: "Torneos", icon: <TrophyIcon /> },
+    { href: "/ranking", label: "Ranking", icon: <RankingIcon /> },
     ...(role === "ADMIN" ? [{ href: "/jugadores", label: "Jugadores", icon: <UsersIcon /> }] : []),
   ];
 

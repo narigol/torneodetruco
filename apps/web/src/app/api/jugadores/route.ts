@@ -33,8 +33,15 @@ export async function POST(req: Request) {
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos invalidos" }, { status: 400 });
   }
+
+  const existingUser = parsed.data.email
+    ? await prisma.user.findUnique({
+        where: { email: parsed.data.email },
+        select: { id: true, player: { select: { id: true } } },
+      })
+    : null;
 
   const player = await prisma.player.create({
     data: {
@@ -42,6 +49,7 @@ export async function POST(req: Request) {
       email: parsed.data.email ?? null,
       phone: parsed.data.phone ?? null,
       locality: parsed.data.locality ?? null,
+      ...(existingUser && !existingUser.player ? { user: { connect: { id: existingUser.id } } } : {}),
     },
   });
 

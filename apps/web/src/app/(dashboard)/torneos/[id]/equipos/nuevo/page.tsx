@@ -4,33 +4,49 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import Link from "next/link";
 import { NuevoEquipoForm } from "@/components/ui/NuevoEquipoForm";
+import { canManageTournament } from "@/lib/tournament-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
 export default async function NuevoEquipoPage({ params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") redirect(`/torneos/${id}`);
 
-  const [tournament, assignedPlayerIds] = await Promise.all([
+  const [tournament, assignedPlayerIds, followedUsers] = await Promise.all([
     prisma.tournament.findUnique({
       where: { id },
-      select: { id: true, name: true, status: true, playersPerTeam: true },
+      select: { id: true, name: true, status: true, playersPerTeam: true, adminId: true },
     }),
     prisma.teamPlayer.findMany({
       where: { team: { tournamentId: id } },
       select: { playerId: true },
     }),
+    session?.user?.id
+      ? prisma.follow.findMany({
+          where: { followerId: session.user.id },
+          select: { followingId: true },
+        })
+      : Promise.resolve([]),
   ]);
 
+  if (!tournament) notFound();
+  if (!canManageTournament(session, tournament.adminId)) redirect(`/torneos/${id}`);
+
   const assignedIds = new Set(assignedPlayerIds.map((tp) => tp.playerId));
+  const followedIds = new Set(followedUsers.map((follow) => follow.followingId));
   const players = await prisma.player.findMany({
     where: { id: { notIn: [...assignedIds] } },
     orderBy: { name: "asc" },
-    select: { id: true, name: true },
+    select: { id: true, name: true, userId: true },
   });
 
-  if (!tournament) notFound();
+  const sortedPlayers = [...players].sort((a, b) => {
+    const aFollowed = a.userId ? followedIds.has(a.userId) : false;
+    const bFollowed = b.userId ? followedIds.has(b.userId) : false;
+    if (aFollowed !== bFollowed) return aFollowed ? -1 : 1;
+    return a.name.localeCompare(b.name, "es", { sensitivity: "base" });
+  });
+
   if (tournament.status === "FINISHED") redirect(`/torneos/${id}`);
 
   const modalidad = tournament.playersPerTeam === 1
@@ -54,7 +70,11 @@ export default async function NuevoEquipoPage({ params }: Params) {
 
       <NuevoEquipoForm
         tournamentId={id}
-        players={players}
+        players={sortedPlayers.map(({ id, name, userId }) => ({
+          id,
+          name,
+          isFollowed: userId ? followedIds.has(userId) : false,
+        }))}
         playersPerTeam={tournament.playersPerTeam}
       />
     </div>

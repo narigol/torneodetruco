@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Player = { id: string; name: string };
+type Player = { id: string; name: string; isFollowed: boolean };
 
 type Props = {
   tournamentId: string;
@@ -33,14 +33,31 @@ export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [teamName, setTeamName] = useState("");
   const [nameEdited, setNameEdited] = useState(false);
+  const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
+
+  const visiblePlayers = useMemo(() => {
+    const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("es-AR");
+    const terms = normalizedQuery.split(/\s+/).filter(Boolean);
+
+    return players.filter((player) => {
+      if (selectedIds.includes(player.id)) return true;
+      if (terms.length === 0) return true;
+
+      const normalizedName = player.name.toLocaleLowerCase("es-AR");
+      return terms.every((term) => normalizedName.includes(term));
+    });
+  }, [deferredQuery, players, selectedIds]);
+
+  const hasFollowedPlayers = players.some((player) => player.isFollowed);
 
   function togglePlayer(id: string) {
     setSelectedIds((prev) => {
       const next = prev.includes(id)
         ? prev.filter((p) => p !== id)
         : prev.length < playersPerTeam
-        ? [...prev, id]
-        : prev;
+          ? [...prev, id]
+          : prev;
 
       if (!nameEdited) {
         setTeamName(generateTeamName(next, players));
@@ -60,7 +77,7 @@ export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props
     setError("");
 
     if (selectedIds.length === 0) {
-      setError("Seleccioná al menos un jugador");
+      setError("Selecciona al menos un jugador");
       return;
     }
 
@@ -98,17 +115,34 @@ export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Jugadores *{" "}
           <span className="text-gray-400 font-normal">
-            (seleccioná exactamente {playersPerTeam})
+            (selecciona exactamente {playersPerTeam})
           </span>
         </label>
 
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="w-full px-3 py-2 mb-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+          placeholder="Buscar por nombre o apellido"
+        />
+
+        {hasFollowedPlayers && !deferredQuery.trim() && (
+          <p className="text-xs text-gray-500 mb-2">
+            Primero se muestran los jugadores asociados a usuarios que seguis.
+          </p>
+        )}
+
         {players.length === 0 ? (
           <p className="text-sm text-gray-400 py-3">
-            No hay jugadores registrados. Creá jugadores primero.
+            No hay jugadores registrados. Crea jugadores primero.
+          </p>
+        ) : visiblePlayers.length === 0 ? (
+          <p className="text-sm text-gray-400 py-3">
+            No encontramos jugadores con esa busqueda.
           </p>
         ) : (
           <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-64 overflow-y-auto">
-            {players.map((player) => {
+            {visiblePlayers.map((player) => {
               const checked = selectedIds.includes(player.id);
               const disabled = !checked && selectedIds.length >= playersPerTeam;
               return (
@@ -125,7 +159,12 @@ export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props
                     onChange={() => togglePlayer(player.id)}
                     className="accent-red-600"
                   />
-                  <span className="text-sm text-gray-800">{player.name}</span>
+                  <div className="min-w-0">
+                    <span className="block text-sm text-gray-800">{player.name}</span>
+                    {player.isFollowed && (
+                      <span className="text-xs text-red-500">Lo seguis</span>
+                    )}
+                  </div>
                 </label>
               );
             })}
@@ -149,10 +188,10 @@ export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props
           value={teamName}
           onChange={handleNameChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-          placeholder="Seleccioná jugadores para generar el nombre"
+          placeholder="Selecciona jugadores para generar el nombre"
         />
         {!nameEdited && selectedIds.length > 0 && (
-          <p className="text-xs text-gray-400 mt-1">Generado automáticamente · podés editarlo</p>
+          <p className="text-xs text-gray-400 mt-1">Generado automaticamente - podes editarlo</p>
         )}
       </div>
 

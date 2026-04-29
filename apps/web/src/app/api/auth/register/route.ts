@@ -24,8 +24,29 @@ export async function POST(req: Request) {
   }
 
   const hashed = await bcrypt.hash(password, 10);
+  const existingPlayer = await prisma.player.findFirst({
+    where: {
+      email,
+      userId: null,
+    },
+    select: { id: true },
+  });
+
   await prisma.user.create({
-    data: { name, email, password: hashed, role: "PLAYER" },
+    data: {
+      name,
+      email,
+      password: hashed,
+      role: "PLAYER",
+      player: existingPlayer
+        ? { connect: { id: existingPlayer.id } }
+        : {
+            create: {
+              name,
+              email,
+            },
+          },
+    },
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });

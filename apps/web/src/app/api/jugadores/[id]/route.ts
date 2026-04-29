@@ -37,8 +37,15 @@ export async function PATCH(req: Request, { params }: Params) {
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos invalidos" }, { status: 400 });
   }
+
+  const existingUser = parsed.data.email
+    ? await prisma.user.findUnique({
+        where: { email: parsed.data.email },
+        select: { id: true, player: { select: { id: true } } },
+      })
+    : null;
 
   const player = await prisma.player.update({
     where: { id },
@@ -47,6 +54,9 @@ export async function PATCH(req: Request, { params }: Params) {
       email: parsed.data.email ?? null,
       phone: parsed.data.phone ?? null,
       locality: parsed.data.locality ?? null,
+      ...(existingUser && (!existingUser.player || existingUser.player.id === id)
+        ? { user: { connect: { id: existingUser.id } } }
+        : {}),
     },
   });
 

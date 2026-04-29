@@ -215,3 +215,16 @@ model Match {
   winnerId String?
   winner   Team?   @relation("MatchWinner", fields: [winnerId], references: [id])
 }
+
+model RankingConfig {
+  key                    String   @id @default("global")
+  tournamentPlayedPoints Int      @default(10)
+  matchPlayedPoints      Int      @default(3)
+  groupWinPoints         Int      @default(5)
+  roundOf16WinPoints     Int      @default(8)
+  quarterfinalWinPoints  Int      @default(12)
+  semifinalWinPoints     Int      @default(18)
+  finalWinPoints         Int      @default(30)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
