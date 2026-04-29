@@ -24,6 +24,7 @@ export default async function EditarTorneoPage({ params }: Params) {
       startTime: true,
       location: true,
       playersPerTeam: true,
+      maxPlayers: true,
       adminId: true,
     },
   });

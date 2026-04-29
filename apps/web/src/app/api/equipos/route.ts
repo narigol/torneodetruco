@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
-    select: { adminId: true, playersPerTeam: true },
+    select: { adminId: true, playersPerTeam: true, maxPlayers: true },
   });
 
   if (!tournament) {
@@ -61,10 +61,22 @@ export async function POST(req: Request) {
     );
   }
 
+  const teamCount = await prisma.team.count({ where: { tournamentId } });
+  const currentPeople = teamCount * tournament.playersPerTeam;
+
+  // Cupo máximo del torneo
+  if (tournament.maxPlayers !== null && tournament.maxPlayers !== undefined) {
+    if (currentPeople + playerIds.length > tournament.maxPlayers) {
+      const restantes = tournament.maxPlayers - currentPeople;
+      return NextResponse.json(
+        { error: `El torneo tiene cupo para ${tournament.maxPlayers} jugadores. ${restantes > 0 ? `Solo quedan ${restantes} lugar${restantes !== 1 ? "es" : ""}.` : "El cupo está completo."}` },
+        { status: 400 }
+      );
+    }
+  }
+
   // Usuarios FREE: máximo 10 personas por torneo
   if (session.user.role !== "ADMIN") {
-    const teamCount = await prisma.team.count({ where: { tournamentId } });
-    const currentPeople = teamCount * tournament.playersPerTeam;
     if (currentPeople + playerIds.length > FREE_PEOPLE_LIMIT) {
       return NextResponse.json(
         { error: `El plan gratuito permite hasta ${FREE_PEOPLE_LIMIT} personas por torneo. Suscribite al plan Organizador para agregar más.` },

@@ -61,6 +61,12 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  dni        String?   @unique
+  phone      String?
+  locality   String?
+  province   String?
+  country    String?
+
   player     Player?
   tournaments Tournament[] @relation("TournamentAdmin")
 
@@ -72,14 +78,18 @@ model User {
 model Player {
   id        String   @id @default(cuid())
   name      String
+  dni       String?
   email     String?
   phone     String?
   locality  String?
+  province  String?
+  country   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String? @unique
-  user   User?   @relation(fields: [userId], references: [id])
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  confirmed Boolean  @default(false)
 
   teamPlayers TeamPlayer[]
 }
@@ -96,6 +106,7 @@ model Tournament {
   location        String?
   qualifyPerGroup   Int              @default(2)
   playersPerTeam    Int              @default(2)
+  maxPlayers        Int?
   createdAt       DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -155,7 +166,7 @@ model TeamPlayer {
   playerId String
 
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  player Player @relation(fields: [playerId], references: [id])
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, playerId])
 }

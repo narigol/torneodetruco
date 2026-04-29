@@ -2,12 +2,21 @@ import { Phase, prisma } from "@tdt/db";
 
 export const RANKING_CONFIG_KEY = "global";
 
+const DEFAULT_CONFIG = {
+  key: RANKING_CONFIG_KEY,
+  tournamentPlayedPoints: 10,
+  matchPlayedPoints: 3,
+  groupWinPoints: 5,
+  roundOf16WinPoints: 8,
+  quarterfinalWinPoints: 12,
+  semifinalWinPoints: 18,
+  finalWinPoints: 30,
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
+};
+
 export async function getRankingConfig() {
-  return prisma.rankingConfig.upsert({
-    where: { key: RANKING_CONFIG_KEY },
-    update: {},
-    create: { key: RANKING_CONFIG_KEY },
-  });
+  return (await prisma.rankingConfig.findFirst({ where: { key: RANKING_CONFIG_KEY } })) ?? DEFAULT_CONFIG;
 }
 
 type RankingConfig = Awaited<ReturnType<typeof getRankingConfig>>;
@@ -53,36 +62,18 @@ export async function getRankingRows(config: RankingConfig): Promise<RankingRow[
       player: {
         select: {
           id: true,
-          email: true,
+          confirmed: true,
         },
       },
     },
   });
 
-  const userEmailSet = new Set(users.map((user) => user.email.toLowerCase()));
-  const orphanPlayers = await prisma.player.findMany({
-    where: {
-      userId: null,
-      email: { not: null },
-    },
-    orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      email: true,
-    },
-  });
-
-  const orphanPlayersByEmail = new Map<string, string>();
-  for (const player of orphanPlayers) {
-    const email = player.email?.toLowerCase();
-    if (!email || !userEmailSet.has(email) || orphanPlayersByEmail.has(email)) continue;
-    orphanPlayersByEmail.set(email, player.id);
-  }
-
   const playerIdByUserId = new Map<string, string>();
   for (const user of users) {
-    const playerId = user.player?.id ?? orphanPlayersByEmail.get(user.email.toLowerCase());
-    if (playerId) playerIdByUserId.set(user.id, playerId);
+    // Only count players that have confirmed their account
+    if (user.player?.id && user.player.confirmed) {
+      playerIdByUserId.set(user.id, user.player.id);
+    }
   }
 
   const trackedPlayerIds = [...new Set(playerIdByUserId.values())];

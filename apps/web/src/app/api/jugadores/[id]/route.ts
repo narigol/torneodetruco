@@ -22,9 +22,12 @@ export async function GET(_req: Request, { params }: Params) {
 
 const updateSchema = z.object({
   name: z.string().min(1).max(100),
+  dni: z.string().max(20).optional().nullable(),
   email: z.string().email().optional().nullable(),
   phone: z.string().max(30).optional().nullable(),
   locality: z.string().max(100).optional().nullable(),
+  province: z.string().max(100).optional().nullable(),
+  country: z.string().max(100).optional().nullable(),
 });
 
 export async function PATCH(req: Request, { params }: Params) {
@@ -40,6 +43,13 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos invalidos" }, { status: 400 });
   }
 
+  if (parsed.data.dni) {
+    const dniExists = await prisma.player.findFirst({ where: { dni: parsed.data.dni, NOT: { id } } });
+    if (dniExists) {
+      return NextResponse.json({ error: `Ya existe un jugador con DNI ${parsed.data.dni}` }, { status: 409 });
+    }
+  }
+
   const existingUser = parsed.data.email
     ? await prisma.user.findUnique({
         where: { email: parsed.data.email },
@@ -51,9 +61,12 @@ export async function PATCH(req: Request, { params }: Params) {
     where: { id },
     data: {
       name: parsed.data.name,
+      dni: parsed.data.dni ?? null,
       email: parsed.data.email ?? null,
       phone: parsed.data.phone ?? null,
       locality: parsed.data.locality ?? null,
+      province: parsed.data.province ?? null,
+      country: parsed.data.country ?? null,
       ...(existingUser && (!existingUser.player || existingUser.player.id === id)
         ? { user: { connect: { id: existingUser.id } } }
         : {}),

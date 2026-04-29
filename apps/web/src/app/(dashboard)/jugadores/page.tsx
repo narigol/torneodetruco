@@ -11,6 +11,7 @@ export default async function JugadoresPage() {
   const jugadores = await prisma.player.findMany({
     orderBy: { name: "asc" },
     include: {
+      user: { select: { id: true, name: true, email: true } },
       teamPlayers: {
         include: {
           team: {
@@ -58,9 +59,10 @@ export default async function JugadoresPage() {
             <thead>
               <tr className="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-100">
                 <th className="text-left px-5 py-3 font-medium">Nombre</th>
-                <th className="text-left px-5 py-3 font-medium">Localidad</th>
-                <th className="text-left px-5 py-3 font-medium">Teléfono</th>
+                <th className="text-left px-5 py-3 font-medium">DNI</th>
                 <th className="text-left px-5 py-3 font-medium">Email</th>
+                <th className="text-left px-5 py-3 font-medium">Localidad</th>
+                <th className="text-left px-5 py-3 font-medium">Estado</th>
                 <th className="text-left px-5 py-3 font-medium">Equipos</th>
                 {isAdmin && <th className="px-5 py-3" />}
               </tr>
@@ -70,10 +72,7 @@ export default async function JugadoresPage() {
                 <tr key={j.id} className="hover:bg-gray-50/50">
                   <td className="px-5 py-3 font-medium text-gray-900">{j.name}</td>
                   <td className="px-5 py-3 text-gray-500">
-                    {j.locality ?? <span className="text-gray-300">—</span>}
-                  </td>
-                  <td className="px-5 py-3 text-gray-500">
-                    {j.phone ?? <span className="text-gray-300">—</span>}
+                    {j.dni ?? <span className="text-gray-300">—</span>}
                   </td>
                   <td className="px-5 py-3 text-gray-500">
                     {j.email ? (
@@ -82,6 +81,22 @@ export default async function JugadoresPage() {
                       </a>
                     ) : (
                       <span className="text-gray-300">—</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 text-gray-500">
+                    {[j.locality, j.province].filter(Boolean).join(", ") || <span className="text-gray-300">—</span>}
+                  </td>
+                  <td className="px-5 py-3">
+                    {j.confirmed ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs bg-green-50 text-green-700 border border-green-100 px-2 py-0.5 rounded-full font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        {j.user?.name ?? "Confirmado"}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-xs bg-yellow-50 text-yellow-700 border border-yellow-100 px-2 py-0.5 rounded-full font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                        Pendiente
+                      </span>
                     )}
                   </td>
                   <td className="px-5 py-3 text-gray-500">

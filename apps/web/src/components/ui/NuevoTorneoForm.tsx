@@ -29,6 +29,7 @@ export function NuevoTorneoForm() {
         startTime: form.get("startTime") || null,
         location: location.trim() || null,
         playersPerTeam: Number(form.get("playersPerTeam")),
+        maxPlayers: form.get("maxPlayers") ? Number(form.get("maxPlayers")) : null,
       }),
     });
 
@@ -105,7 +106,7 @@ export function NuevoTorneoForm() {
             />
           </div>
 
-          <MapaPreview location={location} />
+          <MapaPreview location={location} onLocationChange={setLocation} />
         </div>
 
         {/* Tarjeta derecha — Configuración del torneo */}
@@ -137,6 +138,19 @@ export function NuevoTorneoForm() {
               <option value="2">2 vs 2 — Parejas</option>
               <option value="3">3 vs 3 — Tríos</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Cupo máximo de jugadores</label>
+            <input
+              name="maxPlayers"
+              type="number"
+              min="2"
+              step="1"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
+              placeholder="Sin límite"
+            />
+            <p className="text-xs text-gray-400 mt-1">Opcional. Impide inscribir más jugadores al alcanzar el límite.</p>
           </div>
 
         </div>

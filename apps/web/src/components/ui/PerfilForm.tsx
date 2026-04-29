@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { ArgentinaGeoSelect } from "./ArgentinaGeoSelect";
 
 type Props = {
   id: string;
@@ -11,18 +12,39 @@ type Props = {
   role: string;
   plan: string;
   planExpiresAt: string | null;
+  dni: string | null;
+  phone: string | null;
+  locality: string | null;
+  province: string | null;
 };
 
-export function PerfilForm({ name: initialName, email: initialEmail, role, plan, planExpiresAt }: Props) {
+export function PerfilForm({
+  name: initialName,
+  email: initialEmail,
+  role,
+  plan,
+  planExpiresAt,
+  dni: initialDni,
+  phone: initialPhone,
+  locality: initialLocality,
+  province: initialProvince,
+}: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
+  const [dni, setDni] = useState(initialDni ?? "");
+  const [phone, setPhone] = useState(initialPhone ?? "");
+  const [locality, setLocality] = useState(initialLocality ?? "");
+  const [province, setProvince] = useState(initialProvince ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  const inputClass =
+    "w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,6 +63,10 @@ export function PerfilForm({ name: initialName, email: initialEmail, role, plan,
       body: JSON.stringify({
         name,
         email,
+        dni: dni || null,
+        phone: phone || null,
+        locality: locality || null,
+        province: province || null,
         ...(newPassword ? { currentPassword, newPassword } : {}),
       }),
     });
@@ -57,7 +83,6 @@ export function PerfilForm({ name: initialName, email: initialEmail, role, plan,
     setNewPassword("");
     setConfirmPassword("");
 
-    // If email changed, the session token is stale — force re-login
     if (email !== initialEmail) {
       await signOut({ callbackUrl: "/login" });
       return;
@@ -80,9 +105,10 @@ export function PerfilForm({ name: initialName, email: initialEmail, role, plan,
               minLength={2}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+              className={inputClass}
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
             <input
@@ -90,12 +116,44 @@ export function PerfilForm({ name: initialName, email: initialEmail, role, plan,
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+              className={inputClass}
             />
             {email !== initialEmail && (
               <p className="text-xs text-amber-600 mt-1">Cambiar el email cerrará tu sesión.</p>
             )}
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">DNI</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={dni}
+                onChange={(e) => setDni(e.target.value)}
+                className={inputClass}
+                placeholder="12345678"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Teléfono</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={inputClass}
+                placeholder="11 1234-5678"
+              />
+            </div>
+          </div>
+
+          <ArgentinaGeoSelect
+            locality={locality}
+            province={province}
+            onLocalityChange={setLocality}
+            onProvinceChange={setProvince}
+          />
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Rol</label>
             <div className="flex items-center gap-2">
@@ -131,7 +189,7 @@ export function PerfilForm({ name: initialName, email: initialEmail, role, plan,
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               autoComplete="current-password"
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+              className={inputClass}
               placeholder="••••••••"
             />
           </div>
@@ -143,7 +201,7 @@ export function PerfilForm({ name: initialName, email: initialEmail, role, plan,
               onChange={(e) => setNewPassword(e.target.value)}
               autoComplete="new-password"
               minLength={newPassword ? 6 : undefined}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+              className={inputClass}
               placeholder="Mínimo 6 caracteres"
             />
           </div>
@@ -154,7 +212,7 @@ export function PerfilForm({ name: initialName, email: initialEmail, role, plan,
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+              className={inputClass}
               placeholder="••••••••"
             />
           </div>

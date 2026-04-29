@@ -65,6 +65,7 @@ const updateSchema = z.object({
   startTime: z.string().max(50).nullable().optional(),
   location: z.string().max(500).nullable().optional(),
   playersPerTeam: z.number().int().min(1).max(3).optional(),
+  maxPlayers: z.number().int().min(2).max(10000).nullable().optional(),
 });
 
 export async function PATCH(req: Request, { params }: Params) {

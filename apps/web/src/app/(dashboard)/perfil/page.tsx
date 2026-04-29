@@ -10,7 +10,7 @@ export default async function PerfilPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, name: true, email: true, role: true, plan: true, planExpiresAt: true },
+    select: { id: true, name: true, email: true, role: true, plan: true, planExpiresAt: true, dni: true, phone: true, locality: true, province: true },
   });
   if (!user) notFound();
 
@@ -24,6 +24,10 @@ export default async function PerfilPage() {
         role={user.role}
         plan={user.plan}
         planExpiresAt={user.planExpiresAt?.toISOString() ?? null}
+        dni={user.dni ?? null}
+        phone={user.phone ?? null}
+        locality={user.locality ?? null}
+        province={user.province ?? null}
       />
     </div>
   );

@@ -12,7 +12,8 @@ const schema = z.object({
   qualifyPerGroup: z.number().int().min(1).default(2),
 });
 
-const BYE_SCORE = 30;
+const BYE_HOME_SCORE = 1;
+const BYE_AWAY_SCORE = 0;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -58,13 +59,22 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   const { numGroups, qualifyPerGroup } = parsed.data;
+  const teamCount = tournament.teams.length;
 
-  // Max group size (all groups except possibly the last one)
-  const maxGroupSize = Math.ceil(tournament.teams.length / numGroups);
-
-  if (qualifyPerGroup >= maxGroupSize) {
+  if (numGroups > Math.floor(teamCount / 2)) {
     return NextResponse.json(
-      { error: `Los clasificados deben ser menos que los equipos por grupo (máx ${maxGroupSize - 1})` },
+      { error: `Con ${teamCount} equipos, el máximo de grupos es ${Math.floor(teamCount / 2)}` },
+      { status: 400 }
+    );
+  }
+
+  // Max group size for full groups; last group gets the remainder (≥ floor size)
+  const maxGroupSize = Math.ceil(teamCount / numGroups);
+  const minGroupSize = Math.floor(teamCount / numGroups);
+
+  if (qualifyPerGroup >= minGroupSize) {
+    return NextResponse.json(
+      { error: `Los clasificados (${qualifyPerGroup}) deben ser menos que los equipos del grupo más chico (${minGroupSize})` },
       { status: 400 }
     );
   }
@@ -83,7 +93,7 @@ export async function POST(req: Request, { params }: Params) {
       const end = Math.min(start + maxGroupSize, shuffled.length);
       const teamsInGroup = shuffled.slice(start, end);
 
-      if (teamsInGroup.length === 0) break;
+      if (teamsInGroup.length < 2) break;
 
       const group = await tx.group.create({
         data: {
@@ -126,8 +136,8 @@ export async function POST(req: Request, { params }: Params) {
                 round: b + 2,
                 homeTeamId: team.id,
                 awayTeamId: null,
-                homeScore: BYE_SCORE,
-                awayScore: 0,
+                homeScore: BYE_HOME_SCORE,
+                awayScore: BYE_AWAY_SCORE,
                 status: "FINISHED",
                 winnerId: team.id,
               },
@@ -137,7 +147,7 @@ export async function POST(req: Request, { params }: Params) {
             where: { groupId_teamId: { groupId: group.id, teamId: team.id } },
             data: {
               wins: { increment: byeCount },
-              scored: { increment: BYE_SCORE * byeCount },
+              scored: { increment: BYE_HOME_SCORE * byeCount },
             },
           });
         }

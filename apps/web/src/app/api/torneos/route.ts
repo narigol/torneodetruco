@@ -14,6 +14,7 @@ const createSchema = z.object({
   startTime: z.string().max(50).optional().nullable(),
   location: z.string().max(500).optional().nullable(),
   playersPerTeam: z.number().int().min(1).max(3).default(2),
+  maxPlayers: z.number().int().min(2).max(10000).optional().nullable(),
 });
 
 export async function GET() {
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { name, description, format, startDate, startTime, location, playersPerTeam } = parsed.data;
+  const { name, description, format, startDate, startTime, location, playersPerTeam, maxPlayers } = parsed.data;
 
   const tournament = await prisma.tournament.create({
     data: {
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
       startTime: startTime || null,
       location: location || null,
       playersPerTeam,
+      maxPlayers: maxPlayers ?? null,
       adminId: session.user.id,
     },
   });
