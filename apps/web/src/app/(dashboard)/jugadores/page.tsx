@@ -58,6 +58,9 @@ export default async function JugadoresPage() {
             <thead>
               <tr className="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-100">
                 <th className="text-left px-5 py-3 font-medium">Nombre</th>
+                <th className="text-left px-5 py-3 font-medium">Localidad</th>
+                <th className="text-left px-5 py-3 font-medium">Teléfono</th>
+                <th className="text-left px-5 py-3 font-medium">Email</th>
                 <th className="text-left px-5 py-3 font-medium">Equipos</th>
                 {isAdmin && <th className="px-5 py-3" />}
               </tr>
@@ -66,6 +69,21 @@ export default async function JugadoresPage() {
               {jugadores.map((j) => (
                 <tr key={j.id} className="hover:bg-gray-50/50">
                   <td className="px-5 py-3 font-medium text-gray-900">{j.name}</td>
+                  <td className="px-5 py-3 text-gray-500">
+                    {j.locality ?? <span className="text-gray-300">—</span>}
+                  </td>
+                  <td className="px-5 py-3 text-gray-500">
+                    {j.phone ?? <span className="text-gray-300">—</span>}
+                  </td>
+                  <td className="px-5 py-3 text-gray-500">
+                    {j.email ? (
+                      <a href={`mailto:${j.email}`} className="hover:text-red-600 transition-colors">
+                        {j.email}
+                      </a>
+                    ) : (
+                      <span className="text-gray-300">—</span>
+                    )}
+                  </td>
                   <td className="px-5 py-3 text-gray-500">
                     {j.teamPlayers.length === 0 ? (
                       <span className="text-gray-300">Sin equipo</span>

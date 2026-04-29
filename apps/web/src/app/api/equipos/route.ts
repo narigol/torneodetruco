@@ -40,6 +40,33 @@ export async function POST(req: Request) {
 
   const { name, tournamentId, playerIds } = parsed.data;
 
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+    select: { playersPerTeam: true },
+  });
+
+  if (!tournament) {
+    return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
+  }
+
+  if (playerIds.length !== tournament.playersPerTeam) {
+    return NextResponse.json(
+      { error: `Este torneo requiere exactamente ${tournament.playersPerTeam} jugador${tournament.playersPerTeam !== 1 ? "es" : ""} por equipo` },
+      { status: 400 }
+    );
+  }
+
+  const already = await prisma.teamPlayer.findFirst({
+    where: { playerId: { in: playerIds }, team: { tournamentId } },
+    include: { player: { select: { name: true } } },
+  });
+  if (already) {
+    return NextResponse.json(
+      { error: `${already.player.name} ya está en otro equipo de este torneo` },
+      { status: 400 }
+    );
+  }
+
   const team = await prisma.team.create({
     data: {
       name,

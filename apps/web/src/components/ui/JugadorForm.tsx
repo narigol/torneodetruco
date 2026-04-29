@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Props = {
-  initial?: { id: string; name: string };
+  initial?: {
+    id: string;
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+    locality?: string | null;
+  };
 };
 
 export function JugadorForm({ initial }: Props) {
@@ -18,7 +24,12 @@ export function JugadorForm({ initial }: Props) {
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
-    const body = { name: form.get("name") };
+    const body = {
+      name: form.get("name"),
+      email: form.get("email") || null,
+      phone: form.get("phone") || null,
+      locality: form.get("locality") || null,
+    };
 
     const res = initial
       ? await fetch(`/api/jugadores/${initial.id}`, {
@@ -58,7 +69,45 @@ export function JugadorForm({ initial }: Props) {
           required
           defaultValue={initial?.name}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-          placeholder="Nombre del jugador"
+          placeholder="Nombre completo del jugador"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Email
+        </label>
+        <input
+          name="email"
+          type="email"
+          defaultValue={initial?.email ?? ""}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+          placeholder="jugador@email.com"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Teléfono
+        </label>
+        <input
+          name="phone"
+          type="tel"
+          defaultValue={initial?.phone ?? ""}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+          placeholder="Ej: 11 1234-5678"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Localidad
+        </label>
+        <input
+          name="locality"
+          defaultValue={initial?.locality ?? ""}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+          placeholder="Ej: Buenos Aires"
         />
       </div>
 

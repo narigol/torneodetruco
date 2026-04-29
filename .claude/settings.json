@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001)",
+      "Bash(pkill -f \"next dev\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -First 1 | ForEach-Object { Stop-Process -Id $_ -Force }; Start-Sleep 1; \"ok\")",
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $pid = $conn.OwningProcess; Write-Output \"PID en 3001: $pid\"; Get-Process -Id $pid | Select-Object Id, ProcessName } else { Write-Output \"Nada corriendo en 3001\" })",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3001 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; Write-Output \"Servidor detenido\")",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\PC\\\\Desktop\\\\tdt\\\\packages\\\\db\"; $env:DATABASE_URL = \"postgresql://tdt:tdt1234@localhost:5433/tdt\"; node \"C:\\\\Users\\\\PC\\\\Desktop\\\\tdt\\\\node_modules\\\\prisma\\\\build\\\\index.js\" migrate dev --name add_bye_support; Set-Location \"C:\\\\Users\\\\PC\\\\Desktop\\\\tdt\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Id 36548 -Force)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" node node_modules/prisma/build/index.js generate --schema packages/db/prisma/schema.prisma)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/login)"
+    ]
+  }
+}

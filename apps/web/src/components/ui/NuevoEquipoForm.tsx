@@ -8,22 +8,51 @@ type Player = { id: string; name: string };
 type Props = {
   tournamentId: string;
   players: Player[];
+  playersPerTeam: number;
 };
 
-export function NuevoEquipoForm({ tournamentId, players }: Props) {
+function playerAlias(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const firstName = parts[0];
+  const lastInitial = parts.length > 1 ? parts[parts.length - 1][0].toUpperCase() : "";
+  return firstName + lastInitial;
+}
+
+function generateTeamName(ids: string[], players: Player[]): string {
+  return ids
+    .map((id) => players.find((p) => p.id === id))
+    .filter(Boolean)
+    .map((p) => playerAlias(p!.name))
+    .join(" y ");
+}
+
+export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [teamName, setTeamName] = useState("");
+  const [nameEdited, setNameEdited] = useState(false);
 
   function togglePlayer(id: string) {
-    setSelectedIds((prev) =>
-      prev.includes(id)
+    setSelectedIds((prev) => {
+      const next = prev.includes(id)
         ? prev.filter((p) => p !== id)
-        : prev.length < 3
+        : prev.length < playersPerTeam
         ? [...prev, id]
-        : prev
-    );
+        : prev;
+
+      if (!nameEdited) {
+        setTeamName(generateTeamName(next, players));
+      }
+
+      return next;
+    });
+  }
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setTeamName(e.target.value);
+    setNameEdited(true);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -35,16 +64,16 @@ export function NuevoEquipoForm({ tournamentId, players }: Props) {
       return;
     }
 
+    if (selectedIds.length !== playersPerTeam) {
+      setError(`Este torneo requiere exactamente ${playersPerTeam} jugador${playersPerTeam !== 1 ? "es" : ""} por equipo`);
+      return;
+    }
+
     setLoading(true);
-    const form = new FormData(e.currentTarget);
     const res = await fetch("/api/equipos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.get("name"),
-        tournamentId,
-        playerIds: selectedIds,
-      }),
+      body: JSON.stringify({ name: teamName, tournamentId, playerIds: selectedIds }),
     });
     setLoading(false);
 
@@ -58,6 +87,8 @@ export function NuevoEquipoForm({ tournamentId, players }: Props) {
     router.refresh();
   }
 
+  const remaining = playersPerTeam - selectedIds.length;
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -65,19 +96,10 @@ export function NuevoEquipoForm({ tournamentId, players }: Props) {
     >
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Nombre del equipo *
-        </label>
-        <input
-          name="name"
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-          placeholder="Ej: Los Reyes del Truco"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Jugadores * <span className="text-gray-400 font-normal">(máx. 3)</span>
+          Jugadores *{" "}
+          <span className="text-gray-400 font-normal">
+            (seleccioná exactamente {playersPerTeam})
+          </span>
         </label>
 
         {players.length === 0 ? (
@@ -88,7 +110,7 @@ export function NuevoEquipoForm({ tournamentId, players }: Props) {
           <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-64 overflow-y-auto">
             {players.map((player) => {
               const checked = selectedIds.includes(player.id);
-              const disabled = !checked && selectedIds.length >= 3;
+              const disabled = !checked && selectedIds.length >= playersPerTeam;
               return (
                 <label
                   key={player.id}
@@ -110,17 +132,32 @@ export function NuevoEquipoForm({ tournamentId, players }: Props) {
           </div>
         )}
 
-        {selectedIds.length > 0 && (
-          <p className="text-xs text-gray-400 mt-1">
-            {selectedIds.length} jugador{selectedIds.length !== 1 ? "es" : ""} seleccionado{selectedIds.length !== 1 ? "s" : ""}
-          </p>
+        <p className="text-xs text-gray-400 mt-1">
+          {selectedIds.length === playersPerTeam
+            ? "Jugadores completos"
+            : `Faltan ${remaining} jugador${remaining !== 1 ? "es" : ""}`}
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Nombre del equipo *
+        </label>
+        <input
+          name="name"
+          required
+          value={teamName}
+          onChange={handleNameChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+          placeholder="Seleccioná jugadores para generar el nombre"
+        />
+        {!nameEdited && selectedIds.length > 0 && (
+          <p className="text-xs text-gray-400 mt-1">Generado automáticamente · podés editarlo</p>
         )}
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-          {error}
-        </p>
+        <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
       )}
 
       <div className="flex gap-3">

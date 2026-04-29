@@ -12,6 +12,11 @@ enum Role {
   PLAYER
 }
 
+enum Plan {
+  FREE
+  PRO
+}
+
 enum TournamentFormat {
   GROUPS_AND_KNOCKOUT
   SINGLE_ELIMINATION
@@ -38,14 +43,21 @@ enum Phase {
   FINAL
 }
 
+enum SeriesFormat {
+  SINGLE
+  BEST_OF_3
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      Role     @default(PLAYER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  password       String
+  role           Role      @default(PLAYER)
+  plan           Plan      @default(FREE)
+  planExpiresAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   player     Player?
   tournaments Tournament[] @relation("TournamentAdmin")
@@ -54,6 +66,9 @@ model User {
 model Player {
   id        String   @id @default(cuid())
   name      String
+  email     String?
+  phone     String?
+  locality  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -69,9 +84,15 @@ model Tournament {
   description String?
   format      TournamentFormat
   status      TournamentStatus @default(DRAFT)
-  startDate   DateTime?
-  endDate     DateTime?
-  createdAt   DateTime         @default(now())
+  startDate       DateTime?
+  endDate         DateTime?
+  matchPoints       Int              @default(30)
+  qualifyPerGroup   Int              @default(2)
+  playersPerTeam    Int              @default(2)
+  seriesFormat      SeriesFormat     @default(SINGLE)
+  regularGamePoints Int              @default(24)
+  tiebreakerPoints  Int              @default(30)
+  createdAt       DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
   adminId String
@@ -145,6 +166,7 @@ model Match {
   homeScore Int?
   awayScore Int?
   round     Int?
+  games     Json?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
@@ -157,8 +179,8 @@ model Match {
   homeTeamId String
   homeTeam   Team   @relation("MatchHome", fields: [homeTeamId], references: [id])
 
-  awayTeamId String
-  awayTeam   Team   @relation("MatchAway", fields: [awayTeamId], references: [id])
+  awayTeamId String?
+  awayTeam   Team?  @relation("MatchAway", fields: [awayTeamId], references: [id])
 
   winnerId String?
   winner   Team?   @relation("MatchWinner", fields: [winnerId], references: [id])

@@ -4,11 +4,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, { params }: Params) {
+  const { id } = await params;
   const tournament = await prisma.tournament.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       admin: { select: { id: true, name: true } },
       teams: {
@@ -52,15 +53,26 @@ export async function GET(_req: Request, { params }: Params) {
   return NextResponse.json(tournament);
 }
 
+const evenNumber = z.number().int().min(2).refine((n) => n % 2 === 0, {
+  message: "Los puntos deben ser un número par",
+});
+
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
   status: z.enum(["DRAFT", "REGISTRATION", "IN_PROGRESS", "FINISHED"]).optional(),
-  startDate: z.string().datetime().nullable().optional(),
-  endDate: z.string().datetime().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  matchPoints: evenNumber.optional(),
+  qualifyPerGroup: z.number().int().min(1).max(8).optional(),
+  playersPerTeam: z.number().int().min(1).max(3).optional(),
+  seriesFormat: z.enum(["SINGLE", "BEST_OF_3"]).optional(),
+  regularGamePoints: evenNumber.optional(),
+  tiebreakerPoints: evenNumber.optional(),
 });
 
 export async function PATCH(req: Request, { params }: Params) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
@@ -69,15 +81,17 @@ export async function PATCH(req: Request, { params }: Params) {
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
   }
 
+  const { startDate, endDate, ...rest } = parsed.data;
+
   const tournament = await prisma.tournament.update({
-    where: { id: params.id },
+    where: { id },
     data: {
-      ...parsed.data,
-      startDate: parsed.data.startDate ? new Date(parsed.data.startDate) : undefined,
-      endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : undefined,
+      ...rest,
+      ...(startDate !== undefined ? { startDate: startDate ? new Date(startDate) : null } : {}),
+      ...(endDate !== undefined ? { endDate: endDate ? new Date(endDate) : null } : {}),
     },
   });
 
@@ -85,11 +99,12 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  await prisma.tournament.delete({ where: { id: params.id } });
+  await prisma.tournament.delete({ where: { id } });
   return new NextResponse(null, { status: 204 });
 }

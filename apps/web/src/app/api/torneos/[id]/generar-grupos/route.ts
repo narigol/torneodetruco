@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma, TournamentFormat } from "@tdt/db";
 import { z } from "zod";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 const schema = z.object({
   numGroups: z.number().int().min(2).max(16),
@@ -20,6 +20,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export async function POST(req: Request, { params }: Params) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
@@ -32,7 +33,7 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   const tournament = await prisma.tournament.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { teams: true, groups: true },
   });
 
@@ -54,7 +55,6 @@ export async function POST(req: Request, { params }: Params) {
   const { numGroups } = parsed.data;
   const shuffled = shuffle(tournament.teams);
 
-  // Crear grupos con letra (A, B, C…)
   const groupLetters = Array.from({ length: numGroups }, (_, i) =>
     String.fromCharCode(65 + i)
   );
@@ -66,7 +66,7 @@ export async function POST(req: Request, { params }: Params) {
 
       const group = await tx.group.create({
         data: {
-          tournamentId: params.id,
+          tournamentId: id,
           name: `Grupo ${groupLetters[g]}`,
           standings: {
             create: teamsInGroup.map((t) => ({ teamId: t.id })),
@@ -74,12 +74,11 @@ export async function POST(req: Request, { params }: Params) {
         },
       });
 
-      // Generar partidos round-robin dentro del grupo
       const matchData = [];
       for (let i = 0; i < teamsInGroup.length; i++) {
         for (let j = i + 1; j < teamsInGroup.length; j++) {
           matchData.push({
-            tournamentId: params.id,
+            tournamentId: id,
             groupId: group.id,
             phase: "GROUP" as const,
             round: 1,

@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma, TournamentFormat, Phase } from "@tdt/db";
+import { createPhaseMatches } from "@/lib/bracket";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 function phaseForTeamCount(count: number): Phase {
   if (count <= 2) return "FINAL";
@@ -22,13 +23,14 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export async function POST(_req: Request, { params }: Params) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
   const tournament = await prisma.tournament.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { teams: true, groups: true },
   });
 
@@ -41,25 +43,22 @@ export async function POST(_req: Request, { params }: Params) {
   }
 
   const existingKnockout = await prisma.match.count({
-    where: { tournamentId: params.id, groupId: null },
+    where: { tournamentId: id, groupId: null },
   });
 
   if (existingKnockout > 0) {
     return NextResponse.json({ error: "El bracket ya fue generado" }, { status: 400 });
   }
 
-  // Para GROUPS_AND_KNOCKOUT: usar los clasificados de cada grupo (top 2)
-  // Para SINGLE_ELIMINATION: usar todos los equipos
   let teamsForBracket = tournament.teams;
 
   if (tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT) {
     const standings = await prisma.groupStanding.findMany({
-      where: { group: { tournamentId: params.id } },
+      where: { group: { tournamentId: id } },
       orderBy: [{ points: "desc" }, { wins: "desc" }],
       include: { group: true },
     });
 
-    // Top 2 por grupo
     const qualifiedIds = new Set<string>();
     const groupMap = new Map<string, typeof standings>();
 
@@ -70,7 +69,7 @@ export async function POST(_req: Request, { params }: Params) {
     }
 
     for (const [, arr] of groupMap) {
-      arr.slice(0, 2).forEach((s) => qualifiedIds.add(s.teamId));
+      arr.slice(0, tournament.qualifyPerGroup).forEach((s) => qualifiedIds.add(s.teamId));
     }
 
     teamsForBracket = tournament.teams.filter((t) => qualifiedIds.has(t.id));
@@ -86,19 +85,7 @@ export async function POST(_req: Request, { params }: Params) {
   const shuffled = shuffle(teamsForBracket);
   const phase = phaseForTeamCount(shuffled.length);
 
-  // Crear partidos en pares (bye si número impar)
-  const matchCreates = [];
-  for (let i = 0; i < shuffled.length - 1; i += 2) {
-    matchCreates.push({
-      tournamentId: params.id,
-      phase,
-      round: Math.floor(i / 2) + 1,
-      homeTeamId: shuffled[i].id,
-      awayTeamId: shuffled[i + 1].id,
-    });
-  }
+  await createPhaseMatches(prisma.match, id, phase, shuffled.map((t) => t.id));
 
-  await prisma.match.createMany({ data: matchCreates });
-
-  return NextResponse.json({ created: matchCreates.length });
+  return NextResponse.json({ created: Math.ceil(shuffled.length / 2) });
 }

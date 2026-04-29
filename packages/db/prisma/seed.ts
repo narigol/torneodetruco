@@ -10,7 +10,7 @@ async function main() {
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {},
-    create: { email: adminEmail, name: "Admin", password: adminPwd, role: "ADMIN" },
+    create: { email: adminEmail, name: "Admin", password: adminPwd, role: "ADMIN", plan: "PRO" },
   });
   console.log(`✓ Admin: ${adminEmail} / admin1234`);
 
@@ -29,6 +29,21 @@ async function main() {
     "Juan Pérez", "Carlos García", "Miguel López", "Roberto Martínez",
     "Diego Sánchez", "Gustavo Rodríguez", "Pablo González", "Hernán Díaz",
     "Fernando Torres", "Martín Flores", "Ariel Moreno", "Javier Ruiz",
+    // 50 jugadores adicionales
+    "Lucas Romero", "Matías Herrera", "Nicolás Castro", "Sebastián Ortiz",
+    "Emiliano Vargas", "Rodrigo Medina", "Facundo Suárez", "Leandro Ríos",
+    "Maximiliano Guerrero", "Ezequiel Reyes", "Ignacio Blanco", "Tomás Acosta",
+    "Agustín Mendoza", "Bruno Delgado", "Gonzalo Ramos", "Iván Navarro",
+    "Ramiro Cabrera", "Adrián Molina", "Cristian Peña", "Damián Soria",
+    "Esteban Vega", "Federico Peralta", "Gastón Ibáñez", "Héctor Aguirre",
+    "Joaquín Ponce", "Kevin Montes", "Leonardo Vera", "Marcelo Ávila",
+    "Nahuel Rojas", "Omar Carrillo", "Patricio Lara", "Quintín Barrios",
+    "Ricardo Espinoza", "Santiago Fuentes", "Ulises Gómez", "Valentín Pacheco",
+    "Walter Alvarado", "Xavier Bustos", "Yamil Cortez", "Zacarías Duarte",
+    "Alejandro Ferreira", "Benjamín Galván", "César Hurtado", "Daniel Islas",
+    "Eduardo Juárez", "Felipe Leal", "Guillermo Moya", "Hugo Noriega",
+    "Israel Ojeda", "Jorge Palma", "Kristian Quiroga", "Luis Rosales",
+    "Manuel Salazar", "Norberto Tapia", "Oscar Urbina", "Pedro Villareal",
   ];
 
   const jugadores = await Promise.all(

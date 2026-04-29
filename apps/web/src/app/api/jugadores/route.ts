@@ -6,6 +6,9 @@ import { z } from "zod";
 
 const createSchema = z.object({
   name: z.string().min(1).max(100),
+  email: z.string().email().optional().nullable(),
+  phone: z.string().max(30).optional().nullable(),
+  locality: z.string().max(100).optional().nullable(),
 });
 
 export async function GET() {
@@ -30,11 +33,16 @@ export async function POST(req: Request) {
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
   }
 
   const player = await prisma.player.create({
-    data: { name: parsed.data.name },
+    data: {
+      name: parsed.data.name,
+      email: parsed.data.email ?? null,
+      phone: parsed.data.phone ?? null,
+      locality: parsed.data.locality ?? null,
+    },
   });
 
   return NextResponse.json(player, { status: 201 });

@@ -9,19 +9,21 @@ import { TournamentStatusBadge } from "@/components/tournament/TournamentStatusB
 import { TournamentActions } from "@/components/tournament/TournamentActions";
 
 type Props = {
-  params: { id: string };
-  searchParams: { tab?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 };
 
 const TABS = ["equipos", "grupos", "llave"] as const;
 type Tab = (typeof TABS)[number];
 
 export default async function TorneoDetailPage({ params, searchParams }: Props) {
+  const { id } = await params;
+  const { tab: rawTabParam } = await searchParams;
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user?.role === "ADMIN";
 
   const tournament = await prisma.tournament.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       admin: { select: { id: true, name: true } },
       teams: {
@@ -36,7 +38,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
         include: {
           standings: {
             include: { team: { select: { id: true, name: true } } },
-            orderBy: [{ points: "desc" }, { wins: "desc" }],
+            orderBy: [{ wins: "desc" }],
           },
           matches: {
             include: {
@@ -74,7 +76,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     "llave" as Tab,
   ];
 
-  const rawTab = searchParams.tab as Tab | undefined;
+  const rawTab = rawTabParam as Tab | undefined;
   const activeTab: Tab = rawTab && availableTabs.includes(rawTab) ? rawTab : "equipos";
 
   const tabLabels: Record<Tab, string> = {
@@ -86,6 +88,12 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const formatLabel: Record<string, string> = {
     GROUPS_AND_KNOCKOUT: "Grupos + Eliminatoria",
     SINGLE_ELIMINATION: "Eliminación directa",
+  };
+
+  const modalidadLabel: Record<number, string> = {
+    1: "1 vs 1",
+    2: "2 vs 2",
+    3: "3 vs 3",
   };
 
   return (
@@ -105,14 +113,25 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             <div className="flex items-center gap-3 mb-2 flex-wrap">
               <TournamentStatusBadge status={tournament.status} />
               <span className="text-xs text-gray-400">{formatLabel[tournament.format]}</span>
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">
+                {modalidadLabel[tournament.playersPerTeam] ?? `${tournament.playersPerTeam} vs ${tournament.playersPerTeam}`}
+              </span>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 leading-tight">{tournament.name}</h1>
             {tournament.description && (
               <p className="text-gray-500 text-sm mt-1.5">{tournament.description}</p>
             )}
-            <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
+            <div className="flex items-center gap-4 mt-3 text-xs text-gray-400 flex-wrap">
               <span>{tournament._count.teams} equipos</span>
               <span>{tournament._count.matches} partidos</span>
+              {tournament.seriesFormat === "SINGLE" ? (
+                <span>{tournament.matchPoints} pts ({tournament.matchPoints / 2} malas + {tournament.matchPoints / 2} buenas)</span>
+              ) : (
+                <span>Mejor de 3 · J1/J2: {tournament.regularGamePoints} pts · Desempate: {tournament.tiebreakerPoints} pts</span>
+              )}
+              {hasGroupFormat && (
+                <span>Clasifican {tournament.qualifyPerGroup} por grupo</span>
+              )}
               {tournament.startDate && (
                 <span>Inicio: {new Date(tournament.startDate).toLocaleDateString("es-AR")}</span>
               )}
@@ -121,7 +140,15 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
           </div>
 
           {isAdmin && (
-            <div className="shrink-0">
+            <div className="shrink-0 flex flex-col items-end gap-2">
+              {tournament.status !== "FINISHED" && (
+                <Link
+                  href={`/torneos/${tournament.id}/editar`}
+                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  Editar torneo
+                </Link>
+              )}
               <TournamentActions
                 tournamentId={tournament.id}
                 status={tournament.status}
@@ -132,6 +159,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
               />
             </div>
           )}
+
         </div>
       </div>
 
@@ -142,7 +170,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
           return (
             <Link
               key={tab}
-              href={`/torneos/${params.id}?tab=${tab}`}
+              href={`/torneos/${id}?tab=${tab}`}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                 isActive
                   ? "bg-red-600 text-white shadow-sm"
@@ -196,14 +224,29 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       {/* Tab: Grupos */}
       {activeTab === "grupos" && hasGroupFormat && (
         <section>
-          <GroupStandingsTable groups={tournament.groups} isAdmin={isAdmin} />
+          <GroupStandingsTable
+            groups={tournament.groups}
+            isAdmin={isAdmin}
+            qualifyPerGroup={tournament.qualifyPerGroup}
+            seriesFormat={tournament.seriesFormat as "SINGLE" | "BEST_OF_3"}
+            matchPoints={tournament.matchPoints}
+            regularGamePoints={tournament.regularGamePoints}
+            tiebreakerPoints={tournament.tiebreakerPoints}
+          />
         </section>
       )}
 
       {/* Tab: Llave */}
       {activeTab === "llave" && (
         <section>
-          <Bracket matches={tournament.matches} isAdmin={isAdmin} />
+          <Bracket
+            matches={tournament.matches}
+            isAdmin={isAdmin}
+            seriesFormat={tournament.seriesFormat as "SINGLE" | "BEST_OF_3"}
+            matchPoints={tournament.matchPoints}
+            regularGamePoints={tournament.regularGamePoints}
+            tiebreakerPoints={tournament.tiebreakerPoints}
+          />
         </section>
       )}
     </div>

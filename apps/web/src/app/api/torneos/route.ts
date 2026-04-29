@@ -4,11 +4,21 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
 
+const evenNumber = z.number().int().min(2).refine((n) => n % 2 === 0, {
+  message: "Los puntos deben ser un número par",
+});
+
 const createSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional().nullable(),
   format: z.enum(["GROUPS_AND_KNOCKOUT", "SINGLE_ELIMINATION"]),
-  startDate: z.string().datetime().optional().nullable(),
+  startDate: z.string().optional().nullable(),
+  matchPoints: evenNumber.default(30),
+  qualifyPerGroup: z.number().int().min(1).max(8).default(2),
+  playersPerTeam: z.number().int().min(1).max(3).default(2),
+  seriesFormat: z.enum(["SINGLE", "BEST_OF_3"]).default("SINGLE"),
+  regularGamePoints: evenNumber.default(24),
+  tiebreakerPoints: evenNumber.default(30),
 });
 
 export async function GET() {
@@ -31,10 +41,13 @@ export async function POST(req: Request) {
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Datos inválidos" },
+      { status: 400 }
+    );
   }
 
-  const { name, description, format, startDate } = parsed.data;
+  const { name, description, format, startDate, matchPoints, qualifyPerGroup, playersPerTeam, seriesFormat, regularGamePoints, tiebreakerPoints } = parsed.data;
 
   const tournament = await prisma.tournament.create({
     data: {
@@ -42,6 +55,12 @@ export async function POST(req: Request) {
       description,
       format,
       startDate: startDate ? new Date(startDate) : null,
+      matchPoints,
+      qualifyPerGroup,
+      playersPerTeam,
+      seriesFormat,
+      regularGamePoints,
+      tiebreakerPoints,
       adminId: session.user.id,
     },
   });
