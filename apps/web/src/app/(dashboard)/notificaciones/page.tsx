@@ -8,14 +8,14 @@ export default async function NotificacionesPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return null;
 
-  const [notifications, interests] = await Promise.all([
+  const [notifications, interests, userWithPlayer] = await Promise.all([
     prisma.notification.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
       take: 50,
       include: {
         tournament: {
-          select: { id: true, name: true, admin: { select: { name: true } } },
+          select: { id: true, name: true, playersPerTeam: true, admin: { select: { name: true } } },
         },
       },
     }),
@@ -23,9 +23,23 @@ export default async function NotificacionesPage() {
       where: { userId: session.user.id },
       select: { tournamentId: true },
     }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { player: { select: { id: true } } },
+    }),
   ]);
 
   const interestedIds = new Set(interests.map((i) => i.tournamentId));
+
+  // Torneos donde el usuario ya tiene equipo inscripto
+  const enrolledTournamentIds = new Set<string>();
+  if (userWithPlayer?.player) {
+    const teamPlayers = await prisma.teamPlayer.findMany({
+      where: { playerId: userWithPlayer.player.id },
+      select: { team: { select: { tournamentId: true } } },
+    });
+    teamPlayers.forEach((tp) => enrolledTournamentIds.add(tp.team.tournamentId));
+  }
 
   // Fetch invitation statuses for invitation notifications
   const invitationIds = notifications
@@ -74,6 +88,7 @@ export default async function NotificacionesPage() {
               createdAt={n.createdAt.toISOString()}
               message={n.message ?? null}
               alreadyInterested={n.tournamentId ? interestedIds.has(n.tournamentId) : false}
+              alreadyInscripto={n.tournamentId ? enrolledTournamentIds.has(n.tournamentId) : false}
               invitationId={n.invitationId ?? null}
               invitationStatus={n.invitationId ? (invitationStatusMap[n.invitationId] ?? null) : null}
               tournament={n.tournament}

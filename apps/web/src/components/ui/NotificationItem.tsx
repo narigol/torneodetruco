@@ -20,32 +20,66 @@ type Props = {
   createdAt: string;
   message: string | null;
   alreadyInterested: boolean;
+  alreadyInscripto: boolean;
   invitationId: string | null;
   invitationStatus: string | null;
   tournament: {
     id: string;
     name: string;
+    playersPerTeam: number;
     admin: { name: string };
   } | null;
 };
 
 export function NotificationItem({
-  type, read, createdAt, message, alreadyInterested, invitationId, invitationStatus, tournament,
+  type, read, createdAt, message, alreadyInscripto, invitationId, invitationStatus, tournament,
 }: Props) {
-  const [interested, setInterested] = useState(alreadyInterested);
-  const [loading, setLoading] = useState(false);
+  const [inscripto, setInscripto] = useState(alreadyInscripto);
+  const [showForm, setShowForm] = useState(false);
+  const [partnerName, setPartnerName] = useState("");
+  const [partnerDni, setPartnerDni] = useState("");
+  const [partnerEmail, setPartnerEmail] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const cfg = TYPE_LABEL[type] ?? { text: type, color: "bg-gray-100 text-gray-600" };
   const isLocationInvite = type === "LOCATION_INVITE";
   const isInvitation = type === "TOURNAMENT_INVITATION";
+  const needsPartner = (tournament?.playersPerTeam ?? 2) > 1;
 
-  async function toggleInterest() {
+  async function handleInscribirse() {
     if (!tournament) return;
-    setLoading(true);
-    const method = interested ? "DELETE" : "POST";
-    await fetch(`/api/torneos/${tournament.id}/interesado`, { method });
-    setInterested((v) => !v);
-    setLoading(false);
+    setFormError("");
+    if (needsPartner && !partnerName.trim()) {
+      setFormError("El nombre del compañero es obligatorio");
+      return;
+    }
+    setFormLoading(true);
+    const res = await fetch(`/api/torneos/${tournament.id}/inscribirse`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        partnerName: partnerName.trim() || undefined,
+        partnerDni: partnerDni.trim() || undefined,
+        partnerEmail: partnerEmail.trim() || undefined,
+      }),
+    });
+    setFormLoading(false);
+    if (!res.ok) {
+      const data = await res.json();
+      setFormError(data.error ?? "Error al inscribirse");
+      return;
+    }
+    setInscripto(true);
+    setShowForm(false);
+  }
+
+  async function handleCancelar() {
+    if (!tournament) return;
+    setFormLoading(true);
+    await fetch(`/api/torneos/${tournament.id}/inscribirse`, { method: "DELETE" });
+    setFormLoading(false);
+    setInscripto(false);
   }
 
   return (
@@ -84,17 +118,71 @@ export function NotificationItem({
         )}
 
         {isLocationInvite && tournament && (
-          <button
-            onClick={toggleInterest}
-            disabled={loading}
-            className={`mt-2.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 ${
-              interested
-                ? "bg-green-100 text-green-700 hover:bg-red-50 hover:text-red-600"
-                : "bg-purple-600 text-white hover:bg-purple-700"
-            }`}
-          >
-            {loading ? "..." : interested ? "✓ Me apunté — cancelar" : "Aceptar invitación"}
-          </button>
+          <div className="mt-2.5">
+            {inscripto ? (
+              <button
+                onClick={handleCancelar}
+                disabled={formLoading}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 bg-green-100 text-green-700 hover:bg-red-50 hover:text-red-600"
+              >
+                {formLoading ? "..." : "✓ Inscripto — cancelar"}
+              </button>
+            ) : !showForm ? (
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+              >
+                Anotarme
+              </button>
+            ) : (
+              <div className="space-y-2 mt-1">
+                {needsPartner && (
+                  <>
+                    <input
+                      value={partnerName}
+                      onChange={(e) => setPartnerName(e.target.value)}
+                      placeholder="Nombre de tu pareja *"
+                      className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        value={partnerDni}
+                        onChange={(e) => setPartnerDni(e.target.value)}
+                        placeholder="DNI (opcional)"
+                        inputMode="numeric"
+                        className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors"
+                      />
+                      <input
+                        value={partnerEmail}
+                        onChange={(e) => setPartnerEmail(e.target.value)}
+                        placeholder="Email (opcional)"
+                        type="email"
+                        className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors"
+                      />
+                    </div>
+                  </>
+                )}
+                {formError && (
+                  <p className="text-xs text-red-600">{formError}</p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleInscribirse}
+                    disabled={formLoading}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                  >
+                    {formLoading ? "..." : "Confirmar inscripción"}
+                  </button>
+                  <button
+                    onClick={() => { setShowForm(false); setFormError(""); }}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {isInvitation && invitationId && (
