@@ -1,58 +1,112 @@
 "use client";
 
-type Props = { location: string };
+import { useEffect, useRef } from "react";
 
-export function MapaPreview({ location }: Props) {
-  const query = location.trim();
-  if (!query) return null;
+type Props = {
+  location: string;
+  onLocationChange?: (address: string) => void;
+};
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+export function MapaPreview({ location, onLocationChange }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const onChangeRef = useRef(onLocationChange);
 
-  const mapsUrl = query.startsWith("http")
-    ? query
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  useEffect(() => { onChangeRef.current = onLocationChange; }, [onLocationChange]);
 
-  if (apiKey) {
-    const src = `https://www.google.com/maps/embed/v1/search?key=${apiKey}&q=${encodeURIComponent(query)}&language=es`;
-    return (
-      <div>
-        <div className="rounded-xl overflow-hidden border border-gray-100 h-48 mt-3">
-          <iframe
-            src={src}
-            width="100%"
-            height="100%"
-            loading="lazy"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-            className="w-full h-full"
-          />
-        </div>
-        <a
-          href={mapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium"
-        >
-          Ver en Google Maps →
-        </a>
-      </div>
-    );
-  }
+  // Init Leaflet map once
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+
+    let cancelled = false;
+
+    import("leaflet").then((L) => {
+      if (cancelled || !containerRef.current || mapRef.current) return;
+
+      // Fix default icon paths broken by webpack
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+
+      const map = L.map(containerRef.current!).setView([-34.6, -64.0], 5);
+      mapRef.current = map;
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap",
+        maxZoom: 19,
+      }).addTo(map);
+
+      const marker = L.marker([0, 0], { draggable: true });
+      markerRef.current = marker;
+
+      const reverseGeocode = async (lat: number, lng: number) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+            { headers: { "Accept-Language": "es" } }
+          );
+          const data = await res.json();
+          if (data.display_name) onChangeRef.current?.(data.display_name);
+        } catch {}
+      };
+
+      map.on("click", (e: any) => {
+        const { lat, lng } = e.latlng;
+        marker.setLatLng([lat, lng]).addTo(map);
+        reverseGeocode(lat, lng);
+      });
+
+      marker.on("dragend", () => {
+        const { lat, lng } = marker.getLatLng();
+        reverseGeocode(lat, lng);
+      });
+    });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // When location input changes, forward-geocode and move map (debounced)
+  useEffect(() => {
+    const query = location.trim();
+    if (!mapRef.current) return;
+
+    if (!query) {
+      markerRef.current?.remove();
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+          { headers: { "Accept-Language": "es" } }
+        );
+        const data = await res.json();
+        if (data[0]) {
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
+          mapRef.current.setView([lat, lng], 15);
+          markerRef.current?.setLatLng([lat, lng]).addTo(mapRef.current);
+        }
+      } catch {}
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [location]);
 
   return (
-    <a
-      href={mapsUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-2 inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
-    >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-      Ver en Google Maps
-    </a>
+    <>
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      />
+      <div className="rounded-xl overflow-hidden border border-gray-100 h-48 mt-3">
+        <div ref={containerRef} className="w-full h-full" />
+      </div>
+    </>
   );
 }

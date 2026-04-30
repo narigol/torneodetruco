@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { InvitacionActions } from "@/components/ui/InvitacionActions";
 
 const TYPE_LABEL: Record<string, { text: string; color: string }> = {
-  TOURNAMENT_CREATED:  { text: "Nuevo torneo",        color: "bg-blue-100 text-blue-700" },
-  REGISTRATION_OPEN:   { text: "Inscripción abierta", color: "bg-green-100 text-green-700" },
-  TOURNAMENT_STARTED:  { text: "Torneo iniciado",     color: "bg-amber-100 text-amber-700" },
-  TOURNAMENT_FINISHED: { text: "Torneo finalizado",   color: "bg-gray-100 text-gray-600" },
-  LOCATION_INVITE:     { text: "Torneo en tu zona",   color: "bg-purple-100 text-purple-700" },
+  TOURNAMENT_CREATED:    { text: "Nuevo torneo",        color: "bg-blue-100 text-blue-700" },
+  REGISTRATION_OPEN:     { text: "Inscripción abierta", color: "bg-green-100 text-green-700" },
+  TOURNAMENT_STARTED:    { text: "Torneo iniciado",     color: "bg-amber-100 text-amber-700" },
+  TOURNAMENT_FINISHED:   { text: "Torneo finalizado",   color: "bg-gray-100 text-gray-600" },
+  LOCATION_INVITE:       { text: "Torneo en tu zona",   color: "bg-purple-100 text-purple-700" },
+  TOURNAMENT_INVITATION: { text: "Invitación",          color: "bg-purple-100 text-purple-700" },
 };
 
 type Props = {
@@ -16,7 +18,10 @@ type Props = {
   type: string;
   read: boolean;
   createdAt: string;
+  message: string | null;
   alreadyInterested: boolean;
+  invitationId: string | null;
+  invitationStatus: string | null;
   tournament: {
     id: string;
     name: string;
@@ -24,12 +29,15 @@ type Props = {
   } | null;
 };
 
-export function NotificationItem({ type, read, createdAt, alreadyInterested, tournament }: Props) {
+export function NotificationItem({
+  type, read, createdAt, message, alreadyInterested, invitationId, invitationStatus, tournament,
+}: Props) {
   const [interested, setInterested] = useState(alreadyInterested);
   const [loading, setLoading] = useState(false);
 
   const cfg = TYPE_LABEL[type] ?? { text: type, color: "bg-gray-100 text-gray-600" };
   const isLocationInvite = type === "LOCATION_INVITE";
+  const isInvitation = type === "TOURNAMENT_INVITATION";
 
   async function toggleInterest() {
     if (!tournament) return;
@@ -56,13 +64,12 @@ export function NotificationItem({ type, read, createdAt, alreadyInterested, tou
           </span>
           <span className="text-xs text-gray-400">
             {new Date(createdAt).toLocaleDateString("es-AR", {
-              day: "numeric",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
+              day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
             })}
           </span>
         </div>
+
+        {message && <p className="text-sm text-gray-700 mb-0.5">{message}</p>}
 
         {tournament && (
           <>
@@ -88,6 +95,13 @@ export function NotificationItem({ type, read, createdAt, alreadyInterested, tou
           >
             {loading ? "..." : interested ? "✓ Me apunté — cancelar" : "Aceptar invitación"}
           </button>
+        )}
+
+        {isInvitation && invitationId && (
+          <InvitacionActions
+            invitacionId={invitationId}
+            currentStatus={invitationStatus ?? "PENDING"}
+          />
         )}
       </div>
     </div>

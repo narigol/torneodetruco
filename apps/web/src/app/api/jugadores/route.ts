@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
-import { findUserToLink } from "@/lib/player-link";
 
 const createSchema = z.object({
   name: z.string().min(1).max(100),
@@ -29,8 +28,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   const body = await req.json();
@@ -39,10 +38,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos invalidos" }, { status: 400 });
   }
 
-  const existingUser = await findUserToLink(parsed.data.email, parsed.data.dni);
-  if (existingUser?.player) {
-    console.warn(`[jugadores] user ${existingUser.id} ya tiene player vinculado, se ignora`);
+  if (parsed.data.dni) {
+    const dniExists = await prisma.player.findFirst({ where: { dni: parsed.data.dni } });
+    if (dniExists) {
+      return NextResponse.json({ error: `Ya existe un jugador con DNI ${parsed.data.dni}` }, { status: 409 });
+    }
   }
+
+  const existingUser = parsed.data.email
+    ? await prisma.user.findUnique({
+        where: { email: parsed.data.email },
+        select: { id: true, player: { select: { id: true } } },
+      })
+    : null;
 
   const player = await prisma.player.create({
     data: {

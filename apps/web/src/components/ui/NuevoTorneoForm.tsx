@@ -2,15 +2,25 @@
 
 import { useState } from "react";
 import { MapaPreview } from "./MapaPreview";
+import { ArgentinaGeoSelect } from "./ArgentinaGeoSelect";
 import { useRouter } from "next/navigation";
 
-export function NuevoTorneoForm() {
+type ReglamentoOption = { id: string; nombre: string };
+
+type Props = {
+  reglamentos: ReglamentoOption[];
+};
+
+export function NuevoTorneoForm({ reglamentos }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [format, setFormat] = useState("GROUPS_AND_KNOCKOUT");
   const [location, setLocation] = useState("");
+  const [locality, setLocality] = useState("");
+  const [province, setProvince] = useState("");
+  const [reglamentoId, setReglamentoId] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,7 +38,11 @@ export function NuevoTorneoForm() {
         startDate: form.get("startDate") || null,
         startTime: form.get("startTime") || null,
         location: location.trim() || null,
+        locality: locality.trim() || null,
+        province: province || null,
         playersPerTeam: Number(form.get("playersPerTeam")),
+        maxPlayers: form.get("maxPlayers") ? Number(form.get("maxPlayers")) : null,
+        reglamentoId: reglamentoId || null,
       }),
     });
 
@@ -105,7 +119,14 @@ export function NuevoTorneoForm() {
             />
           </div>
 
-          <MapaPreview location={location} />
+          <ArgentinaGeoSelect
+            locality={locality}
+            province={province}
+            onLocalityChange={setLocality}
+            onProvinceChange={setProvince}
+          />
+
+          <MapaPreview location={location} onLocationChange={setLocation} />
         </div>
 
         {/* Tarjeta derecha — Configuración del torneo */}
@@ -139,6 +160,34 @@ export function NuevoTorneoForm() {
             </select>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Cupo máximo de jugadores</label>
+            <input
+              name="maxPlayers"
+              type="number"
+              min="2"
+              step="1"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
+              placeholder="Sin límite"
+            />
+            <p className="text-xs text-gray-400 mt-1">Opcional. Impide inscribir más jugadores al alcanzar el límite.</p>
+          </div>
+
+          {reglamentos.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Reglamento</label>
+              <select
+                value={reglamentoId}
+                onChange={(e) => setReglamentoId(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
+              >
+                <option value="">Sin reglamento</option>
+                {reglamentos.map((r) => (
+                  <option key={r.id} value={r.id}>{r.nombre}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 

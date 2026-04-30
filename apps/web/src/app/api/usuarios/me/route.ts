@@ -8,6 +8,10 @@ import { prisma } from "@tdt/db";
 const schema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
+  dni: z.string().max(20).optional().nullable(),
+  phone: z.string().max(30).optional().nullable(),
+  locality: z.string().max(100).optional().nullable(),
+  province: z.string().max(100).optional().nullable(),
   currentPassword: z.string().optional(),
   newPassword: z.string().min(6).optional(),
 }).refine(
@@ -28,26 +32,25 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
-  const { name, email, currentPassword, newPassword } = parsed.data;
+  const { name, email, dni, phone, locality, province, currentPassword, newPassword } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
 
-  // Email uniqueness check (allow keeping same email)
   if (email !== user.email) {
     const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return NextResponse.json({ error: "El email ya está en uso" }, { status: 409 });
-    }
+    if (existing) return NextResponse.json({ error: "El email ya está en uso" }, { status: 409 });
   }
 
-  // Password change
+  if (dni && dni !== user.dni) {
+    const existing = await prisma.user.findUnique({ where: { dni } });
+    if (existing) return NextResponse.json({ error: "El DNI ya está en uso" }, { status: 409 });
+  }
+
   let hashedPassword: string | undefined;
   if (newPassword) {
     const valid = await bcrypt.compare(currentPassword!, user.password);
-    if (!valid) {
-      return NextResponse.json({ error: "La contraseña actual es incorrecta" }, { status: 400 });
-    }
+    if (!valid) return NextResponse.json({ error: "La contraseña actual es incorrecta" }, { status: 400 });
     hashedPassword = await bcrypt.hash(newPassword, 10);
   }
 
@@ -56,6 +59,11 @@ export async function PATCH(req: Request) {
     data: {
       name,
       email,
+      dni: dni ?? null,
+      phone: phone ?? null,
+      locality: locality ?? null,
+      province: province ?? null,
+      country: "Argentina",
       ...(hashedPassword ? { password: hashedPassword } : {}),
     },
   });

@@ -15,7 +15,7 @@ export default async function EditarJugadorPage({ params }: Params) {
   if (!jugador) notFound();
 
   return (
-    <div className="max-w-md">
+    <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Editar jugador</h1>
       <JugadorForm
         initial={{

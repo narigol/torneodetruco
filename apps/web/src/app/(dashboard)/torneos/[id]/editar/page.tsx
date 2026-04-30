@@ -23,14 +23,29 @@ export default async function EditarTorneoPage({ params }: Params) {
       startDate: true,
       startTime: true,
       location: true,
+      locality: true,
+      province: true,
       playersPerTeam: true,
+      maxPlayers: true,
       adminId: true,
+      reglamentoId: true,
     },
   });
 
   if (!torneo) notFound();
   if (!canManageTournament(session, torneo.adminId)) redirect(`/torneos/${id}`);
   if (torneo.status === "FINISHED") redirect(`/torneos/${id}`);
+
+  const reglamentos = await prisma.reglamento.findMany({
+    where: {
+      OR: [
+        { adminId: session!.user.id },
+        { admin: { role: "ADMIN" } },
+      ],
+    },
+    select: { id: true, nombre: true },
+    orderBy: { nombre: "asc" },
+  });
 
   return (
     <div className="max-w-4xl">
@@ -46,6 +61,7 @@ export default async function EditarTorneoPage({ params }: Params) {
           ...torneo,
           startDate: torneo.startDate ? torneo.startDate.toISOString() : null,
         }}
+        reglamentos={reglamentos}
       />
     </div>
   );

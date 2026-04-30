@@ -37,7 +37,7 @@ export default async function NuevoEquipoPage({ params }: Params) {
   const players = await prisma.player.findMany({
     where: { id: { notIn: [...assignedIds] } },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, userId: true },
+    select: { id: true, name: true, dni: true, userId: true },
   });
 
   const sortedPlayers = [...players].sort((a, b) => {
@@ -56,7 +56,7 @@ export default async function NuevoEquipoPage({ params }: Params) {
     : "Tríos (3 vs 3)";
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-4xl">
       <div className="mb-6">
         <Link
           href={`/torneos/${id}`}
@@ -70,9 +70,10 @@ export default async function NuevoEquipoPage({ params }: Params) {
 
       <NuevoEquipoForm
         tournamentId={id}
-        players={sortedPlayers.map(({ id, name, userId }) => ({
+        players={sortedPlayers.map(({ id, name, dni, userId }) => ({
           id,
           name,
+          dni: dni ?? null,
           isFollowed: userId ? followedIds.has(userId) : false,
         }))}
         playersPerTeam={tournament.playersPerTeam}

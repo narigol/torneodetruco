@@ -4,15 +4,25 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Admin
+  // Super admin (Ezequiel Berterretche)
+  const superAdminEmail = "ezebedlp@gmail.com";
+  const superAdminPwd = await bcrypt.hash("admin1234", 10);
+  const superAdmin = await prisma.user.upsert({
+    where: { email: superAdminEmail },
+    update: { role: "ADMIN", plan: "PRO" },
+    create: { email: superAdminEmail, name: "Ezequiel Berterretche", password: superAdminPwd, role: "ADMIN", plan: "PRO" },
+  });
+  console.log(`✓ Super Admin: ${superAdminEmail}`);
+
+  // Organizador demo
   const adminEmail = "admin@tdt.com";
   const adminPwd = await bcrypt.hash("admin1234", 10);
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
-    create: { email: adminEmail, name: "Admin", password: adminPwd, role: "ADMIN", plan: "PRO" },
+    update: { role: "ORGANIZER" },
+    create: { email: adminEmail, name: "Organizador Demo", password: adminPwd, role: "ORGANIZER", plan: "PRO" },
   });
-  console.log(`✓ Admin: ${adminEmail} / admin1234`);
+  console.log(`✓ Organizador: ${adminEmail} / admin1234`);
 
   // Jugador demo
   const playerEmail = "jugador@tdt.com";

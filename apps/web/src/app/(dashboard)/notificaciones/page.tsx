@@ -26,6 +26,21 @@ export default async function NotificacionesPage() {
   ]);
 
   const interestedIds = new Set(interests.map((i) => i.tournamentId));
+
+  // Fetch invitation statuses for invitation notifications
+  const invitationIds = notifications
+    .map((n) => n.invitationId)
+    .filter((id): id is string => !!id);
+
+  const invitations = invitationIds.length > 0
+    ? await prisma.invitation.findMany({
+        where: { id: { in: invitationIds } },
+        select: { id: true, status: true },
+      })
+    : [];
+
+  const invitationStatusMap = Object.fromEntries(invitations.map((i) => [i.id, i.status]));
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
@@ -57,7 +72,10 @@ export default async function NotificacionesPage() {
               type={n.type}
               read={n.read}
               createdAt={n.createdAt.toISOString()}
+              message={n.message ?? null}
               alreadyInterested={n.tournamentId ? interestedIds.has(n.tournamentId) : false}
+              invitationId={n.invitationId ?? null}
+              invitationStatus={n.invitationId ? (invitationStatusMap[n.invitationId] ?? null) : null}
               tournament={n.tournament}
             />
           ))}

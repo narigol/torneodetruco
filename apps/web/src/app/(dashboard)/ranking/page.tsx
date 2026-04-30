@@ -5,7 +5,7 @@ import { RankingConfigForm } from "@/components/ui/RankingConfigForm";
 
 export default async function RankingPage() {
   const session = await getServerSession(authOptions);
-  const isAdmin = session?.user?.role === "ADMIN";
+  const isAdmin = session?.user?.role === "ADMIN"; // solo superadmin ve config
 
   const config = await getRankingConfig();
   const rows = await getRankingRows(config);
@@ -71,7 +71,7 @@ export default async function RankingPage() {
                   <td className="px-5 py-4">
                     <div className="font-medium text-gray-900">{row.userName}</div>
                     <div className="text-xs text-gray-400 mt-1">
-                      {row.userEmail} · {row.role === "ADMIN" ? "Organizador" : "Jugador"}
+                      {row.userEmail} · {row.role === "ADMIN" || row.role === "ORGANIZER" ? "Organizador" : "Jugador"}
                     </div>
                   </td>
                   <td className="px-5 py-4 text-right">

@@ -17,7 +17,7 @@ export default function LoginPage() {
 
     const form = new FormData(e.currentTarget);
     const result = await signIn("credentials", {
-      email: form.get("email"),
+      identifier: form.get("identifier"),
       password: form.get("password"),
       redirect: false,
     });
@@ -25,7 +25,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Email o contraseña incorrectos");
+      setError("Email/DNI o contraseña incorrectos. Si tu cuenta está pendiente de activación, registrate con tu email o DNI.");
     } else {
       router.push("/torneos");
       router.refresh();
@@ -41,7 +41,6 @@ export default function LoginPage() {
     const email = form.get("email") as string;
     const password = form.get("password") as string;
     const confirm = form.get("confirm") as string;
-    const dni = (form.get("dni") as string) || null;
 
     if (password !== confirm) {
       setError("Las contraseñas no coinciden");
@@ -53,7 +52,15 @@ export default function LoginPage() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, dni }),
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        dni: form.get("dni") || null,
+        locality: form.get("locality") || null,
+        province: form.get("province") || null,
+        country: "Argentina",
+      }),
     });
 
     if (!res.ok) {
@@ -64,7 +71,7 @@ export default function LoginPage() {
     }
 
     const result = await signIn("credentials", {
-      email,
+      identifier: email,
       password,
       redirect: false,
     });
@@ -152,14 +159,14 @@ export default function LoginPage() {
 
               <form onSubmit={handleLogin} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email o DNI</label>
                   <input
-                    name="email"
-                    type="email"
+                    name="identifier"
+                    type="text"
                     required
-                    autoComplete="email"
+                    autoComplete="username"
                     className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
-                    placeholder="tu@email.com"
+                    placeholder="tu@email.com o 12345678"
                   />
                 </div>
 
@@ -222,30 +229,51 @@ export default function LoginPage() {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Email *</label>
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+                      placeholder="tu@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">DNI</label>
+                    <input
+                      name="dni"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+                      placeholder="12345678"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Localidad</label>
                   <input
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
+                    name="locality"
+                    type="text"
+                    autoComplete="address-level2"
                     className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
-                    placeholder="tu@email.com"
+                    placeholder="Ciudad o localidad"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    DNI <span className="text-gray-400 font-normal">(opcional)</span>
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Provincia</label>
                   <input
-                    name="dni"
+                    name="province"
                     type="text"
-                    autoComplete="off"
+                    autoComplete="address-level1"
                     className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
-                    placeholder="Ej: 30123456"
+                    placeholder="Ej: Buenos Aires"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Si el admin ya te cargó como jugador, te vinculamos automáticamente</p>
                 </div>
 
                 <div>

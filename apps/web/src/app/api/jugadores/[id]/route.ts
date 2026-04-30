@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
-import { findUserToLink } from "@/lib/player-link";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -43,7 +42,19 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos invalidos" }, { status: 400 });
   }
 
-  const existingUser = await findUserToLink(parsed.data.email, parsed.data.dni);
+  if (parsed.data.dni) {
+    const dniExists = await prisma.player.findFirst({ where: { dni: parsed.data.dni, NOT: { id } } });
+    if (dniExists) {
+      return NextResponse.json({ error: `Ya existe un jugador con DNI ${parsed.data.dni}` }, { status: 409 });
+    }
+  }
+
+  const existingUser = parsed.data.email
+    ? await prisma.user.findUnique({
+        where: { email: parsed.data.email },
+        select: { id: true, player: { select: { id: true } } },
+      })
+    : null;
 
   const player = await prisma.player.update({
     where: { id },

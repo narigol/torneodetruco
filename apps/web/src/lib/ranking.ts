@@ -2,12 +2,21 @@ import { Phase, prisma } from "@tdt/db";
 
 export const RANKING_CONFIG_KEY = "global";
 
+const DEFAULT_CONFIG = {
+  key: RANKING_CONFIG_KEY,
+  tournamentPlayedPoints: 10,
+  matchPlayedPoints: 3,
+  groupWinPoints: 5,
+  roundOf16WinPoints: 8,
+  quarterfinalWinPoints: 12,
+  semifinalWinPoints: 18,
+  finalWinPoints: 30,
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
+};
+
 export async function getRankingConfig() {
-  return prisma.rankingConfig.upsert({
-    where: { key: RANKING_CONFIG_KEY },
-    update: {},
-    create: { key: RANKING_CONFIG_KEY },
-  });
+  return (await prisma.rankingConfig.findFirst({ where: { key: RANKING_CONFIG_KEY } })) ?? DEFAULT_CONFIG;
 }
 
 type RankingConfig = Awaited<ReturnType<typeof getRankingConfig>>;
@@ -224,30 +233,20 @@ export async function getRankingRows(config: RankingConfig): Promise<RankingRow[
 
 export function getPhaseLabel(phase: Phase): string {
   switch (phase) {
-    case "GROUP":
-      return "Grupos";
-    case "ROUND_OF_16":
-      return "Octavos";
-    case "QUARTERFINAL":
-      return "Cuartos";
-    case "SEMIFINAL":
-      return "Semis";
-    case "FINAL":
-      return "Final";
+    case "GROUP":       return "Grupos";
+    case "ROUND_OF_16": return "Octavos";
+    case "QUARTERFINAL":return "Cuartos";
+    case "SEMIFINAL":   return "Semis";
+    case "FINAL":       return "Final";
   }
 }
 
 export function getPhaseConfigLabel(phase: Phase): string {
   switch (phase) {
-    case "GROUP":
-      return "Victoria en grupos";
-    case "ROUND_OF_16":
-      return "Victoria en octavos";
-    case "QUARTERFINAL":
-      return "Victoria en cuartos";
-    case "SEMIFINAL":
-      return "Victoria en semifinal";
-    case "FINAL":
-      return "Victoria en final";
+    case "GROUP":       return "Victoria en grupos";
+    case "ROUND_OF_16": return "Victoria en octavos";
+    case "QUARTERFINAL":return "Victoria en cuartos";
+    case "SEMIFINAL":   return "Victoria en semifinal";
+    case "FINAL":       return "Victoria en final";
   }
 }

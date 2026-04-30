@@ -15,7 +15,7 @@ const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
 const evenNumber = z.number().int().min(0);
 
 const singleSchema = z.object({
-  seriesFormat: z.literal("SINGLE").optional(),
+  seriesFormat: z.literal("SINGLE"),
   matchPoints: z.number().int().min(1).optional(),
   homeScore: z.number().int().min(0),
   awayScore: z.number().int().min(0),
@@ -29,7 +29,7 @@ const best3Schema = z.object({
   games: z.array(gameSchema).min(2).max(3),
 });
 
-const bodySchema = z.union([best3Schema, singleSchema]);
+const bodySchema = z.discriminatedUnion("seriesFormat", [singleSchema, best3Schema]);
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -108,19 +108,18 @@ export async function PATCH(req: Request, { params }: Params) {
     awayScore = awayWins;
     gamesData = games;
   } else {
-    const d = data as z.infer<typeof singleSchema>;
-    homeScore = d.homeScore;
-    awayScore = d.awayScore;
+    homeScore = data.homeScore;
+    awayScore = data.awayScore;
 
     if (homeScore === awayScore) {
       return NextResponse.json({ error: "No puede haber empate en truco" }, { status: 400 });
     }
 
-    if (d.matchPoints !== undefined) {
+    if (data.matchPoints !== undefined) {
       const maxScore = Math.max(homeScore, awayScore);
-      if (maxScore !== d.matchPoints) {
+      if (maxScore !== data.matchPoints) {
         return NextResponse.json(
-          { error: `El ganador debe tener exactamente ${d.matchPoints} puntos` },
+          { error: `El ganador debe tener exactamente ${data.matchPoints} puntos` },
           { status: 400 }
         );
       }
