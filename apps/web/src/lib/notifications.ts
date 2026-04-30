@@ -21,3 +21,47 @@ export async function notifyFollowers(
     })),
   });
 }
+
+export async function notifyByLocation(organizerId: string, tournamentId: string) {
+  // Find organizer's province/locality via their linked player
+  const organizer = await prisma.user.findUnique({
+    where: { id: organizerId },
+    select: { player: { select: { provincia: true, locality: true } } },
+  });
+
+  const provincia = organizer?.player?.provincia;
+  if (!provincia) return;
+
+  const locality = organizer?.player?.locality;
+
+  // Find existing notification recipients to avoid duplicates (e.g. followers)
+  const alreadyNotified = await prisma.notification.findMany({
+    where: { tournamentId },
+    select: { userId: true },
+  });
+  const alreadyNotifiedIds = new Set(alreadyNotified.map((n) => n.userId));
+
+  // Find users who opted in and are in the same province (and locality if set)
+  const targets = await prisma.user.findMany({
+    where: {
+      id: { not: organizerId },
+      acceptsLocationInvites: true,
+      player: {
+        provincia,
+        ...(locality ? { locality } : {}),
+      },
+    },
+    select: { id: true },
+  });
+
+  const newTargets = targets.filter((u) => !alreadyNotifiedIds.has(u.id));
+  if (newTargets.length === 0) return;
+
+  await prisma.notification.createMany({
+    data: newTargets.map((u) => ({
+      userId: u.id,
+      tournamentId,
+      type: "LOCATION_INVITE" as NotificationType,
+    })),
+  });
+}

@@ -24,6 +24,7 @@ export function RankingConfigForm({ initial }: Props) {
 
   function updateValue<K extends keyof typeof values>(key: K, value: number) {
     setValues((prev) => ({ ...prev, [key]: value }));
+    setSuccess(false);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -42,7 +43,7 @@ export function RankingConfigForm({ initial }: Props) {
 
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error ?? "No pudimos guardar la configuracion");
+      setError(data.error ?? "No pudimos guardar la configuración");
       return;
     }
 
@@ -63,9 +64,9 @@ export function RankingConfigForm({ initial }: Props) {
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-gray-100 rounded-2xl p-6">
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-gray-900">Configuracion del ranking</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Configuración del ranking</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Ajusta cuanto suma cada participacion y cada victoria por fase.
+          Ajustá cuánto suma cada participación y cada victoria por fase.
         </p>
       </div>
 
@@ -95,7 +96,7 @@ export function RankingConfigForm({ initial }: Props) {
 
       {success && (
         <div className="mt-4 text-sm text-green-700 bg-green-50 border border-green-100 px-3.5 py-3 rounded-xl">
-          Configuracion guardada.
+          Configuración guardada.
         </div>
       )}
 
@@ -105,7 +106,7 @@ export function RankingConfigForm({ initial }: Props) {
           disabled={loading}
           className="px-5 py-2.5 bg-red-600 text-white rounded-xl font-semibold text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
-          {loading ? "Guardando..." : "Guardar configuracion"}
+          {loading ? "Guardando..." : "Guardar configuración"}
         </button>
       </div>
     </form>

@@ -12,6 +12,9 @@ export default async function TorneosPage() {
 
   const torneos = await prisma.tournament.findMany({
     orderBy: { createdAt: "desc" },
+    where: isAdmin
+      ? undefined
+      : { OR: [{ published: true }, ...(userId ? [{ adminId: userId }] : [])] },
     include: {
       admin: { select: { name: true } },
       _count: { select: { teams: true, matches: true } },

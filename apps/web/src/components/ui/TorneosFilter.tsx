@@ -9,6 +9,7 @@ type Torneo = {
   status: string;
   format: string;
   adminId: string;
+  published: boolean;
   admin: { name: string };
   _count: { teams: number; matches: number };
 };
@@ -115,7 +116,12 @@ export function TorneosFilter({ torneos, userId, isAdmin }: Props) {
                     <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
                     {sc.label}
                   </div>
-                  <span className="text-xs text-gray-300">{FORMAT_LABEL[t.format]}</span>
+                  <div className="flex items-center gap-1.5">
+                    {t.published && (
+                      <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">Público</span>
+                    )}
+                    <span className="text-xs text-gray-300">{FORMAT_LABEL[t.format]}</span>
+                  </div>
                 </div>
                 <h2 className="font-semibold text-gray-900 group-hover:text-red-700 transition-colors mb-4 leading-snug">
                   {t.name}

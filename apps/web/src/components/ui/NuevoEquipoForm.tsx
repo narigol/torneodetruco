@@ -77,7 +77,7 @@ export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props
     setError("");
 
     if (selectedIds.length === 0) {
-      setError("Selecciona al menos un jugador");
+      setError("Seleccioná al menos un jugador");
       return;
     }
 
@@ -115,7 +115,7 @@ export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Jugadores *{" "}
           <span className="text-gray-400 font-normal">
-            (selecciona exactamente {playersPerTeam})
+            (seleccioná exactamente {playersPerTeam})
           </span>
         </label>
 
@@ -126,15 +126,15 @@ export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props
           placeholder="Buscar por nombre o apellido"
         />
 
-        {hasFollowedPlayers && !deferredQuery.trim() && (
+        {hasFollowedPlayers && (
           <p className="text-xs text-gray-500 mb-2">
-            Primero se muestran los jugadores asociados a usuarios que seguis.
+            Los jugadores marcados con "Lo seguís" aparecen primero.
           </p>
         )}
 
         {players.length === 0 ? (
           <p className="text-sm text-gray-400 py-3">
-            No hay jugadores registrados. Crea jugadores primero.
+            No hay jugadores registrados. Creá jugadores primero.
           </p>
         ) : visiblePlayers.length === 0 ? (
           <p className="text-sm text-gray-400 py-3">
@@ -188,10 +188,10 @@ export function NuevoEquipoForm({ tournamentId, players, playersPerTeam }: Props
           value={teamName}
           onChange={handleNameChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-          placeholder="Selecciona jugadores para generar el nombre"
+          placeholder="Seleccioná jugadores para generar el nombre"
         />
         {!nameEdited && selectedIds.length > 0 && (
-          <p className="text-xs text-gray-400 mt-1">Generado automaticamente - podes editarlo</p>
+          <p className="text-xs text-gray-400 mt-1">Generado automáticamente · podés editarlo</p>
         )}
       </div>
 

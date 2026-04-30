@@ -48,33 +48,39 @@ enum NotificationType {
   REGISTRATION_OPEN
   TOURNAMENT_STARTED
   TOURNAMENT_FINISHED
+  LOCATION_INVITE
 }
 
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  name           String
-  password       String
-  role           Role      @default(PLAYER)
-  plan           Plan      @default(FREE)
-  planExpiresAt  DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  name                  String
+  password              String
+  role                  Role      @default(PLAYER)
+  plan                  Plan      @default(FREE)
+  planExpiresAt         DateTime?
+  dni                   String?   @unique
+  acceptsLocationInvites Boolean  @default(false)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   player     Player?
   tournaments Tournament[] @relation("TournamentAdmin")
 
-  followers     Follow[]       @relation("Following")
-  following     Follow[]       @relation("Follower")
+  followers     Follow[]              @relation("Following")
+  following     Follow[]              @relation("Follower")
   notifications Notification[]
+  interests     TournamentInterest[]
 }
 
 model Player {
   id        String   @id @default(cuid())
   name      String
   email     String?
+  dni       String?  @unique
   phone     String?
   locality  String?
+  provincia String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -90,6 +96,7 @@ model Tournament {
   description String?
   format      TournamentFormat
   status      TournamentStatus @default(DRAFT)
+  published   Boolean          @default(false)
   startDate       DateTime?
   endDate         DateTime?
   startTime       String?
@@ -106,6 +113,7 @@ model Tournament {
   groups Group[]
   matches Match[]
   notifications Notification[]
+  interests     TournamentInterest[]
 }
 
 model Follow {
@@ -214,6 +222,19 @@ model Match {
 
   winnerId String?
   winner   Team?   @relation("MatchWinner", fields: [winnerId], references: [id])
+}
+
+model TournamentInterest {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now())
+
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tournamentId])
 }
 
 model RankingConfig {

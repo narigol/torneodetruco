@@ -63,6 +63,18 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
         orderBy: { round: "asc" },
       },
       _count: { select: { teams: true, matches: true } },
+      interests: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              player: { select: { locality: true, provincia: true, phone: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 
@@ -173,6 +185,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 teamCount={tournament._count.teams}
                 hasGroups={hasGroups}
                 hasBracket={hasBracket}
+                published={tournament.published}
               />
             </div>
           )}
@@ -211,6 +224,34 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
               >
                 + Agregar equipo
               </Link>
+            </div>
+          )}
+
+          {/* Interesados — solo visible para el admin */}
+          {isAdmin && tournament.interests.length > 0 && (
+            <div className="mb-6 bg-purple-50 border border-purple-100 rounded-xl p-4">
+              <p className="text-sm font-semibold text-purple-800 mb-3">
+                {tournament.interests.length} jugador{tournament.interests.length !== 1 ? "es" : ""} interesado{tournament.interests.length !== 1 ? "s" : ""}
+              </p>
+              <div className="space-y-2">
+                {tournament.interests.map((i) => (
+                  <div key={i.id} className="flex items-center justify-between text-sm bg-white rounded-lg px-3 py-2 border border-purple-100">
+                    <div>
+                      <span className="font-medium text-gray-900">{i.user.name}</span>
+                      {(i.user.player?.locality || i.user.player?.provincia) && (
+                        <span className="text-xs text-gray-400 ml-2">
+                          {[i.user.player.locality, i.user.player.provincia].filter(Boolean).join(", ")}
+                        </span>
+                      )}
+                    </div>
+                    {i.user.player?.phone && (
+                      <a href={`tel:${i.user.player.phone}`} className="text-xs text-gray-400 hover:text-red-600">
+                        {i.user.player.phone}
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

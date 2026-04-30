@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
 import { canManageTournament } from "@/lib/tournament-auth";
-import { notifyFollowers } from "@/lib/notifications";
+import { notifyFollowers, notifyByLocation } from "@/lib/notifications";
 import type { NotificationType } from "@tdt/db";
 
 type Params = { params: Promise<{ id: string }> };
@@ -60,6 +60,7 @@ const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
   status: z.enum(["DRAFT", "REGISTRATION", "IN_PROGRESS", "FINISHED"]).optional(),
+  published: z.boolean().optional(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   startTime: z.string().max(50).nullable().optional(),
@@ -73,7 +74,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
-    select: { adminId: true, status: true },
+    select: { adminId: true, status: true, published: true },
   });
   if (!tournament) return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
   if (!canManageTournament(session, tournament.adminId)) {
@@ -109,6 +110,13 @@ export async function PATCH(req: Request, { params }: Params) {
     if (notifType) {
       notifyFollowers(tournament.adminId, id, notifType).catch(() => {});
     }
+  }
+
+  // Cuando abre inscripción en un torneo publicado, notificar a jugadores de la misma zona
+  const becomesRegistration = rest.status === "REGISTRATION" && tournament.status !== "REGISTRATION";
+  const isOrWillBePublished = rest.published === true || tournament.published;
+  if (becomesRegistration && isOrWillBePublished) {
+    notifyByLocation(tournament.adminId, id).catch(() => {});
   }
 
   return NextResponse.json(updated);

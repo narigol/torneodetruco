@@ -7,6 +7,7 @@ const schema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
   password: z.string().min(6),
+  dni: z.string().min(6).max(20).optional().nullable(),
 });
 
 export async function POST(req: Request) {
@@ -16,18 +17,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
 
-  const { name, email, password } = parsed.data;
+  const { name, email, password, dni } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json({ error: "El email ya está registrado" }, { status: 409 });
   }
 
+  if (dni) {
+    const dniTaken = await prisma.user.findUnique({ where: { dni } });
+    if (dniTaken) {
+      return NextResponse.json({ error: "El DNI ya está registrado" }, { status: 409 });
+    }
+  }
+
   const hashed = await bcrypt.hash(password, 10);
+
   const existingPlayer = await prisma.player.findFirst({
     where: {
-      email,
       userId: null,
+      OR: [
+        { email },
+        ...(dni ? [{ dni }] : []),
+      ],
     },
     select: { id: true },
   });
@@ -38,14 +50,10 @@ export async function POST(req: Request) {
       email,
       password: hashed,
       role: "PLAYER",
+      ...(dni ? { dni } : {}),
       player: existingPlayer
         ? { connect: { id: existingPlayer.id } }
-        : {
-            create: {
-              name,
-              email,
-            },
-          },
+        : { create: { name, email, ...(dni ? { dni } : {}) } },
     },
   });
 

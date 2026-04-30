@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import Link from "next/link";
-import { DeleteButton } from "@/components/ui/DeleteButton";
+import { JugadoresFilter } from "@/components/ui/JugadoresFilter";
 
 export default async function JugadoresPage() {
   const session = await getServerSession(authOptions);
@@ -10,7 +10,13 @@ export default async function JugadoresPage() {
 
   const jugadores = await prisma.player.findMany({
     orderBy: { name: "asc" },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      locality: true,
+      provincia: true,
       teamPlayers: {
         include: {
           team: {
@@ -53,68 +59,7 @@ export default async function JugadoresPage() {
           )}
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-100">
-                <th className="text-left px-5 py-3 font-medium">Nombre</th>
-                <th className="text-left px-5 py-3 font-medium">Localidad</th>
-                <th className="text-left px-5 py-3 font-medium">Teléfono</th>
-                <th className="text-left px-5 py-3 font-medium">Email</th>
-                <th className="text-left px-5 py-3 font-medium">Equipos</th>
-                {isAdmin && <th className="px-5 py-3" />}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {jugadores.map((j) => (
-                <tr key={j.id} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-3 font-medium text-gray-900">{j.name}</td>
-                  <td className="px-5 py-3 text-gray-500">
-                    {j.locality ?? <span className="text-gray-300">—</span>}
-                  </td>
-                  <td className="px-5 py-3 text-gray-500">
-                    {j.phone ?? <span className="text-gray-300">—</span>}
-                  </td>
-                  <td className="px-5 py-3 text-gray-500">
-                    {j.email ? (
-                      <a href={`mailto:${j.email}`} className="hover:text-red-600 transition-colors">
-                        {j.email}
-                      </a>
-                    ) : (
-                      <span className="text-gray-300">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3 text-gray-500">
-                    {j.teamPlayers.length === 0 ? (
-                      <span className="text-gray-300">Sin equipo</span>
-                    ) : (
-                      j.teamPlayers
-                        .map((tp) => `${tp.team.name} (${tp.team.tournament.name})`)
-                        .join(", ")
-                    )}
-                  </td>
-                  {isAdmin && (
-                    <td className="px-5 py-3 text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        <Link
-                          href={`/jugadores/${j.id}/editar`}
-                          className="text-xs text-gray-400 hover:text-gray-700"
-                        >
-                          Editar
-                        </Link>
-                        <DeleteButton
-                          url={`/api/jugadores/${j.id}`}
-                          label="Eliminar"
-                          confirmText={`¿Eliminar a ${j.name}?`}
-                        />
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <JugadoresFilter jugadores={jugadores} isAdmin={isAdmin} />
       )}
     </div>
   );

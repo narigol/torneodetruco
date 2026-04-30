@@ -41,6 +41,7 @@ export default function LoginPage() {
     const email = form.get("email") as string;
     const password = form.get("password") as string;
     const confirm = form.get("confirm") as string;
+    const dni = (form.get("dni") as string) || null;
 
     if (password !== confirm) {
       setError("Las contraseñas no coinciden");
@@ -52,7 +53,7 @@ export default function LoginPage() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, dni }),
     });
 
     if (!res.ok) {
@@ -231,6 +232,20 @@ export default function LoginPage() {
                     className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
                     placeholder="tu@email.com"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    DNI <span className="text-gray-400 font-normal">(opcional)</span>
+                  </label>
+                  <input
+                    name="dni"
+                    type="text"
+                    autoComplete="off"
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+                    placeholder="Ej: 30123456"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Si el admin ya te cargó como jugador, te vinculamos automáticamente</p>
                 </div>
 
                 <div>

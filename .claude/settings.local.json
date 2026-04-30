@@ -15,7 +15,20 @@
       "Bash(npm run *)",
       "Bash(curl -s http://localhost:3000/api/torneos)",
       "Bash(npx tsc *)",
-      "PowerShell(cd C:\\\\torneodetruco\\\\packages\\\\db; $env:PRISMA_MIGRATE_SKIP_GENERATE=\"false\"; echo \"y\" | npx prisma migrate dev --name follow_notifications 2>&1)"
+      "PowerShell(cd C:\\\\torneodetruco\\\\packages\\\\db; $env:PRISMA_MIGRATE_SKIP_GENERATE=\"false\"; echo \"y\" | npx prisma migrate dev --name follow_notifications 2>&1)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" npx prisma db push --schema packages/db/prisma/schema.prisma --accept-data-loss)",
+      "PowerShell(Get-Process | Where-Object { $_.Name -match \"node\" } | Stop-Process -Force; Start-Sleep -Seconds 2; cd c:/torneodetruco; $env:DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\"; npx prisma db push --schema packages/db/prisma/schema.prisma --accept-data-loss 2>&1 | Select-Object -Last 5)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" npx prisma db push --accept-data-loss)",
+      "Read(//tmp/**)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" npx prisma db execute --stdin)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" npx prisma db execute --schema=prisma/schema.prisma --stdin)",
+      "Bash(node -e ' *)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" npx prisma generate)",
+      "Bash(curl -s -c /tmp/cookies.txt -X POST http://localhost:3001/api/auth/callback/credentials -H 'Content-Type: application/x-www-form-urlencoded' -d 'email=admin%40tdt.com&password=admin1234&csrfToken=test&json=true')",
+      "Bash(taskkill /F /PID 24352)",
+      "Bash(curl -s http://localhost:3001/ -o /dev/null -w \"%{http_code}\")",
+      "PowerShell(Get-Process | Where-Object { $_.Name -match \"node\" } | Stop-Process -Force -Confirm:$false 2>$null; Start-Sleep -Seconds 2)"
     ]
   }
 }

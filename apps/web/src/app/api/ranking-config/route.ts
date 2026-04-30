@@ -6,13 +6,13 @@ import { prisma } from "@tdt/db";
 import { getRankingConfig, RANKING_CONFIG_KEY } from "@/lib/ranking";
 
 const schema = z.object({
-  tournamentPlayedPoints: z.number().int().min(0),
-  matchPlayedPoints: z.number().int().min(0),
-  groupWinPoints: z.number().int().min(0),
-  roundOf16WinPoints: z.number().int().min(0),
-  quarterfinalWinPoints: z.number().int().min(0),
-  semifinalWinPoints: z.number().int().min(0),
-  finalWinPoints: z.number().int().min(0),
+  tournamentPlayedPoints: z.number().int().min(0).max(1000),
+  matchPlayedPoints: z.number().int().min(0).max(1000),
+  groupWinPoints: z.number().int().min(0).max(1000),
+  roundOf16WinPoints: z.number().int().min(0).max(1000),
+  quarterfinalWinPoints: z.number().int().min(0).max(1000),
+  semifinalWinPoints: z.number().int().min(0).max(1000),
+  finalWinPoints: z.number().int().min(0).max(1000),
 });
 
 export async function GET() {

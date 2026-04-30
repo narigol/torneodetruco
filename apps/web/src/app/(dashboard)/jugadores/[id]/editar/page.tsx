@@ -22,8 +22,10 @@ export default async function EditarJugadorPage({ params }: Params) {
           id: jugador.id,
           name: jugador.name,
           email: jugador.email,
+          dni: jugador.dni,
           phone: jugador.phone,
           locality: jugador.locality,
+          provincia: jugador.provincia,
         }}
       />
     </div>

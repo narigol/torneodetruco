@@ -58,6 +58,13 @@ export default async function RankingPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={10} className="px-5 py-12 text-center text-sm text-gray-400">
+                    Todavía no hay datos de ranking. Jugá torneos para aparecer acá.
+                  </td>
+                </tr>
+              )}
               {rows.map((row, index) => (
                 <tr key={row.userId} className="hover:bg-gray-50/50 align-top">
                   <td className="px-5 py-4 font-semibold text-gray-900">#{index + 1}</td>
@@ -69,8 +76,8 @@ export default async function RankingPage() {
                   </td>
                   <td className="px-5 py-4 text-right">
                     <div className="font-semibold text-gray-900">{row.totalPoints}</div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {row.pointsBreakdown.tournamentsPlayed} + {row.pointsBreakdown.matchesPlayed} + {row.pointsBreakdown.groupWins} + {row.pointsBreakdown.roundOf16Wins} + {row.pointsBreakdown.quarterfinalWins} + {row.pointsBreakdown.semifinalWins} + {row.pointsBreakdown.finalWins}
+                    <div className="text-xs text-gray-400 mt-1" title={`Torneos: ${row.pointsBreakdown.tournamentsPlayed} · Partidos: ${row.pointsBreakdown.matchesPlayed} · Grupos: ${row.pointsBreakdown.groupWins} · Octavos: ${row.pointsBreakdown.roundOf16Wins} · Cuartos: ${row.pointsBreakdown.quarterfinalWins} · Semis: ${row.pointsBreakdown.semifinalWins} · Final: ${row.pointsBreakdown.finalWins}`}>
+                      {[row.pointsBreakdown.tournamentsPlayed, row.pointsBreakdown.matchesPlayed, row.pointsBreakdown.groupWins, row.pointsBreakdown.roundOf16Wins, row.pointsBreakdown.quarterfinalWins, row.pointsBreakdown.semifinalWins, row.pointsBreakdown.finalWins].join(" + ")}
                     </div>
                   </td>
                   <td className="px-5 py-4 text-right text-gray-700">

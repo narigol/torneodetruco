@@ -43,45 +43,57 @@ function emptyWinsByPhase(): Record<Phase, number> {
 }
 
 export async function getRankingRows(config: RankingConfig): Promise<RankingRow[]> {
-  const users = await prisma.user.findMany({
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      player: {
-        select: {
-          id: true,
-          email: true,
-        },
+  const [users, orphanPlayers] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        dni: true,
+        player: { select: { id: true } },
       },
-    },
-  });
+    }),
+    prisma.player.findMany({
+      where: {
+        userId: null,
+        OR: [{ email: { not: null } }, { dni: { not: null } }],
+      },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, email: true, dni: true },
+    }),
+  ]);
 
-  const userEmailSet = new Set(users.map((user) => user.email.toLowerCase()));
-  const orphanPlayers = await prisma.player.findMany({
-    where: {
-      userId: null,
-      email: { not: null },
-    },
-    orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      email: true,
-    },
-  });
+  const userEmailSet = new Set(users.map((u) => u.email.toLowerCase()));
+  const userDniSet = new Set(users.filter((u) => u.dni).map((u) => u.dni!));
 
-  const orphanPlayersByEmail = new Map<string, string>();
+  const orphanByEmail = new Map<string, string>();
+  const orphanByDni = new Map<string, string>();
   for (const player of orphanPlayers) {
     const email = player.email?.toLowerCase();
-    if (!email || !userEmailSet.has(email) || orphanPlayersByEmail.has(email)) continue;
-    orphanPlayersByEmail.set(email, player.id);
+    if (email && userEmailSet.has(email)) {
+      if (orphanByEmail.has(email)) {
+        console.warn(`[ranking] múltiples players huérfanos con email ${email}, usando el primero`);
+      } else {
+        orphanByEmail.set(email, player.id);
+      }
+    }
+    if (player.dni && userDniSet.has(player.dni)) {
+      if (orphanByDni.has(player.dni)) {
+        console.warn(`[ranking] múltiples players huérfanos con DNI ${player.dni}, usando el primero`);
+      } else {
+        orphanByDni.set(player.dni, player.id);
+      }
+    }
   }
 
   const playerIdByUserId = new Map<string, string>();
   for (const user of users) {
-    const playerId = user.player?.id ?? orphanPlayersByEmail.get(user.email.toLowerCase());
+    const playerId =
+      user.player?.id ??
+      orphanByEmail.get(user.email.toLowerCase()) ??
+      (user.dni ? orphanByDni.get(user.dni) : undefined);
     if (playerId) playerIdByUserId.set(user.id, playerId);
   }
 
@@ -112,8 +124,6 @@ export async function getRankingRows(config: RankingConfig): Promise<RankingRow[
         winnerId: true,
         homeTeamId: true,
         awayTeamId: true,
-        homeScore: true,
-        awayScore: true,
         homeTeam: {
           select: {
             teamPlayers: {
@@ -150,8 +160,6 @@ export async function getRankingRows(config: RankingConfig): Promise<RankingRow[
   const winsByPhaseByPlayerId = new Map<string, Record<Phase, number>>();
 
   for (const match of playedMatches) {
-    if (match.homeScore === null || match.awayScore === null) continue;
-
     const participants = new Set<string>([
       ...match.homeTeam.teamPlayers.map((tp) => tp.playerId),
       ...(match.awayTeam?.teamPlayers.map((tp) => tp.playerId) ?? []),

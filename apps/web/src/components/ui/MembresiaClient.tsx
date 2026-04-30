@@ -25,7 +25,9 @@ const benefits: { label: string; pro: string | boolean; free: string | boolean }
   { label: "Personas por torneo", pro: "Ilimitadas",  free: "Hasta 10" },
   { label: "Grupos y llaves eliminatorias", pro: true, free: true },
   { label: "Carga de resultados", pro: true,          free: true },
-  { label: "Ver torneos y standings", pro: true,      free: true },
+  { label: "Ver torneos y posiciones", pro: true,      free: true },
+  { label: "Publicar torneos (alcance público)", pro: true, free: false },
+  { label: "Invitá jugadores por zona", pro: true,     free: false },
 ];
 
 export function MembresiaClient({ plan, planExpiresAt, precio }: Props) {

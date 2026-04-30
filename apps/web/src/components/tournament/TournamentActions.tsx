@@ -11,6 +11,7 @@ type Props = {
   teamCount: number;
   hasGroups: boolean;
   hasBracket: boolean;
+  published: boolean;
 };
 
 const NEXT_STATUS: Partial<Record<TournamentStatus, TournamentStatus>> = {
@@ -32,9 +33,11 @@ export function TournamentActions({
   teamCount,
   hasGroups,
   hasBracket,
+  published,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [publishLoading, setPublishLoading] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [showBracketModal, setShowBracketModal] = useState(false);
   const [numGroups, setNumGroups] = useState(2);
@@ -52,6 +55,17 @@ export function TournamentActions({
     (format === TournamentFormat.SINGLE_ELIMINATION ||
       (format === TournamentFormat.GROUPS_AND_KNOCKOUT && hasGroups)) &&
     !hasBracket;
+
+  async function togglePublish() {
+    setPublishLoading(true);
+    await fetch(`/api/torneos/${tournamentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ published: !published }),
+    });
+    setPublishLoading(false);
+    router.refresh();
+  }
 
   async function advanceStatus() {
     if (!nextStatus) return;
@@ -89,7 +103,19 @@ export function TournamentActions({
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={togglePublish}
+          disabled={publishLoading}
+          className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50 ${
+            published
+              ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          {publishLoading ? "..." : published ? "⊙ Público" : "Publicar"}
+        </button>
+
         {needsGroups && (
           <button
             onClick={() => setShowGroupModal(true)}
