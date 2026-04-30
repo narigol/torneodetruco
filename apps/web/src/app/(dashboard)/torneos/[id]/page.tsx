@@ -9,6 +9,8 @@ import { TournamentStatusBadge } from "@/components/tournament/TournamentStatusB
 import { TournamentActions } from "@/components/tournament/TournamentActions";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { FollowButton } from "@/components/ui/FollowButton";
+import { ReglamentoCollapsible } from "@/components/ui/ReglamentoCollapsible";
+import { InvitarJugadorModal } from "@/components/ui/InvitarJugadorModal";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -27,6 +29,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     where: { id },
     include: {
       admin: { select: { id: true, name: true } },
+      reglamento: { select: { id: true, nombre: true, descripcion: true, contenido: true } },
       teams: {
         include: {
           teamPlayers: {
@@ -67,7 +70,17 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
 
   if (!tournament) notFound();
 
-  const isAdmin = session?.user?.role === "ADMIN" || session?.user?.id === tournament.adminId;
+  const isAdmin = session?.user?.role === "ADMIN" ||
+    (session?.user?.role === "ORGANIZER" && session?.user?.id === tournament.adminId);
+
+  const canInvite = isAdmin && (session?.user?.plan === "PRO" || session?.user?.role === "ADMIN");
+
+  const invitations = canInvite
+    ? await prisma.invitation.findMany({
+        where: { tournamentId: id },
+        select: { userId: true, status: true },
+      })
+    : [];
 
   const hasGroupFormat = tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT;
   const hasGroups = tournament.groups.length > 0;
@@ -176,6 +189,10 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             })()}
           </div>
 
+          {tournament.reglamento && (
+            <ReglamentoCollapsible reglamento={tournament.reglamento} />
+          )}
+
           {isAdmin && (
             <div className="shrink-0 flex flex-col items-end gap-2">
               {tournament.status !== "FINISHED" && (
@@ -224,7 +241,13 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       {activeTab === "equipos" && (
         <section>
           {isAdmin && (
-            <div className="flex justify-end mb-4">
+            <div className="flex items-center justify-end gap-3 mb-4">
+              {canInvite && (
+                <InvitarJugadorModal
+                  tournamentId={tournament.id}
+                  alreadyInvited={invitations}
+                />
+              )}
               <Link
                 href={`/torneos/${tournament.id}/equipos/nuevo`}
                 className="inline-flex items-center gap-1 text-sm text-red-600 hover:text-red-700 font-medium"

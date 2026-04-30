@@ -21,29 +21,64 @@ export async function POST(req: Request) {
   }
 
   const { name, email, password, dni, locality, province, country } = parsed.data;
-
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return NextResponse.json({ error: "El email ya está registrado" }, { status: 409 });
-  }
-
-  if (dni) {
-    const dniExists = await prisma.user.findUnique({ where: { dni } });
-    if (dniExists) {
-      return NextResponse.json({ error: "El DNI ya está registrado" }, { status: 409 });
-    }
-  }
-
   const hashed = await bcrypt.hash(password, 10);
 
-  // Find existing unlinked player by email or DNI
-  const existingPlayer = await prisma.player.findFirst({
+  // Check if there's a pending user with the same email or DNI (created by an organizer)
+  const pendingUser = await prisma.user.findFirst({
     where: {
-      userId: null,
+      pendingActivation: true,
       OR: [
         { email },
         ...(dni ? [{ dni }] : []),
       ],
+    },
+    include: { player: { select: { id: true } } },
+  });
+
+  if (pendingUser) {
+    // Activate the pending user
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: pendingUser.id },
+        data: {
+          name,
+          email,
+          password: hashed,
+          pendingActivation: false,
+          dni: dni || null,
+          locality: locality || null,
+          province: province || null,
+          country: country || "Argentina",
+        },
+      });
+      if (pendingUser.player) {
+        await tx.player.update({
+          where: { id: pendingUser.player.id },
+          data: { name, email, confirmed: true, dni: dni || null, locality: locality || null, province: province || null },
+        });
+      }
+    });
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  // No pending user — check for uniqueness and create fresh
+  const existingEmail = await prisma.user.findUnique({ where: { email } });
+  if (existingEmail) {
+    return NextResponse.json({ error: "El email ya está registrado" }, { status: 409 });
+  }
+
+  if (dni) {
+    const existingDni = await prisma.user.findUnique({ where: { dni } });
+    if (existingDni) {
+      return NextResponse.json({ error: "El DNI ya está registrado" }, { status: 409 });
+    }
+  }
+
+  // Find existing orphan player by email or DNI to link
+  const existingPlayer = await prisma.player.findFirst({
+    where: {
+      userId: null,
+      OR: [{ email }, ...(dni ? [{ dni }] : [])],
     },
     select: { id: true },
   });
@@ -58,7 +93,8 @@ export async function POST(req: Request) {
         dni: dni || null,
         locality: locality || null,
         province: province || null,
-        country: country || null,
+        country: country || "Argentina",
+        pendingActivation: false,
         player: existingPlayer
           ? { connect: { id: existingPlayer.id } }
           : { create: { name, email, confirmed: true } },

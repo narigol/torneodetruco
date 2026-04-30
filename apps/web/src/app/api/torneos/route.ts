@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
-import { FREE_TOURNAMENT_LIMIT } from "@/lib/tournament-auth";
+import { FREE_TOURNAMENT_LIMIT, isOrganizer, isSuperAdmin } from "@/lib/tournament-auth";
 import { notifyFollowers } from "@/lib/notifications";
 
 const createSchema = z.object({
@@ -13,8 +13,11 @@ const createSchema = z.object({
   startDate: z.string().optional().nullable(),
   startTime: z.string().max(50).optional().nullable(),
   location: z.string().max(500).optional().nullable(),
+  locality: z.string().max(100).optional().nullable(),
+  province: z.string().max(100).optional().nullable(),
   playersPerTeam: z.number().int().min(1).max(3).default(2),
   maxPlayers: z.number().int().min(2).max(10000).optional().nullable(),
+  reglamentoId: z.string().optional().nullable(),
 });
 
 export async function GET() {
@@ -34,8 +37,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  if (!isOrganizer(session.user.role)) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
   // Usuarios FREE: máximo 5 torneos
-  if (session.user.role !== "ADMIN") {
+  if (!isSuperAdmin(session.user.role)) {
     const count = await prisma.tournament.count({ where: { adminId: session.user.id } });
     if (count >= FREE_TOURNAMENT_LIMIT) {
       return NextResponse.json(
@@ -54,7 +61,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { name, description, format, startDate, startTime, location, playersPerTeam, maxPlayers } = parsed.data;
+  const { name, description, format, startDate, startTime, location, locality, province, playersPerTeam, maxPlayers, reglamentoId } = parsed.data;
 
   const tournament = await prisma.tournament.create({
     data: {
@@ -64,9 +71,12 @@ export async function POST(req: Request) {
       startDate: startDate ? new Date(startDate) : null,
       startTime: startTime || null,
       location: location || null,
+      locality: locality || null,
+      province: province || null,
       playersPerTeam,
       maxPlayers: maxPlayers ?? null,
       adminId: session.user.id,
+      reglamentoId: reglamentoId || null,
     },
   });
 

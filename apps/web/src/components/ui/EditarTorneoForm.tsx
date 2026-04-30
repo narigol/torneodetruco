@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { MapaPreview } from "./MapaPreview";
+import { ArgentinaGeoSelect } from "./ArgentinaGeoSelect";
 import { useRouter } from "next/navigation";
+
+type ReglamentoOption = { id: string; nombre: string };
 
 type Props = {
   torneo: {
@@ -14,12 +17,16 @@ type Props = {
     startDate: string | null;
     startTime: string | null;
     location: string | null;
+    locality: string | null;
+    province: string | null;
     playersPerTeam: number;
     maxPlayers: number | null;
+    reglamentoId: string | null;
   };
+  reglamentos: ReglamentoOption[];
 };
 
-export function EditarTorneoForm({ torneo }: Props) {
+export function EditarTorneoForm({ torneo, reglamentos }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,6 +35,9 @@ export function EditarTorneoForm({ torneo }: Props) {
 
   const [format, setFormat] = useState(torneo.format);
   const [location, setLocation] = useState(torneo.location ?? "");
+  const [locality, setLocality] = useState(torneo.locality ?? "");
+  const [province, setProvince] = useState(torneo.province ?? "");
+  const [reglamentoId, setReglamentoId] = useState(torneo.reglamentoId ?? "");
 
   const startDateValue = torneo.startDate
     ? new Date(torneo.startDate).toISOString().split("T")[0]
@@ -46,7 +56,10 @@ export function EditarTorneoForm({ torneo }: Props) {
       startDate: form.get("startDate") || null,
       startTime: form.get("startTime") || null,
       location: location.trim() || null,
+      locality: locality.trim() || null,
+      province: province || null,
       maxPlayers: form.get("maxPlayers") ? Number(form.get("maxPlayers")) : null,
+      reglamentoId: reglamentoId || null,
     };
 
     if (canEditStructure) {
@@ -134,6 +147,13 @@ export function EditarTorneoForm({ torneo }: Props) {
             />
           </div>
 
+          <ArgentinaGeoSelect
+            locality={locality}
+            province={province}
+            onLocalityChange={setLocality}
+            onProvinceChange={setProvince}
+          />
+
           <MapaPreview location={location} onLocationChange={setLocation} />
         </div>
 
@@ -189,6 +209,21 @@ export function EditarTorneoForm({ torneo }: Props) {
             <p className="text-xs text-gray-400 mt-1">Opcional. Dejá vacío para no limitar.</p>
           </div>
 
+          {reglamentos.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Reglamento</label>
+              <select
+                value={reglamentoId}
+                onChange={(e) => setReglamentoId(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
+              >
+                <option value="">Sin reglamento</option>
+                {reglamentos.map((r) => (
+                  <option key={r.id} value={r.id}>{r.nombre}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 

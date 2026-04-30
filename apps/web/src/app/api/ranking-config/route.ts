@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
-  if (session?.user?.role !== "ADMIN") {
+  if (session?.user?.role !== "ADMIN") { // solo superadmin
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 

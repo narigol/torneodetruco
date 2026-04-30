@@ -160,7 +160,7 @@ export function PerfilForm({
               <input
                 type="text"
                 disabled
-                value={role === "ADMIN" ? "Organizador" : "Jugador"}
+                value={role === "ADMIN" ? "Super Admin" : role === "ORGANIZER" ? "Organizador" : "Jugador"}
                 className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
               />
               {plan === "PRO" ? (

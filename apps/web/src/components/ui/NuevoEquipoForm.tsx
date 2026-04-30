@@ -81,16 +81,15 @@ export function NuevoEquipoForm({ tournamentId, players: initialPlayers, players
     if (!newName.trim()) return;
 
     setNewLoading(true);
-    const res = await fetch("/api/jugadores", {
+    const res = await fetch("/api/usuarios", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: newName.trim(),
+        email: newEmail.trim(),
         dni: newDni.trim() || null,
-        email: newEmail.trim() || null,
         locality: newLocality.trim() || null,
         province: newProvince || null,
-        country: newCountry.trim() || null,
       }),
     });
     setNewLoading(false);
@@ -102,7 +101,9 @@ export function NuevoEquipoForm({ tournamentId, players: initialPlayers, players
     }
 
     const created = await res.json();
-    const newPlayer: Player = { id: created.id, name: created.name, dni: created.dni ?? null, isFollowed: false };
+    // Use the linked Player ID for team assignment
+    const playerId = created.player?.id ?? created.id;
+    const newPlayer: Player = { id: playerId, name: created.name, dni: created.dni ?? null, isFollowed: false };
     setPlayerList((prev) => [...prev, newPlayer].sort((a, b) => a.name.localeCompare(b.name, "es")));
 
     // Auto-select if there's room
@@ -278,11 +279,12 @@ export function NuevoEquipoForm({ tournamentId, players: initialPlayers, players
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email *</label>
             <input
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               type="email"
+              required
               className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
               placeholder="jugador@email.com"
             />

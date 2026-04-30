@@ -3,12 +3,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import Link from "next/link";
 import { MarkReadButton } from "@/components/ui/MarkReadButton";
+import { InvitacionActions } from "@/components/ui/InvitacionActions";
 
 const TYPE_LABEL: Record<string, { text: string; color: string }> = {
-  TOURNAMENT_CREATED: { text: "Nuevo torneo",        color: "bg-blue-100 text-blue-700" },
-  REGISTRATION_OPEN:  { text: "Inscripción abierta", color: "bg-green-100 text-green-700" },
-  TOURNAMENT_STARTED: { text: "Torneo iniciado",     color: "bg-amber-100 text-amber-700" },
-  TOURNAMENT_FINISHED:{ text: "Torneo finalizado",   color: "bg-gray-100 text-gray-600" },
+  TOURNAMENT_CREATED:    { text: "Nuevo torneo",        color: "bg-blue-100 text-blue-700" },
+  REGISTRATION_OPEN:     { text: "Inscripción abierta", color: "bg-green-100 text-green-700" },
+  TOURNAMENT_STARTED:    { text: "Torneo iniciado",     color: "bg-amber-100 text-amber-700" },
+  TOURNAMENT_FINISHED:   { text: "Torneo finalizado",   color: "bg-gray-100 text-gray-600" },
+  TOURNAMENT_INVITATION: { text: "Invitación",          color: "bg-purple-100 text-purple-700" },
 };
 
 export default async function NotificacionesPage() {
@@ -25,6 +27,20 @@ export default async function NotificacionesPage() {
       },
     },
   });
+
+  // Fetch invitation statuses for invitation notifications
+  const invitationIds = notifications
+    .map((n) => n.invitationId)
+    .filter((id): id is string => !!id);
+
+  const invitations = invitationIds.length > 0
+    ? await prisma.invitation.findMany({
+        where: { id: { in: invitationIds } },
+        select: { id: true, status: true },
+      })
+    : [];
+
+  const invitationStatusMap = Object.fromEntries(invitations.map((i) => [i.id, i.status]));
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -52,11 +68,13 @@ export default async function NotificacionesPage() {
         <div className="space-y-2">
           {notifications.map((n) => {
             const cfg = TYPE_LABEL[n.type] ?? { text: n.type, color: "bg-gray-100 text-gray-600" };
+            const isInvitation = n.type === "TOURNAMENT_INVITATION";
+            const invitationStatus = n.invitationId ? invitationStatusMap[n.invitationId] : null;
+
             return (
-              <Link
+              <div
                 key={n.id}
-                href={n.tournament ? `/torneos/${n.tournament.id}` : "/notificaciones"}
-                className={`flex items-start gap-4 p-4 rounded-2xl border transition-colors hover:border-gray-200 ${
+                className={`flex items-start gap-4 p-4 rounded-2xl border transition-colors ${
                   n.read ? "bg-white border-gray-100" : "bg-blue-50/40 border-blue-100"
                 }`}
               >
@@ -78,14 +96,31 @@ export default async function NotificacionesPage() {
                       })}
                     </span>
                   </div>
-                  {n.tournament && (
+                  {n.message && (
+                    <p className="text-sm text-gray-700 mb-0.5">{n.message}</p>
+                  )}
+                  {!n.message && n.tournament && (
                     <>
                       <p className="text-sm font-medium text-gray-900 truncate">{n.tournament.name}</p>
                       <p className="text-xs text-gray-400">por {n.tournament.admin.name}</p>
                     </>
                   )}
+                  {n.tournament && !isInvitation && (
+                    <Link
+                      href={`/torneos/${n.tournament.id}`}
+                      className="text-xs text-red-600 hover:underline mt-1 inline-block"
+                    >
+                      Ver torneo →
+                    </Link>
+                  )}
+                  {isInvitation && n.invitationId && (
+                    <InvitacionActions
+                      invitacionId={n.invitationId}
+                      currentStatus={invitationStatus ?? "PENDING"}
+                    />
+                  )}
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

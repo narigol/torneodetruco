@@ -25,7 +25,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Email o contraseña incorrectos");
+      setError("Email/DNI o contraseña incorrectos. Si tu cuenta está pendiente de activación, registrate con tu email o DNI.");
     } else {
       router.push("/torneos");
       router.refresh();

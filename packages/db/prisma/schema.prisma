@@ -9,6 +9,7 @@ datasource db {
 
 enum Role {
   ADMIN
+  ORGANIZER
   PLAYER
 }
 
@@ -48,31 +49,44 @@ enum NotificationType {
   REGISTRATION_OPEN
   TOURNAMENT_STARTED
   TOURNAMENT_FINISHED
+  TOURNAMENT_INVITATION
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  name           String
-  password       String
-  role           Role      @default(PLAYER)
-  plan           Plan      @default(FREE)
-  planExpiresAt  DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String
+  password          String
+  role              Role      @default(PLAYER)
+  plan              Plan      @default(FREE)
+  planExpiresAt     DateTime?
+  pendingActivation Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  dni        String?   @unique
-  phone      String?
-  locality   String?
-  province   String?
-  country    String?
+  dni      String?  @unique
+  phone    String?
+  locality String?
+  province String?
+  country  String?
 
-  player     Player?
+  player      Player?
   tournaments Tournament[] @relation("TournamentAdmin")
 
   followers     Follow[]       @relation("Following")
   following     Follow[]       @relation("Follower")
   notifications Notification[]
+
+  reglamentos           Reglamento[]
+  invitationsSent       Invitation[] @relation("InvitationsSent")
+  invitationsReceived   Invitation[] @relation("InvitationsReceived")
+  tournamentRegistrations TournamentRegistration[]
 }
 
 model Player {
@@ -95,28 +109,79 @@ model Player {
 }
 
 model Tournament {
-  id          String           @id @default(cuid())
-  name        String
-  description String?
-  format      TournamentFormat
-  status      TournamentStatus @default(DRAFT)
+  id              String           @id @default(cuid())
+  name            String
+  description     String?
+  format          TournamentFormat
+  status          TournamentStatus @default(DRAFT)
   startDate       DateTime?
   endDate         DateTime?
   startTime       String?
   location        String?
-  qualifyPerGroup   Int              @default(2)
-  playersPerTeam    Int              @default(2)
-  maxPlayers        Int?
+  locality        String?
+  province        String?
+  qualifyPerGroup Int              @default(2)
+  playersPerTeam  Int              @default(2)
+  maxPlayers      Int?
   createdAt       DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  updatedAt       DateTime         @updatedAt
 
   adminId String
   admin   User   @relation("TournamentAdmin", fields: [adminId], references: [id])
 
-  teams  Team[]
-  groups Group[]
-  matches Match[]
+  reglamentoId String?
+  reglamento   Reglamento? @relation(fields: [reglamentoId], references: [id])
+
+  teams         Team[]
+  groups        Group[]
+  matches       Match[]
   notifications Notification[]
+  invitations   Invitation[]
+  registrations TournamentRegistration[]
+}
+
+model Reglamento {
+  id          String   @id @default(cuid())
+  nombre      String
+  descripcion String?
+  contenido   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  adminId String
+  admin   User   @relation(fields: [adminId], references: [id])
+
+  torneos Tournament[]
+}
+
+model Invitation {
+  id           String           @id @default(cuid())
+  status       InvitationStatus @default(PENDING)
+  createdAt    DateTime         @default(now())
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  inviterId String
+  inviter   User   @relation("InvitationsSent", fields: [inviterId], references: [id])
+
+  userId String
+  user   User   @relation("InvitationsReceived", fields: [userId], references: [id])
+
+  @@unique([tournamentId, userId])
+}
+
+model TournamentRegistration {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, userId])
 }
 
 model Follow {
@@ -132,16 +197,19 @@ model Follow {
 }
 
 model Notification {
-  id           String           @id @default(cuid())
-  type         NotificationType
-  read         Boolean          @default(false)
-  createdAt    DateTime         @default(now())
+  id        String           @id @default(cuid())
+  type      NotificationType
+  read      Boolean          @default(false)
+  message   String?
+  createdAt DateTime         @default(now())
 
-  userId       String
-  user         User        @relation(fields: [userId],       references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   tournamentId String?
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  invitationId String?
 }
 
 model Team {
@@ -153,11 +221,11 @@ model Team {
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
-  teamPlayers   TeamPlayer[]
+  teamPlayers    TeamPlayer[]
   groupStandings GroupStanding[]
-  homeMatches   Match[]        @relation("MatchHome")
-  awayMatches   Match[]        @relation("MatchAway")
-  wonMatches    Match[]        @relation("MatchWinner")
+  homeMatches    Match[]         @relation("MatchHome")
+  awayMatches    Match[]         @relation("MatchAway")
+  wonMatches     Match[]         @relation("MatchWinner")
 }
 
 model TeamPlayer {
@@ -165,7 +233,7 @@ model TeamPlayer {
   teamId   String
   playerId String
 
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId],   references: [id], onDelete: Cascade)
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, playerId])

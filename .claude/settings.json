@@ -36,7 +36,11 @@
       "PowerShell(Start-Process cmd -ArgumentList '/k', 'cd /d C:\\\\Users\\\\PC\\\\Desktop\\\\tdt && npm run dev:web')",
       "PowerShell(cmd /c \"cd C:\\\\Users\\\\PC\\\\Desktop\\\\tdt\\\\packages\\\\db && npx prisma db push --accept-data-loss\" 2>&1)",
       "PowerShell(cmd /c \"cd C:\\\\Users\\\\PC\\\\Desktop\\\\tdt\\\\packages\\\\db && npx prisma db push\" 2>&1)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "PowerShell(cmd /c \"cd C:\\\\Users\\\\PC\\\\Desktop\\\\tdt\\\\packages\\\\db && npx prisma db push --accept-data-loss && npx prisma generate\" 2>&1)",
+      "PowerShell(cmd /c \"cd C:\\\\Users\\\\PC\\\\Desktop\\\\tdt && npm run db:seed\" 2>&1)",
+      "Bash(npm list *)",
+      "Bash(npm i *)"
     ]
   }
 }

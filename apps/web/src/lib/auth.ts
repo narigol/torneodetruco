@@ -29,6 +29,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) return null;
+        if (user.pendingActivation) return null; // cuenta pendiente, debe registrarse
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
