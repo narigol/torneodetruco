@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { ArgentinaGeoSelect } from "@/components/ui/ArgentinaGeoSelect";
 
 type Torneo = {
   id: string;
@@ -49,7 +50,6 @@ export function TorneosFilter({ torneos, userId, isAdmin }: Props) {
   const [locality, setLocality] = useState("");
   const [province, setProvince] = useState("");
   const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
   const [organizerId, setOrganizerId] = useState("");
   const [mineOnly, setMineOnly] = useState(false);
 
@@ -66,31 +66,29 @@ export function TorneosFilter({ torneos, userId, isAdmin }: Props) {
     const loc = locality.trim().toLowerCase();
     const prov = province.toLowerCase();
     const from = dateFrom ? new Date(dateFrom) : null;
-    const to = dateTo ? new Date(dateTo + "T23:59:59") : null;
 
     return torneos.filter((t) => {
       if (q && !t.name.toLowerCase().includes(q)) return false;
       if (statusFilter && t.status !== statusFilter) return false;
       if (mineOnly && userId && t.adminId !== userId) return false;
       if (loc && !(t.locality ?? "").toLowerCase().includes(loc)) return false;
-      if (prov && (t.province ?? "").toLowerCase() !== prov) return false;
+      if (prov && !(t.province ?? "").toLowerCase().includes(prov)) return false;
       if (organizerId && t.admin.id !== organizerId) return false;
-      if (from || to) {
+      if (from) {
         if (!t.startDate) return false;
         const d = new Date(t.startDate);
-        if (from && d < from) return false;
-        if (to && d > to) return false;
+        if (d < from) return false;
       }
       return true;
     });
-  }, [torneos, search, statusFilter, mineOnly, userId, locality, province, organizerId, dateFrom, dateTo]);
+  }, [torneos, search, statusFilter, mineOnly, userId, locality, province, organizerId, dateFrom]);
 
-  const hasFilters = !!(search || statusFilter || mineOnly || locality || province || organizerId || dateFrom || dateTo);
+  const hasFilters = !!(search || statusFilter || mineOnly || locality || province || organizerId || dateFrom);
 
   function clearFilters() {
     setSearch(""); setStatusFilter(""); setMineOnly(false);
     setLocality(""); setProvince(""); setOrganizerId("");
-    setDateFrom(""); setDateTo("");
+    setDateFrom("");
   }
 
   return (
@@ -129,26 +127,24 @@ export function TorneosFilter({ torneos, userId, isAdmin }: Props) {
         </div>
 
         {/* Filtros avanzados */}
-        <div className="flex flex-wrap gap-3">
-          <input
-            type="text"
-            value={locality}
-            onChange={(e) => setLocality(e.target.value)}
-            placeholder="Localidad..."
-            className="w-40 px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-          />
-          <input
-            type="text"
-            value={province}
-            onChange={(e) => setProvince(e.target.value)}
-            placeholder="Provincia..."
-            className="w-44 px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-          />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="sm:col-span-2 xl:col-span-2">
+            <ArgentinaGeoSelect
+              province={province}
+              locality={locality}
+              onProvinceChange={(value) => setProvince(value)}
+              onLocalityChange={(value) => setLocality(value)}
+              nameProvince="province"
+              nameLocality="locality"
+              inline
+            />
+          </div>
+
           {organizers.length > 1 && (
             <select
               value={organizerId}
               onChange={(e) => setOrganizerId(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
             >
               <option value="">Todos los organizadores</option>
               {organizers.map((o) => (
@@ -156,31 +152,27 @@ export function TorneosFilter({ torneos, userId, isAdmin }: Props) {
               ))}
             </select>
           )}
+
           <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-500">Desde</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+              placeholder="Desde"
+              aria-label="Desde"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-500">Hasta</label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-            />
-          </div>
+
           {hasFilters && (
-            <button
-              onClick={clearFilters}
-              className="px-3 py-2 text-sm text-gray-400 hover:text-red-600 transition-colors"
-            >
-              Limpiar filtros
-            </button>
+            <div className="flex items-center sm:col-span-2 xl:col-span-1">
+              <button
+                onClick={clearFilters}
+                className="w-full px-3 py-2 text-sm text-gray-400 hover:text-red-600 transition-colors"
+              >
+                Limpiar filtros
+              </button>
+            </div>
           )}
         </div>
       </div>

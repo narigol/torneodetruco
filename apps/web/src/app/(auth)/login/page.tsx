@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArgentinaGeoSelect } from "@/components/ui/ArgentinaGeoSelect";
 
 export default function LoginPage() {
   return (
@@ -218,6 +219,7 @@ function LoginPageContent() {
               <p className="mt-6 text-center text-sm text-gray-500">
                 ¿No tenés cuenta?{" "}
                 <button
+                  type="button"
                   onClick={() => switchMode("register")}
                   className="text-red-600 font-medium hover:text-red-700"
                 >
@@ -269,27 +271,7 @@ function LoginPageContent() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Localidad</label>
-                  <input
-                    name="locality"
-                    type="text"
-                    autoComplete="address-level2"
-                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
-                    placeholder="Ciudad o localidad"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Provincia</label>
-                  <input
-                    name="province"
-                    type="text"
-                    autoComplete="address-level1"
-                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
-                    placeholder="Ej: Buenos Aires"
-                  />
-                </div>
+                <ArgentinaGeoSelect />
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Contraseña</label>
@@ -337,6 +319,7 @@ function LoginPageContent() {
               <p className="mt-6 text-center text-sm text-gray-500">
                 ¿Ya tenés cuenta?{" "}
                 <button
+                  type="button"
                   onClick={() => switchMode("login")}
                   className="text-red-600 font-medium hover:text-red-700"
                 >
