@@ -5,6 +5,7 @@ import { prisma, Phase } from "@tdt/db";
 import { z } from "zod";
 import { createPhaseMatches } from "@/lib/bracket";
 import { canManageTournament } from "@/lib/tournament-auth";
+import { sendMatchResultEmails } from "@/lib/email-notifications";
 
 const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
   ROUND_OF_16: "QUARTERFINAL",
@@ -131,6 +132,14 @@ export async function PATCH(req: Request, { params }: Params) {
     awayScore > homeScore ? (match.awayTeamId ?? null) : null;
 
   await prisma.$transaction(async (tx) => {
+    const previousData = {
+      homeScore: match.homeScore,
+      awayScore: match.awayScore,
+      winnerId: match.winnerId,
+      status: match.status,
+      games: match.games,
+    };
+
     await tx.match.update({
       where: { id },
       data: {
@@ -139,6 +148,22 @@ export async function PATCH(req: Request, { params }: Params) {
         winnerId,
         status: "FINISHED",
         ...(gamesData ? { games: gamesData } : {}),
+      },
+    });
+
+    await tx.matchAudit.create({
+      data: {
+        matchId: match.id,
+        userId: session.user.id,
+        action: "RESULT_UPDATED",
+        previousData,
+        newData: {
+          homeScore,
+          awayScore,
+          winnerId,
+          status: "FINISHED",
+          games: gamesData,
+        },
       },
     });
 
@@ -190,6 +215,10 @@ export async function PATCH(req: Request, { params }: Params) {
 
     const winners = phaseMatches.map((m) => m.winnerId!).filter(Boolean);
     await createPhaseMatches(tx.match, match.tournamentId, nextPhase, winners);
+  });
+
+  sendMatchResultEmails(match.id).catch((error) => {
+    console.error("[match-result-email]", error);
   });
 
   return NextResponse.json({ ok: true });

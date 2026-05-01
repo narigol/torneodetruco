@@ -1,14 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const callbackUrl = searchParams.get("callbackUrl") || "/torneos";
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -27,7 +37,7 @@ export default function LoginPage() {
     if (result?.error) {
       setError("Email/DNI o contraseña incorrectos. Si tu cuenta está pendiente de activación, registrate con tu email o DNI.");
     } else {
-      router.push("/torneos");
+      router.push(callbackUrl);
       router.refresh();
     }
   }
@@ -82,7 +92,7 @@ export default function LoginPage() {
       setError("Cuenta creada, pero no se pudo iniciar sesión. Ingresá manualmente.");
       setMode("login");
     } else {
-      router.push("/torneos");
+      router.push(callbackUrl);
       router.refresh();
     }
   }
@@ -180,6 +190,11 @@ export default function LoginPage() {
                     className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
                     placeholder="••••••••"
                   />
+                  <div className="mt-2 text-right">
+                    <a href="/forgot-password" className="text-xs text-red-600 hover:text-red-700">
+                      Olvide mi contrasena
+                    </a>
+                  </div>
                 </div>
 
                 {error && (

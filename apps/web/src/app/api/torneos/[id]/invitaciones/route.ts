@@ -34,7 +34,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
 
-  const tournament = await prisma.tournament.findUnique({ where: { id }, select: { adminId: true, status: true } });
+  const tournament = await prisma.tournament.findUnique({ where: { id }, select: { adminId: true, status: true, name: true } });
   if (!tournament) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   if (!canManageTournament(session, tournament.adminId)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
@@ -55,6 +55,10 @@ export async function POST(req: Request, { params }: Params) {
 
   const { userId } = parsed.data;
 
+  if (userId === session!.user.id) {
+    return NextResponse.json({ error: "No podés invitarte a vos mismo" }, { status: 400 });
+  }
+
   const existing = await prisma.invitation.findUnique({
     where: { tournamentId_userId: { tournamentId: id, userId } },
   });
@@ -71,20 +75,15 @@ export async function POST(req: Request, { params }: Params) {
     include: { user: { select: { id: true, name: true } } },
   });
 
-  // Create notification for the invited user
-  const tournamentData = await prisma.tournament.findUnique({
-    where: { id },
-    select: { name: true },
-  });
   await prisma.notification.create({
     data: {
       userId,
       type: "TOURNAMENT_INVITATION",
-      message: `Fuiste invitado al torneo "${tournamentData?.name}" por ${session!.user.name}`,
+      message: `Fuiste invitado al torneo "${tournament.name}" por ${session!.user.name}`,
       tournamentId: id,
       invitationId: invitation.id,
     },
-  }).catch(() => {});
+  }).catch((e) => console.error("notification:create failed", e));
 
   return NextResponse.json(invitation, { status: 201 });
 }

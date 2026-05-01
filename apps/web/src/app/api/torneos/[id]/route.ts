@@ -5,6 +5,7 @@ import { prisma } from "@tdt/db";
 import { z } from "zod";
 import { canManageTournament } from "@/lib/tournament-auth";
 import { notifyFollowers, notifyByLocation } from "@/lib/notifications";
+import { sendTournamentStartedEmails } from "@/lib/email-notifications";
 import type { NotificationType } from "@tdt/db";
 
 type Params = { params: Promise<{ id: string }> };
@@ -116,6 +117,11 @@ export async function PATCH(req: Request, { params }: Params) {
     const notifType = STATUS_NOTIF[rest.status];
     if (notifType) {
       notifyFollowers(tournament.adminId, id, notifType).catch(() => {});
+    }
+    if (rest.status === "IN_PROGRESS") {
+      sendTournamentStartedEmails(id).catch((error) => {
+        console.error("[tournament-start-email]", error);
+      });
     }
   }
 

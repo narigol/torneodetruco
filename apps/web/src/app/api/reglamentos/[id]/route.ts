@@ -11,14 +11,17 @@ const schema = z.object({
   contenido: z.string().min(1).optional(),
 });
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+type Params = { params: Promise<{ id: string }> };
+
+export async function GET(req: Request, { params }: Params) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || !isOrganizer(session.user.role)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   const reglamento = await prisma.reglamento.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { admin: { select: { id: true, name: true } } },
   });
 
@@ -27,13 +30,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   return NextResponse.json(reglamento);
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: Params) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || !isOrganizer(session.user.role)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const reglamento = await prisma.reglamento.findUnique({ where: { id: params.id } });
+  const reglamento = await prisma.reglamento.findUnique({ where: { id } });
   if (!reglamento) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
   if (!isSuperAdmin(session.user.role) && reglamento.adminId !== session.user.id) {
@@ -47,7 +51,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 
   const updated = await prisma.reglamento.update({
-    where: { id: params.id },
+    where: { id },
     data: parsed.data,
     include: { admin: { select: { id: true, name: true } } },
   });
@@ -55,19 +59,20 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json(updated);
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: Params) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || !isOrganizer(session.user.role)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const reglamento = await prisma.reglamento.findUnique({ where: { id: params.id } });
+  const reglamento = await prisma.reglamento.findUnique({ where: { id } });
   if (!reglamento) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
   if (!isSuperAdmin(session.user.role) && reglamento.adminId !== session.user.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  await prisma.reglamento.delete({ where: { id: params.id } });
+  await prisma.reglamento.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

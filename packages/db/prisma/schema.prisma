@@ -73,6 +73,7 @@ model User {
   province               String?
   country                String?
   acceptsLocationInvites Boolean   @default(false)
+  acceptsEmailNotifications Boolean @default(true)
   pendingActivation      Boolean   @default(false)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
@@ -89,6 +90,8 @@ model User {
   invitationsSent       Invitation[] @relation("InvitationsSent")
   invitationsReceived   Invitation[] @relation("InvitationsReceived")
   tournamentRegistrations TournamentRegistration[]
+  matchAudits           MatchAudit[]
+  passwordResetTokens   PasswordResetToken[]
 }
 
 model Player {
@@ -171,6 +174,8 @@ model Invitation {
   userId String
   user   User   @relation("InvitationsReceived", fields: [userId], references: [id])
 
+  notifications Notification[]
+
   @@unique([tournamentId, userId])
 }
 
@@ -226,6 +231,7 @@ model Notification {
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   invitationId String?
+  invitation   Invitation? @relation(fields: [invitationId], references: [id], onDelete: SetNull)
 }
 
 model Team {
@@ -290,6 +296,8 @@ model Match {
   status    MatchStatus @default(PENDING)
   homeScore Int?
   awayScore Int?
+  scheduledAt DateTime?
+  location    String?
   round     Int?
   games     Json?
   createdAt DateTime    @default(now())
@@ -309,6 +317,33 @@ model Match {
 
   winnerId String?
   winner   Team?   @relation("MatchWinner", fields: [winnerId], references: [id])
+
+  audits MatchAudit[]
+}
+
+model MatchAudit {
+  id           String   @id @default(cuid())
+  action       String
+  previousData Json?
+  newData      Json?
+  createdAt    DateTime @default(now())
+
+  matchId String
+  match   Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model RankingConfig {

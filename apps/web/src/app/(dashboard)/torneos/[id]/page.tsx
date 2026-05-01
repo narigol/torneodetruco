@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma, TournamentFormat } from "@tdt/db";
@@ -7,6 +8,8 @@ import { GroupStandingsTable } from "@/components/tournament/GroupStandingsTable
 import { Bracket } from "@/components/tournament/Bracket";
 import { TournamentStatusBadge } from "@/components/tournament/TournamentStatusBadge";
 import { TournamentActions } from "@/components/tournament/TournamentActions";
+import { TournamentOverview } from "@/components/tournament/TournamentOverview";
+import { TournamentShareCard } from "@/components/tournament/TournamentShareCard";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { FollowButton } from "@/components/ui/FollowButton";
 import { ReglamentoCollapsible } from "@/components/ui/ReglamentoCollapsible";
@@ -17,13 +20,17 @@ type Props = {
   searchParams: Promise<{ tab?: string }>;
 };
 
-const TABS = ["equipos", "grupos", "llave"] as const;
+const TABS = ["resumen", "equipos", "grupos", "llave"] as const;
 type Tab = (typeof TABS)[number];
 
 export default async function TorneoDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { tab: rawTabParam } = await searchParams;
   const session = await getServerSession(authOptions);
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "localhost:3001";
+  const protocol = headersList.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
+  const publicTournamentUrl = `${protocol}://${host}/t/${id}`;
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
@@ -50,7 +57,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
               awayTeam: { select: { id: true, name: true } },
               winner: { select: { id: true, name: true } },
             },
-            orderBy: { round: "asc" },
+            orderBy: [{ scheduledAt: "asc" }, { round: "asc" }],
           },
         },
         orderBy: { name: "asc" },
@@ -62,7 +69,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
           awayTeam: { select: { id: true, name: true } },
           winner: { select: { id: true, name: true } },
         },
-        orderBy: { round: "asc" },
+        orderBy: [{ scheduledAt: "asc" }, { round: "asc" }],
       },
       _count: { select: { teams: true, matches: true } },
       interests: {
@@ -99,15 +106,19 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const hasBracket = tournament.matches.length > 0;
 
   const availableTabs: Tab[] = [
+    ...(isAdmin ? ["resumen" as Tab] : []),
     "equipos",
     ...(hasGroupFormat ? ["grupos" as Tab] : []),
     "llave" as Tab,
   ];
 
   const rawTab = rawTabParam as Tab | undefined;
-  const activeTab: Tab = rawTab && availableTabs.includes(rawTab) ? rawTab : "equipos";
+  const activeTab: Tab = rawTab && availableTabs.includes(rawTab)
+    ? rawTab
+    : (isAdmin ? "resumen" : "equipos");
 
   const tabLabels: Record<Tab, string> = {
+    resumen: "Resumen",
     equipos: `Equipos (${tournament.teams.length})`,
     grupos: "Grupos",
     llave: "Llave",
@@ -250,6 +261,14 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
         })}
       </div>
 
+      {/* Tab: Resumen */}
+      {activeTab === "resumen" && isAdmin && (
+        <div className="space-y-6">
+          <TournamentOverview tournament={tournament} />
+          <TournamentShareCard publicUrl={publicTournamentUrl} />
+        </div>
+      )}
+
       {/* Tab: Equipos */}
       {activeTab === "equipos" && (
         <section>
@@ -259,6 +278,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 <InvitarJugadorModal
                   tournamentId={tournament.id}
                   alreadyInvited={invitations}
+                  currentUserId={session!.user.id}
                 />
               )}
               <Link

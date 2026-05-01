@@ -40,7 +40,12 @@
       "PowerShell(cmd /c \"cd C:\\\\Users\\\\PC\\\\Desktop\\\\tdt\\\\packages\\\\db && npx prisma db push --accept-data-loss && npx prisma generate\" 2>&1)",
       "PowerShell(cmd /c \"cd C:\\\\Users\\\\PC\\\\Desktop\\\\tdt && npm run db:seed\" 2>&1)",
       "Bash(npm list *)",
-      "Bash(npm i *)"
+      "Bash(npm i *)",
+      "Bash(git rm *)",
+      "Bash(node ../../node_modules/prisma/build/index.js migrate dev --name \"add_published_invitations_reglamento_roles\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\PC\\Desktop\\tdt\\apps\\web\\src\\app\\(dashboard)\\usuarios\\[id]"
     ]
   }
 }

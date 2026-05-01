@@ -1,4 +1,6 @@
 import { ResultadoModal } from "@/components/ui/ResultadoModal";
+import { ScheduleMatchModal } from "@/components/ui/ScheduleMatchModal";
+import { MatchAuditModal } from "@/components/ui/MatchAuditModal";
 
 type Standing = {
   team: { id: string; name: string };
@@ -16,6 +18,8 @@ type MatchWithWinner = {
   homeScore: number | null;
   awayScore: number | null;
   winner?: { id: string; name: string } | null;
+  scheduledAt?: string | Date | null;
+  location?: string | null;
 };
 
 type Group = {
@@ -37,7 +41,7 @@ function sortStandings(standings: Standing[], matches: MatchWithWinner[]): { sta
     const dfA = a.scored - a.against;
     const dfB = b.scored - b.against;
     if (dfB !== dfA) return dfB - dfA;
-    // Resultado directo
+
     const h2h = matches.find(
       (m) =>
         m.status === "FINISHED" &&
@@ -45,14 +49,15 @@ function sortStandings(standings: Standing[], matches: MatchWithWinner[]): { sta
         ((m.homeTeam.id === a.team.id && m.awayTeam?.id === b.team.id) ||
           (m.homeTeam.id === b.team.id && m.awayTeam?.id === a.team.id))
     );
+
     if (h2h?.winner) {
       if (h2h.winner.id === a.team.id) return -1;
       if (h2h.winner.id === b.team.id) return 1;
     }
+
     return 0;
   });
 
-  // Detectar cuáles equipos fueron ordenados por resultado directo
   const h2hTeams = new Set<string>();
   for (let i = 0; i + 1 < sorted.length; i++) {
     const a = sorted[i];
@@ -157,7 +162,7 @@ export function GroupStandingsTable({
                   {sorted.length === 0 && (
                     <tr>
                       <td colSpan={7} className="px-5 py-6 text-center text-gray-400 text-sm">
-                        Sin posiciones todavía
+                        Sin posiciones todavia
                       </td>
                     </tr>
                   )}
@@ -167,7 +172,7 @@ export function GroupStandingsTable({
 
             {hasH2h && (
               <p className="text-xs text-amber-600 mb-3">
-                <span className="font-semibold">DH</span> — Desempate por resultado directo
+                <span className="font-semibold">DH</span> - Desempate por resultado directo
               </p>
             )}
 
@@ -190,20 +195,42 @@ function MatchRow({ match, isAdmin }: { match: MatchWithWinner; isAdmin?: boolea
   const finished = match.status === "FINISHED";
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl px-5 py-3 flex items-center gap-4 text-sm hover:border-gray-200 transition-colors">
-      <span className="flex-1 text-right font-medium text-gray-800 truncate">{match.homeTeam.name}</span>
-      <span className={`text-center font-mono text-xs px-3 py-1 rounded-lg tabular-nums min-w-[52px] ${finished ? "bg-gray-900 text-white font-bold" : "bg-gray-100 text-gray-500"}`}>
-        {finished ? `${match.homeScore} – ${match.awayScore}` : "vs"}
-      </span>
-      <span className={`flex-1 font-medium truncate ${match.awayTeam ? "text-gray-800" : "text-gray-300 italic"}`}>
-        {match.awayTeam?.name ?? "Equipo libre"}
-      </span>
-      {isAdmin && !finished && (
-        <ResultadoModal
-          matchId={match.id}
-          homeTeam={match.homeTeam.name}
-          awayTeam={match.awayTeam?.name ?? ""}
-        />
+    <div className="bg-white border border-gray-100 rounded-xl px-5 py-3 text-sm hover:border-gray-200 transition-colors">
+      <div className="flex items-center gap-4">
+        <span className="flex-1 text-right font-medium text-gray-800 truncate">{match.homeTeam.name}</span>
+        <span className={`text-center font-mono text-xs px-3 py-1 rounded-lg tabular-nums min-w-[52px] ${finished ? "bg-gray-900 text-white font-bold" : "bg-gray-100 text-gray-500"}`}>
+          {finished ? `${match.homeScore} - ${match.awayScore}` : "vs"}
+        </span>
+        <span className={`flex-1 font-medium truncate ${match.awayTeam ? "text-gray-800" : "text-gray-300 italic"}`}>
+          {match.awayTeam?.name ?? "Equipo libre"}
+        </span>
+        {isAdmin && !finished && (
+          <div className="flex items-center gap-3">
+            <ScheduleMatchModal
+              matchId={match.id}
+              initialScheduledAt={typeof match.scheduledAt === "string" ? match.scheduledAt : match.scheduledAt?.toISOString()}
+              initialLocation={match.location}
+            />
+            <ResultadoModal
+              matchId={match.id}
+              homeTeam={match.homeTeam.name}
+              awayTeam={match.awayTeam?.name ?? ""}
+            />
+          </div>
+        )}
+        {isAdmin && finished && (
+          <MatchAuditModal matchId={match.id} />
+        )}
+      </div>
+      {(match.scheduledAt || match.location) && (
+        <div className="mt-2 border-t border-gray-50 pt-2 text-xs text-gray-500">
+          {match.scheduledAt && (
+            <p>{new Date(match.scheduledAt).toLocaleString("es-AR")}</p>
+          )}
+          {match.location && (
+            <p className="mt-0.5">{match.location}</p>
+          )}
+        </div>
       )}
     </div>
   );

@@ -57,7 +57,6 @@ export async function GET(req: Request) {
       plan: true,
       pendingActivation: true,
       createdAt: true,
-      player: { select: { id: true, confirmed: true, teamPlayers: { select: { team: { select: { name: true, tournament: { select: { name: true } } } } } } } },
     },
   });
 
@@ -115,8 +114,7 @@ export async function POST(req: Request) {
             dni: dni ?? null,
             phone: phone ?? null,
             locality: locality ?? null,
-            province: province ?? null,
-            country: "Argentina",
+            provincia: province ?? null,
             confirmed: !isPending,
           },
         },

@@ -6,6 +6,7 @@ import { z } from "zod";
 
 const updateSchema = z.object({
   acceptsLocationInvites: z.boolean().optional(),
+  acceptsEmailNotifications: z.boolean().optional(),
 });
 
 export async function PATCH(req: Request) {
@@ -21,7 +22,7 @@ export async function PATCH(req: Request) {
   const updated = await prisma.user.update({
     where: { id: session.user.id },
     data: parsed.data,
-    select: { acceptsLocationInvites: true },
+    select: { acceptsLocationInvites: true, acceptsEmailNotifications: true },
   });
 
   return NextResponse.json(updated);

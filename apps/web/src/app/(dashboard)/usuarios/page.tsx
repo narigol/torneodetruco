@@ -26,22 +26,6 @@ export default async function UsuariosPage() {
       plan: true,
       pendingActivation: true,
       createdAt: true,
-      player: {
-        select: {
-          id: true,
-          confirmed: true,
-          teamPlayers: {
-            select: {
-              team: {
-                select: {
-                  name: true,
-                  tournament: { select: { name: true } },
-                },
-              },
-            },
-          },
-        },
-      },
     },
   });
 

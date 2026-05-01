@@ -15,9 +15,10 @@ type InvitedUser = { userId: string; status: string };
 type Props = {
   tournamentId: string;
   alreadyInvited: InvitedUser[];
+  currentUserId: string;
 };
 
-export function InvitarJugadorModal({ tournamentId, alreadyInvited }: Props) {
+export function InvitarJugadorModal({ tournamentId, alreadyInvited, currentUserId }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<Usuario[]>([]);
@@ -36,7 +37,7 @@ export function InvitarJugadorModal({ tournamentId, alreadyInvited }: Props) {
       setLoading(true);
       const res = await fetch(`/api/usuarios?search=${encodeURIComponent(search.trim())}&limit=10`);
       setLoading(false);
-      if (res.ok) setResults(await res.json());
+      if (res.ok) setResults((await res.json()).filter((u: Usuario) => u.id !== currentUserId));
     }, 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [search]);

@@ -4,9 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-type TeamPlayer = { team: { name: string; tournament: { name: string } } };
-type Player = { id: string; confirmed: boolean; teamPlayers: TeamPlayer[] } | null;
-
 type Usuario = {
   id: string;
   name: string;
@@ -19,7 +16,6 @@ type Usuario = {
   plan: string;
   pendingActivation: boolean;
   createdAt: Date;
-  player: Player;
 };
 
 type Props = {
@@ -115,14 +111,15 @@ export function UsuariosClient({ usuarios, isAdmin }: Props) {
                 <th className="text-left px-5 py-3 font-medium">Localidad</th>
                 <th className="text-left px-5 py-3 font-medium">Rol</th>
                 <th className="text-left px-5 py-3 font-medium">Estado</th>
-                <th className="text-left px-5 py-3 font-medium">Equipos</th>
                 {isAdmin && <th className="px-5 py-3" />}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.map((u) => (
                 <tr key={u.id} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-3 font-medium text-gray-900">{u.name}</td>
+                  <td className="px-5 py-3 font-medium text-gray-900">
+                    <Link href={`/usuarios/${u.id}`} className="hover:text-red-600 transition-colors">{u.name}</Link>
+                  </td>
                   <td className="px-5 py-3 text-gray-500">{u.dni ?? <span className="text-gray-300">—</span>}</td>
                   <td className="px-5 py-3 text-gray-500">
                     {u.email ? (
@@ -136,13 +133,6 @@ export function UsuariosClient({ usuarios, isAdmin }: Props) {
                   </td>
                   <td className="px-5 py-3"><RolBadge role={u.role} /></td>
                   <td className="px-5 py-3"><EstadoBadge pendingActivation={u.pendingActivation} /></td>
-                  <td className="px-5 py-3 text-gray-500">
-                    {u.player?.teamPlayers.length === 0 || !u.player ? (
-                      <span className="text-gray-300">Sin equipo</span>
-                    ) : (
-                      u.player.teamPlayers.map((tp) => `${tp.team.name} (${tp.team.tournament.name})`).join(", ")
-                    )}
-                  </td>
                   {isAdmin && (
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-3">

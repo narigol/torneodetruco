@@ -1,5 +1,7 @@
 import { Phase } from "@tdt/db";
 import { ResultadoModal } from "@/components/ui/ResultadoModal";
+import { ScheduleMatchModal } from "@/components/ui/ScheduleMatchModal";
+import { MatchAuditModal } from "@/components/ui/MatchAuditModal";
 
 type GameScore = { home: number; away: number };
 
@@ -14,6 +16,8 @@ type BracketMatch = {
   awayScore: number | null;
   winner: { id: string; name: string } | null;
   games?: unknown;
+  scheduledAt?: string | Date | null;
+  location?: string | null;
 };
 
 const PHASE_ORDER: Phase[] = ["ROUND_OF_16", "QUARTERFINAL", "SEMIFINAL", "FINAL"];
@@ -39,7 +43,7 @@ export function Bracket({ matches, isAdmin }: Props) {
   if (matches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="text-4xl mb-3">🏆</div>
+        <div className="text-4xl mb-3">T</div>
         <p className="text-gray-400 text-sm">El bracket se genera al iniciar la fase eliminatoria</p>
       </div>
     );
@@ -49,8 +53,8 @@ export function Bracket({ matches, isAdmin }: Props) {
     <div className="space-y-8">
       {champion && (
         <div className="flex flex-col items-center gap-2 py-6 bg-amber-50 border border-amber-200 rounded-2xl text-center">
-          <div className="text-4xl">🏆</div>
-          <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest">Campeón</p>
+          <div className="text-4xl">T</div>
+          <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest">Campeon</p>
           <p className="text-2xl font-bold text-amber-800">{champion.name}</p>
         </div>
       )}
@@ -122,7 +126,6 @@ function BracketCard({ match, isAdmin }: { match: BracketMatch; isAdmin?: boolea
         isBest3={isBest3}
       />
 
-      {/* Detalle de juegos en mejor de 3 */}
       {finished && isBest3 && games && (
         <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 space-y-1">
           {games.map((g, i) => {
@@ -131,7 +134,7 @@ function BracketCard({ match, isAdmin }: { match: BracketMatch; isAdmin?: boolea
               <div key={i} className="flex items-center justify-between text-xs text-gray-500">
                 <span className="text-gray-400">J{i + 1}</span>
                 <span className={homeWon ? "font-semibold text-green-700" : ""}>{g.home}</span>
-                <span className="text-gray-300">–</span>
+                <span className="text-gray-300">-</span>
                 <span className={!homeWon ? "font-semibold text-green-700" : ""}>{g.away}</span>
               </div>
             );
@@ -139,8 +142,24 @@ function BracketCard({ match, isAdmin }: { match: BracketMatch; isAdmin?: boolea
         </div>
       )}
 
+      {(match.scheduledAt || match.location) && (
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
+          {match.scheduledAt && (
+            <p>{new Date(match.scheduledAt).toLocaleString("es-AR")}</p>
+          )}
+          {match.location && (
+            <p className="mt-0.5 truncate">{match.location}</p>
+          )}
+        </div>
+      )}
+
       {isAdmin && !finished && (
-        <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex justify-center">
+        <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
+          <ScheduleMatchModal
+            matchId={match.id}
+            initialScheduledAt={typeof match.scheduledAt === "string" ? match.scheduledAt : match.scheduledAt?.toISOString()}
+            initialLocation={match.location}
+          />
           <ResultadoModal
             matchId={match.id}
             homeTeam={match.homeTeam.name}
@@ -149,8 +168,9 @@ function BracketCard({ match, isAdmin }: { match: BracketMatch; isAdmin?: boolea
         </div>
       )}
       {finished && match.winner && (
-        <div className="px-4 py-2 bg-amber-50 border-t border-amber-100 text-center">
-          <span className="text-xs font-semibold text-amber-700">🏆 {match.winner.name}</span>
+        <div className="px-4 py-2 bg-amber-50 border-t border-amber-100 flex items-center justify-between gap-3">
+          <span className="text-xs font-semibold text-amber-700">T {match.winner.name}</span>
+          {isAdmin && <MatchAuditModal matchId={match.id} />}
         </div>
       )}
     </div>

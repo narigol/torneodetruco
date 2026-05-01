@@ -23,16 +23,15 @@ export async function notifyFollowers(
 }
 
 export async function notifyByLocation(organizerId: string, tournamentId: string) {
-  // Find organizer's province/locality via their linked player
   const organizer = await prisma.user.findUnique({
     where: { id: organizerId },
-    select: { player: { select: { provincia: true, locality: true } } },
+    select: { province: true, locality: true },
   });
 
-  const provincia = organizer?.player?.provincia;
-  if (!provincia) return;
+  const province = organizer?.province;
+  if (!province) return;
 
-  const locality = organizer?.player?.locality;
+  const locality = organizer?.locality;
 
   // Find existing notification recipients to avoid duplicates (e.g. followers)
   const alreadyNotified = await prisma.notification.findMany({
@@ -46,10 +45,8 @@ export async function notifyByLocation(organizerId: string, tournamentId: string
     where: {
       id: { not: organizerId },
       acceptsLocationInvites: true,
-      player: {
-        provincia,
-        ...(locality ? { locality } : {}),
-      },
+      province,
+      ...(locality ? { locality } : {}),
     },
     select: { id: true },
   });

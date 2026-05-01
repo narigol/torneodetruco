@@ -4,12 +4,16 @@ import { useState } from "react";
 
 type Props = {
   acceptsLocationInvites: boolean;
+  acceptsEmailNotifications: boolean;
 };
 
-export function PerfilSettings({ acceptsLocationInvites: initial }: Props) {
+export function PerfilSettings({ acceptsLocationInvites: initial, acceptsEmailNotifications: initialEmail }: Props) {
   const [enabled, setEnabled] = useState(initial);
+  const [emailEnabled, setEmailEnabled] = useState(initialEmail);
   const [loading, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [emailSaved, setEmailSaved] = useState(false);
 
   async function toggle() {
     setLoading(true);
@@ -25,6 +29,23 @@ export function PerfilSettings({ acceptsLocationInvites: initial }: Props) {
       setEnabled(next);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
+    }
+  }
+
+  async function toggleEmail() {
+    setEmailLoading(true);
+    setEmailSaved(false);
+    const next = !emailEnabled;
+    const res = await fetch("/api/perfil", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ acceptsEmailNotifications: next }),
+    });
+    setEmailLoading(false);
+    if (res.ok) {
+      setEmailEnabled(next);
+      setEmailSaved(true);
+      setTimeout(() => setEmailSaved(false), 2500);
     }
   }
 
@@ -65,6 +86,40 @@ export function PerfilSettings({ acceptsLocationInvites: initial }: Props) {
       {saved && (
         <p className="text-xs text-green-600 mt-4">
           Preferencia guardada.
+        </p>
+      )}
+
+      <div className="h-px bg-gray-100 my-5" />
+
+      <button
+        onClick={toggleEmail}
+        disabled={emailLoading}
+        className="w-full flex items-center justify-between gap-4 text-left group disabled:opacity-60"
+      >
+        <div>
+          <p className="text-sm font-medium text-gray-800">
+            Recibir emails de TdT
+          </p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Activa o desactiva avisos por correo para torneos, recordatorios y novedades de tu actividad.
+          </p>
+        </div>
+        <div
+          className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${
+            emailEnabled ? "bg-red-600" : "bg-gray-200"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+              emailEnabled ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </div>
+      </button>
+
+      {emailSaved && (
+        <p className="text-xs text-green-600 mt-4">
+          Preferencia de email guardada.
         </p>
       )}
     </div>

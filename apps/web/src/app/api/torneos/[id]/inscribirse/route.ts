@@ -55,14 +55,16 @@ export async function POST(req: Request, { params }: Params) {
 
   let myPlayerId = user.player?.id;
   if (!myPlayerId) {
-    const newPlayer = await prisma.player.create({
-      data: { name: user.name, email: user.email, dni: user.dni ?? null, confirmed: true },
+    myPlayerId = await prisma.$transaction(async (tx) => {
+      const newPlayer = await tx.player.create({
+        data: { name: user.name, email: user.email, dni: user.dni ?? null, confirmed: true },
+      });
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: { player: { connect: { id: newPlayer.id } } },
+      });
+      return newPlayer.id;
     });
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { player: { connect: { id: newPlayer.id } } },
-    });
-    myPlayerId = newPlayer.id;
   }
 
   // Buscar o crear Player del compañero (solo para torneos con más de 1 jugador por equipo)
