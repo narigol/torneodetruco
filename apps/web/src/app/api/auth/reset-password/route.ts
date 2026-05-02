@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@tdt/db";
+import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   token: z.string().min(1),
@@ -10,6 +11,16 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  const clientIp = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
+  const rateLimitKey = `reset-password:${clientIp}`;
+
+  if (!rateLimit(rateLimitKey, 5, 15 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Intenta de nuevo más tarde." },
+      { status: 429 }
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

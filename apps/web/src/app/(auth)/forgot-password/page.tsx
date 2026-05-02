@@ -32,9 +32,9 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-stone-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-3xl border border-stone-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">Recuperar contrasena</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Recuperar contraseña</h1>
         <p className="text-sm text-gray-500 mt-2">
-          Ingresa tu email y te enviaremos un enlace para crear una nueva contrasena.
+          Ingresa tu email y te enviaremos un enlace para crear una nueva contraseña.
         </p>
 
         {done ? (
