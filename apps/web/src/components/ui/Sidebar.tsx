@@ -32,6 +32,13 @@ const StarIcon = () => (
   </svg>
 );
 
+const MyTournamentsIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M5 12h4m-4 4h4m-4-8h10m2 4h2m-2 4h2M3 6h18v12H3V6z" />
+  </svg>
+);
+
 const LogoutIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -67,6 +74,7 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0 }: Props) {
 
   const links = [
     { href: "/torneos", label: "Torneos", icon: <TrophyIcon /> },
+    { href: "/torneos/mis", label: "Mis torneos", icon: <MyTournamentsIcon /> },
     { href: "/ranking", label: "Ranking", icon: <RankingIcon /> },
     ...(canOrganize ? [
       { href: "/usuarios", label: "Usuarios", icon: <UsersIcon /> },
@@ -94,7 +102,10 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0 }: Props) {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         {links.map(({ href, label, icon }) => {
-          const active = pathname === href || pathname.startsWith(href + "/");
+          const active =
+            pathname === href ||
+            (href === "/torneos" && pathname.startsWith("/torneos/") && !pathname.startsWith("/torneos/mis")) ||
+            (href !== "/torneos" && pathname.startsWith(href + "/"));
           return (
             <Link
               key={href}

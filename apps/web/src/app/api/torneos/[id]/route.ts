@@ -94,6 +94,10 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const { startDate, endDate, startTime, location, locality, province, reglamentoId, ...rest } = parsed.data;
 
+  if (rest.published === true && session?.user?.role === "PLAYER") {
+    return NextResponse.json({ error: "No autorizado para publicar torneos" }, { status: 403 });
+  }
+
   const updated = await prisma.tournament.update({
     where: { id },
     data: {

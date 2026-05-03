@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
-import { FREE_TOURNAMENT_LIMIT, isOrganizer, isSuperAdmin } from "@/lib/tournament-auth";
+import { FREE_TOURNAMENT_LIMIT, canCreateTournament, isOrganizer, isSuperAdmin } from "@/lib/tournament-auth";
 import { notifyFollowers } from "@/lib/notifications";
 
 const createSchema = z.object({
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  if (!isOrganizer(session.user.role)) {
+  if (!canCreateTournament(session)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 

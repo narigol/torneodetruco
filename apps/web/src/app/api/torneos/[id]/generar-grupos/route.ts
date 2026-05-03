@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma, TournamentFormat } from "@tdt/db";
 import { z } from "zod";
-import { canManageTournament } from "@/lib/tournament-auth";
+import { canGenerateGroups, canManageTournament } from "@/lib/tournament-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -37,7 +37,7 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
   }
 
-  if (!canManageTournament(session, tournament.adminId)) {
+  if (!canManageTournament(session, tournament.adminId) || !canGenerateGroups(session)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 

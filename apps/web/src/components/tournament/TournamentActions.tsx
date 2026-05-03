@@ -12,6 +12,8 @@ type Props = {
   hasGroups: boolean;
   hasBracket: boolean;
   published: boolean;
+  canPublish?: boolean;
+  canGenerateGroups?: boolean;
 };
 
 const NEXT_STATUS: Partial<Record<TournamentStatus, TournamentStatus>> = {
@@ -34,6 +36,8 @@ export function TournamentActions({
   hasGroups,
   hasBracket,
   published,
+  canPublish = true,
+  canGenerateGroups = true,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -104,19 +108,27 @@ export function TournamentActions({
   return (
     <>
       <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={togglePublish}
-          disabled={publishLoading}
-          className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50 ${
-            published
-              ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          {publishLoading ? "..." : published ? "⊙ Público" : "Publicar"}
-        </button>
+        {canPublish ? (
+          <button
+            onClick={togglePublish}
+            disabled={publishLoading}
+            className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50 ${
+              published
+                ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            {publishLoading ? "..." : published ? "⊙ Público" : "Publicar"}
+          </button>
+        ) : (
+          published && (
+            <span className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
+              ⊙ Público
+            </span>
+          )
+        )}
 
-        {needsGroups && (
+        {needsGroups && canGenerateGroups && (
           <button
             onClick={() => setShowGroupModal(true)}
             disabled={loading || teamCount < 4}

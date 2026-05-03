@@ -40,18 +40,14 @@ const STATUS_FILTERS = [
 
 type Props = {
   torneos: Torneo[];
-  userId?: string;
-  isAdmin: boolean;
 };
 
-export function TorneosFilter({ torneos, userId, isAdmin }: Props) {
+export function TorneosFilter({ torneos }: Props) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [locality, setLocality] = useState("");
   const [province, setProvince] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
   const [organizerId, setOrganizerId] = useState("");
-  const [mineOnly, setMineOnly] = useState(false);
 
   const organizers = useMemo(() => {
     const seen = new Set<string>();
@@ -65,127 +61,78 @@ export function TorneosFilter({ torneos, userId, isAdmin }: Props) {
     const q = search.trim().toLowerCase();
     const loc = locality.trim().toLowerCase();
     const prov = province.toLowerCase();
-    const from = dateFrom ? new Date(dateFrom) : null;
 
     return torneos.filter((t) => {
       if (q && !t.name.toLowerCase().includes(q)) return false;
       if (statusFilter && t.status !== statusFilter) return false;
-      if (mineOnly && userId && t.adminId !== userId) return false;
       if (loc && !(t.locality ?? "").toLowerCase().includes(loc)) return false;
       if (prov && !(t.province ?? "").toLowerCase().includes(prov)) return false;
       if (organizerId && t.admin.id !== organizerId) return false;
-      if (from) {
-        if (!t.startDate) return false;
-        const d = new Date(t.startDate);
-        if (d < from) return false;
-      }
       return true;
     });
-  }, [torneos, search, statusFilter, mineOnly, userId, locality, province, organizerId, dateFrom]);
-
-  const hasFilters = !!(search || statusFilter || mineOnly || locality || province || organizerId || dateFrom);
-
-  function clearFilters() {
-    setSearch(""); setStatusFilter(""); setMineOnly(false);
-    setLocality(""); setProvince(""); setOrganizerId("");
-    setDateFrom("");
-  }
+  }, [torneos, search, statusFilter, locality, province, organizerId]);
 
   return (
     <div className="space-y-5">
       {/* Controles */}
-      <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar torneo..."
-            className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+      <div className="flex flex-wrap items-end gap-3">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar torneo..."
+          className="min-w-[18rem] flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+        />
+
+        <div className="min-w-[28rem] flex-1">
+          <ArgentinaGeoSelect
+            province={province}
+            locality={locality}
+            onProvinceChange={(value) => setProvince(value)}
+            onLocalityChange={(value) => setLocality(value)}
+            nameProvince="province"
+            nameLocality="locality"
+            inline
           />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-          >
-            {STATUS_FILTERS.map((f) => (
-              <option key={f.value} value={f.value}>{f.label}</option>
-            ))}
-          </select>
-          {userId && !isAdmin && (
+        </div>
+
+        <select
+          value={organizerId}
+          onChange={(e) => setOrganizerId(e.target.value)}
+          className="min-w-[14rem] px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+        >
+          <option value="">Todos los organizadores</option>
+          {organizers.map((o) => (
+            <option key={o.id} value={o.id}>{o.name}</option>
+          ))}
+        </select>
+
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {STATUS_FILTERS.map((filter) => {
+          const active = statusFilter === filter.value;
+          return (
             <button
-              onClick={() => setMineOnly((v) => !v)}
-              className={`px-3.5 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
-                mineOnly
-                  ? "bg-red-50 border-red-200 text-red-700"
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+              key={filter.value}
+              type="button"
+              onClick={() => setStatusFilter(filter.value)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                active
+                  ? "bg-red-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              Mis torneos
+              {filter.label}
             </button>
-          )}
-        </div>
-
-        {/* Filtros avanzados */}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="sm:col-span-2 xl:col-span-2">
-            <ArgentinaGeoSelect
-              province={province}
-              locality={locality}
-              onProvinceChange={(value) => setProvince(value)}
-              onLocalityChange={(value) => setLocality(value)}
-              nameProvince="province"
-              nameLocality="locality"
-              inline
-            />
-          </div>
-
-          {organizers.length > 1 && (
-            <select
-              value={organizerId}
-              onChange={(e) => setOrganizerId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-            >
-              <option value="">Todos los organizadores</option>
-              {organizers.map((o) => (
-                <option key={o.id} value={o.id}>{o.name}</option>
-              ))}
-            </select>
-          )}
-
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              placeholder="Desde"
-              aria-label="Desde"
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-            />
-          </div>
-
-          {hasFilters && (
-            <div className="flex items-center sm:col-span-2 xl:col-span-1">
-              <button
-                onClick={clearFilters}
-                className="w-full px-3 py-2 text-sm text-gray-400 hover:text-red-600 transition-colors"
-              >
-                Limpiar filtros
-              </button>
-            </div>
-          )}
-        </div>
+          );
+        })}
       </div>
 
       {/* Resultados */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-gray-400 text-sm">No se encontraron torneos</p>
-          {hasFilters && (
-            <button onClick={clearFilters} className="mt-2 text-sm text-red-600 hover:underline">
-              Limpiar filtros
-            </button>
-          )}
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

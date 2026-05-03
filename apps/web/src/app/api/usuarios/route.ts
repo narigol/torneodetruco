@@ -14,6 +14,7 @@ const createSchema = z.object({
   phone: z.string().max(30).optional().nullable(),
   locality: z.string().max(100).optional().nullable(),
   province: z.string().max(100).optional().nullable(),
+  instagram: z.string().max(100).optional().nullable(),
 });
 
 export async function GET(req: Request) {
@@ -55,6 +56,7 @@ export async function GET(req: Request) {
       province: true,
       role: true,
       plan: true,
+      instagram: true,
       pendingActivation: true,
       createdAt: true,
     },
@@ -75,7 +77,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
   }
 
-  const { name, email, dni, phone, locality, province } = parsed.data;
+  const { name, email, dni, phone, locality, province, instagram } = parsed.data;
 
   const existingEmail = await prisma.user.findUnique({ where: { email } });
   if (existingEmail) {
@@ -106,6 +108,7 @@ export async function POST(req: Request) {
         locality: locality ?? null,
         province: province ?? null,
         country: "Argentina",
+        instagram: instagram ?? null,
         pendingActivation: isPending,
         player: {
           create: {

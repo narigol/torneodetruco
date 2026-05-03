@@ -2,11 +2,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import Link from "next/link";
-import { FREE_TOURNAMENT_LIMIT, isOrganizer } from "@/lib/tournament-auth";
+import { FREE_TOURNAMENT_LIMIT, isOrganizer, canCreateTournament } from "@/lib/tournament-auth";
 import { TorneosFilter } from "@/components/ui/TorneosFilter";
 
 export default async function TorneosPage() {
   const session = await getServerSession(authOptions);
+  const canCreate = canCreateTournament(session);
   const canOrganize = isOrganizer(session?.user?.role ?? "");
   const isSuperAdmin = session?.user?.role === "ADMIN";
   const userId = session?.user?.id;
@@ -37,7 +38,7 @@ export default async function TorneosPage() {
           </p>
         </div>
 
-        {canOrganize && (
+        {canCreate && (
           <div className="flex flex-col items-end gap-1">
             {atLimit ? (
               <span
@@ -65,7 +66,8 @@ export default async function TorneosPage() {
         )}
       </div>
 
-      {torneos.length === 0 ? (
+      <TorneosFilter torneos={torneos} />
+      {torneos.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="text-5xl mb-4">🃏</div>
           <p className="text-gray-500 font-medium">No hay torneos todavía</p>
@@ -73,8 +75,6 @@ export default async function TorneosPage() {
             Crear el primer torneo →
           </Link>
         </div>
-      ) : (
-        <TorneosFilter torneos={torneos} userId={userId} isAdmin={isSuperAdmin} />
       )}
     </div>
   );

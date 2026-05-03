@@ -23,7 +23,8 @@ const XIcon = () => (
 const benefits: { label: string; pro: string | boolean; free: string | boolean }[] = [
   { label: "Torneos",              pro: "Ilimitados",  free: "Hasta 5" },
   { label: "Personas por torneo", pro: "Ilimitadas",  free: "Hasta 10" },
-  { label: "Grupos y llaves eliminatorias", pro: true, free: true },
+  { label: "Grupos",                pro: true,          free: false },
+  { label: "Llaves eliminatorias", pro: true,          free: true },
   { label: "Carga de resultados", pro: true,          free: true },
   { label: "Ver torneos y posiciones", pro: true,      free: true },
   { label: "Publicar torneos (alcance público)", pro: true, free: false },

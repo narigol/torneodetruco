@@ -14,6 +14,7 @@ import { DeleteButton } from "@/components/ui/DeleteButton";
 import { FollowButton } from "@/components/ui/FollowButton";
 import { ReglamentoCollapsible } from "@/components/ui/ReglamentoCollapsible";
 import { InvitarJugadorModal } from "@/components/ui/InvitarJugadorModal";
+import { canGenerateGroups, canInviteTournament, canManageTournament, canPublishTournament } from "@/lib/tournament-auth";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -89,10 +90,9 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
 
   if (!tournament) notFound();
 
-  const isAdmin = session?.user?.role === "ADMIN" ||
-    (session?.user?.role === "ORGANIZER" && session?.user?.id === tournament.adminId);
-
-  const canInvite = isAdmin && (session?.user?.plan === "PRO" || session?.user?.role === "ADMIN");
+  const canManage = canManageTournament(session, tournament.adminId);
+  const canInvite = canManage && canInviteTournament(session);
+  const canGenerateGroupsPermission = canManage && canGenerateGroups(session);
 
   const invitations = canInvite
     ? await prisma.invitation.findMany({
@@ -106,7 +106,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const hasBracket = tournament.matches.length > 0;
 
   const availableTabs: Tab[] = [
-    ...(isAdmin ? ["resumen" as Tab] : []),
+    ...(canManage ? ["resumen" as Tab] : []),
     "equipos",
     ...(hasGroupFormat ? ["grupos" as Tab] : []),
     "llave" as Tab,
@@ -115,7 +115,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const rawTab = rawTabParam as Tab | undefined;
   const activeTab: Tab = rawTab && availableTabs.includes(rawTab)
     ? rawTab
-    : (isAdmin ? "resumen" : "equipos");
+    : (canManage ? "resumen" : "equipos");
 
   const tabLabels: Record<Tab, string> = {
     resumen: "Resumen",
@@ -179,7 +179,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 <span>{tournament.startTime}</span>
               )}
               <span>Por {tournament.admin.name}</span>
-              {!isAdmin && (
+              {!canManage && (
                 <FollowButton
                   organizerId={tournament.admin.id}
                   organizerName={tournament.admin.name}
@@ -216,7 +216,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             <ReglamentoCollapsible reglamento={tournament.reglamento} />
           )}
 
-          {isAdmin && (
+          {canManage && (
             <div className="shrink-0 flex flex-col items-end gap-2">
               {tournament.status !== "FINISHED" && (
                 <Link
@@ -234,6 +234,8 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 hasGroups={hasGroups}
                 hasBracket={hasBracket}
                 published={tournament.published}
+                canPublish={canPublishTournament(session)}
+                canGenerateGroups={canGenerateGroupsPermission}
               />
             </div>
           )}
@@ -262,7 +264,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       </div>
 
       {/* Tab: Resumen */}
-      {activeTab === "resumen" && isAdmin && (
+      {activeTab === "resumen" && canManage && (
         <div className="space-y-6">
           <TournamentOverview tournament={tournament} />
           <TournamentShareCard publicUrl={publicTournamentUrl} />

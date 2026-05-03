@@ -72,6 +72,7 @@ model User {
   locality               String?
   province               String?
   country                String?
+  instagram              String?   // Solo para ORGANIZER
   acceptsLocationInvites Boolean   @default(false)
   acceptsEmailNotifications Boolean @default(true)
   pendingActivation      Boolean   @default(false)

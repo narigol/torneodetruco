@@ -43,10 +43,10 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: "El torneo ya finalizó" }, { status: 400 });
   }
 
-  // PRO check: only PRO or ADMIN can invite
-  const user = await prisma.user.findUnique({ where: { id: session!.user.id }, select: { plan: true, role: true } });
-  if (user?.plan !== "PRO" && user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Las invitaciones son una función PRO" }, { status: 403 });
+  // Only ORGANIZER or ADMIN can invite
+  const user = await prisma.user.findUnique({ where: { id: session!.user.id }, select: { role: true } });
+  if (user?.role !== "ORGANIZER" && user?.role !== "ADMIN") {
+    return NextResponse.json({ error: "Solo organizadores pueden invitar jugadores" }, { status: 403 });
   }
 
   const body = await req.json();

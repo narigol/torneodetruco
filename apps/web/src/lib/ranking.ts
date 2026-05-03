@@ -51,8 +51,8 @@ function emptyWinsByPhase(): Record<Phase, number> {
   };
 }
 
-export async function getRankingRows(config: RankingConfig): Promise<RankingRow[]> {
-  const [users, orphanPlayers] = await Promise.all([
+export async function getRankingRows(config: RankingConfig, organizerId?: string): Promise<RankingRow[]> {
+  const [users, orphanPlayers, organizerTournaments] = await Promise.all([
     prisma.user.findMany({
       orderBy: { name: "asc" },
       select: {
@@ -72,7 +72,15 @@ export async function getRankingRows(config: RankingConfig): Promise<RankingRow[
       orderBy: { createdAt: "asc" },
       select: { id: true, email: true, dni: true },
     }),
+    organizerId
+      ? prisma.tournament.findMany({
+          where: { adminId: organizerId },
+          select: { id: true },
+        })
+      : Promise.resolve([]),
   ]);
+
+  const organizerTournamentIds = organizerId ? new Set(organizerTournaments.map((t) => t.id)) : null;
 
   const userEmailSet = new Set(users.map((u) => u.email.toLowerCase()));
   const userDniSet = new Set(users.filter((u) => u.dni).map((u) => u.dni!));
