@@ -44,7 +44,7 @@ export function Bracket({ matches, isAdmin }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="text-4xl mb-3">T</div>
-        <p className="text-gray-400 text-sm">El bracket se genera al iniciar la fase eliminatoria</p>
+        <p className="text-gray-400 text-sm">La llave se genera al iniciar la fase eliminatoria</p>
       </div>
     );
   }

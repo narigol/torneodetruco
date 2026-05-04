@@ -104,6 +104,7 @@ export function ResultadoModal({ matchId, homeTeam, awayTeam }: Props) {
       }
 
       body = {
+        seriesFormat: "SINGLE",
         homeScore: h,
         awayScore: a,
         ...(matchPoints ? { matchPoints: parseInt(matchPoints, 10) } : {}),

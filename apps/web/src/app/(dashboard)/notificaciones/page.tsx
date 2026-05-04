@@ -9,52 +9,16 @@ export default async function NotificacionesPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return null;
 
-  const [notifications, interests, userWithPlayer] = await Promise.all([
-    prisma.notification.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-      include: {
-        tournament: {
-          select: { id: true, name: true, playersPerTeam: true, admin: { select: { name: true } } },
-        },
+  const notifications = await prisma.notification.findMany({
+    where: { userId: session.user.id },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    include: {
+      tournament: {
+        select: { id: true, name: true, admin: { select: { name: true } } },
       },
-    }),
-    prisma.tournamentInterest.findMany({
-      where: { userId: session.user.id },
-      select: { tournamentId: true },
-    }),
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { player: { select: { id: true } } },
-    }),
-  ]);
-
-  const interestedIds = new Set(interests.map((i) => i.tournamentId));
-
-  // Torneos donde el usuario ya tiene equipo inscripto
-  const enrolledTournamentIds = new Set<string>();
-  if (userWithPlayer?.player) {
-    const teamPlayers = await prisma.teamPlayer.findMany({
-      where: { playerId: userWithPlayer.player.id },
-      select: { team: { select: { tournamentId: true } } },
-    });
-    teamPlayers.forEach((tp) => enrolledTournamentIds.add(tp.team.tournamentId));
-  }
-
-  // Fetch invitation statuses for invitation notifications
-  const invitationIds = notifications
-    .map((n) => n.invitationId)
-    .filter((id): id is string => !!id);
-
-  const invitations = invitationIds.length > 0
-    ? await prisma.invitation.findMany({
-        where: { id: { in: invitationIds } },
-        select: { id: true, status: true },
-      })
-    : [];
-
-  const invitationStatusMap = Object.fromEntries(invitations.map((i) => [i.id, i.status]));
+    },
+  });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -80,15 +44,10 @@ export default async function NotificacionesPage() {
           {notifications.map((n) => (
             <NotificationItem
               key={n.id}
-              id={n.id}
               type={n.type}
               read={n.read}
               createdAt={n.createdAt.toISOString()}
               message={n.message ?? null}
-              alreadyInterested={n.tournamentId ? interestedIds.has(n.tournamentId) : false}
-              alreadyInscripto={n.tournamentId ? enrolledTournamentIds.has(n.tournamentId) : false}
-              invitationId={n.invitationId ?? null}
-              invitationStatus={n.invitationId ? (invitationStatusMap[n.invitationId] ?? null) : null}
               tournament={n.tournament}
             />
           ))}

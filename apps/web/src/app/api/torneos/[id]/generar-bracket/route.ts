@@ -49,7 +49,7 @@ export async function POST(_req: Request, { params }: Params) {
   });
 
   if (existingKnockout > 0) {
-    return NextResponse.json({ error: "El bracket ya fue generado" }, { status: 400 });
+    return NextResponse.json({ error: "La llave ya fue generada" }, { status: 400 });
   }
 
   let teamsForBracket = tournament.teams;
@@ -79,7 +79,7 @@ export async function POST(_req: Request, { params }: Params) {
 
   if (teamsForBracket.length < 2) {
     return NextResponse.json(
-      { error: "Se necesitan al menos 2 equipos para generar el bracket" },
+      { error: "Se necesitan al menos 2 equipos para generar la llave" },
       { status: 400 }
     );
   }

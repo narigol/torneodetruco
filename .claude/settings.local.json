@@ -29,7 +29,10 @@
       "Bash(taskkill /F /PID 24352)",
       "Bash(curl -s http://localhost:3001/ -o /dev/null -w \"%{http_code}\")",
       "PowerShell(Get-Process | Where-Object { $_.Name -match \"node\" } | Stop-Process -Force -Confirm:$false 2>$null; Start-Sleep -Seconds 2)",
-      "PowerShell(Get-Process | Where-Object { $_.Name -match \"node\" } | Stop-Process -Force 2>$null; Start-Sleep -Seconds 2; Write-Host \"done\")"
+      "PowerShell(Get-Process | Where-Object { $_.Name -match \"node\" } | Stop-Process -Force 2>$null; Start-Sleep -Seconds 2; Write-Host \"done\")",
+      "Bash(New-Item -Path \"c:\\\\torneodetruco\\\\apps\\\\web\\\\src\\\\app\\\\api\\\\equipos\\\\[id]\\\\route.ts\" -ItemType File -Force)",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"created\")"
     ]
   }
 }

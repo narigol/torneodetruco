@@ -9,27 +9,26 @@ type Params = { params: Promise<{ id: string }> };
 export async function DELETE(_req: Request, { params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
 
   const team = await prisma.team.findUnique({
     where: { id },
-    include: { tournament: { select: { adminId: true, status: true } } },
+    select: { tournament: { select: { adminId: true, status: true } } },
   });
 
-  if (!team) {
-    return NextResponse.json({ error: "Equipo no encontrado" }, { status: 404 });
-  }
+  if (!team) return NextResponse.json({ error: "Equipo no encontrado" }, { status: 404 });
 
   if (!canManageTournament(session, team.tournament.adminId)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
   if (!["DRAFT", "REGISTRATION"].includes(team.tournament.status)) {
-    return NextResponse.json(
-      { error: "No se puede eliminar equipos de un torneo ya iniciado" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "No se puede eliminar equipos en este estado del torneo" }, { status: 400 });
   }
 
   await prisma.team.delete({ where: { id } });
-  return new NextResponse(null, { status: 204 });
+
+  return NextResponse.json({ ok: true });
 }

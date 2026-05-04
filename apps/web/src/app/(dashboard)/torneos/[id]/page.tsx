@@ -16,6 +16,8 @@ import { ReglamentoCollapsible } from "@/components/ui/ReglamentoCollapsible";
 import { InvitarJugadorModal } from "@/components/ui/InvitarJugadorModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { canGenerateGroups, canInviteTournament, canManageTournament, canPublishTournament } from "@/lib/tournament-auth";
+import { PublicTournamentActions } from "@/components/tournament/PublicTournamentActions";
+import { EquipoDetailModal } from "@/components/ui/EquipoDetailModal";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -32,7 +34,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const headersList = await headers();
   const host = headersList.get("host") ?? "localhost:3001";
   const protocol = headersList.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
-  const publicTournamentUrl = `${protocol}://${host}/t/${id}`;
+  const publicTournamentUrl = `${protocol}://${host}/torneos/${id}`;
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
@@ -42,7 +44,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       teams: {
         include: {
           teamPlayers: {
-            include: { player: { select: { id: true, name: true } } },
+            include: { player: { select: { id: true, name: true, email: true, dni: true, phone: true, locality: true, provincia: true } } },
           },
         },
         orderBy: { name: "asc" },
@@ -93,6 +95,19 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
 
   const canManage = canManageTournament(session, tournament.adminId);
   const canInvite = canManage && canInviteTournament(session);
+
+  const myUserData = !canManage && session?.user?.id
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { name: true, email: true, dni: true, phone: true, player: { select: { id: true } } },
+      })
+    : null;
+
+  const myPlayerId = myUserData?.player?.id ?? null;
+
+  const alreadyInscripto = myPlayerId
+    ? tournament.teams.some((t) => t.teamPlayers.some((tp) => tp.player.id === myPlayerId))
+    : false;
   const canGenerateGroupsPermission = canManage && canGenerateGroups(session);
 
   const invitations = canInvite
@@ -306,6 +321,25 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             </div>
           )}
 
+          {/* Formulario de inscripción para jugadores no-admin */}
+          {!canManage && tournament.status === "REGISTRATION" && session?.user?.id && (
+            <div className="mb-6">
+              <PublicTournamentActions
+                tournamentId={tournament.id}
+                playersPerTeam={tournament.playersPerTeam}
+                loggedIn={true}
+                callbackUrl={`/torneos/${tournament.id}`}
+                initialInscripto={alreadyInscripto}
+                userData={myUserData ? {
+                  name: myUserData.name ?? "",
+                  email: myUserData.email ?? "",
+                  dni: myUserData.dni ?? "",
+                  phone: myUserData.phone ?? "",
+                } : undefined}
+              />
+            </div>
+          )}
+
           {/* Interesados — solo visible para el admin */}
           {canManage && tournament.interests.length > 0 && (
             <div className="mb-6 bg-purple-50 border border-purple-100 rounded-xl p-4">
@@ -337,21 +371,22 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
           {tournament.teams.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {tournament.teams.map((team) => (
-                <div key={team.id} className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 hover:border-gray-200 transition-colors">
-                  <p className="font-semibold text-gray-900 text-sm">{team.name}</p>
-                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                    {team.teamPlayers.map((tp) => tp.player.name).join(" · ")}
-                  </p>
-                  {canManage && ["DRAFT", "REGISTRATION"].includes(tournament.status) && (
-                    <div className="mt-2 pt-2 border-t border-gray-50">
-                      <DeleteButton
-                        url={`/api/equipos/${team.id}`}
-                        label="Eliminar"
-                        confirmText="¿Eliminar equipo?"
-                      />
-                    </div>
-                  )}
-                </div>
+                canManage ? (
+                  <EquipoDetailModal
+                    key={team.id}
+                    teamName={team.name}
+                    players={team.teamPlayers.map((tp) => tp.player)}
+                    canDelete={["DRAFT", "REGISTRATION"].includes(tournament.status)}
+                    teamId={team.id}
+                  />
+                ) : (
+                  <div key={team.id} className="bg-white border border-gray-100 rounded-xl px-4 py-3.5">
+                    <p className="font-semibold text-gray-900 text-sm">{team.name}</p>
+                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                      {team.teamPlayers.map((tp) => tp.player.name).join(" · ")}
+                    </p>
+                  </div>
+                )
               ))}
             </div>
           ) : (

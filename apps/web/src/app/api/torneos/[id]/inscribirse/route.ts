@@ -7,9 +7,12 @@ import { z } from "zod";
 type Params = { params: Promise<{ id: string }> };
 
 const schema = z.object({
+  myDni: z.string().min(6).max(20).optional().nullable(),
+  myPhone: z.string().min(6).max(30).optional().nullable(),
   partnerName: z.string().min(1).max(100).optional(),
   partnerEmail: z.string().email().optional().nullable(),
   partnerDni: z.string().min(6).max(20).optional().nullable(),
+  partnerPhone: z.string().min(6).max(30).optional().nullable(),
 });
 
 function alias(name: string): string {
@@ -29,7 +32,7 @@ export async function POST(req: Request, { params }: Params) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
   }
-  const { partnerName, partnerEmail, partnerDni } = parsed.data;
+  const { myDni, myPhone, partnerName, partnerEmail, partnerDni, partnerPhone } = parsed.data;
 
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
@@ -49,7 +52,7 @@ export async function POST(req: Request, { params }: Params) {
   // Obtener o crear Player del usuario actual
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, email: true, dni: true, player: { select: { id: true } } },
+    select: { name: true, email: true, dni: true, phone: true, player: { select: { id: true } } },
   });
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
@@ -57,13 +60,27 @@ export async function POST(req: Request, { params }: Params) {
   if (!myPlayerId) {
     myPlayerId = await prisma.$transaction(async (tx) => {
       const newPlayer = await tx.player.create({
-        data: { name: user.name, email: user.email, dni: user.dni ?? null, confirmed: true },
+        data: {
+          name: user.name,
+          email: user.email,
+          dni: myDni ?? user.dni ?? null,
+          phone: myPhone ?? user.phone ?? null,
+          confirmed: true,
+        },
       });
       await tx.user.update({
         where: { id: session.user.id },
         data: { player: { connect: { id: newPlayer.id } } },
       });
       return newPlayer.id;
+    });
+  } else if (myPhone || myDni) {
+    await prisma.player.update({
+      where: { id: myPlayerId },
+      data: {
+        ...(myPhone ? { phone: myPhone } : {}),
+        ...(myDni ? { dni: myDni } : {}),
+      },
     });
   }
 
@@ -84,7 +101,12 @@ export async function POST(req: Request, { params }: Params) {
 
     if (!partner) {
       partner = await prisma.player.create({
-        data: { name: partnerName, email: partnerEmail ?? null, dni: partnerDni ?? null },
+        data: {
+          name: partnerName,
+          email: partnerEmail ?? null,
+          dni: partnerDni ?? null,
+          phone: partnerPhone ?? null,
+        },
       });
     }
     partnerPlayerId = partner.id;
