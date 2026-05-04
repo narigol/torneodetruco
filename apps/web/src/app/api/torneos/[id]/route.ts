@@ -98,6 +98,10 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: "No autorizado para publicar torneos" }, { status: 403 });
   }
 
+  if (rest.published !== undefined && tournament.status !== "REGISTRATION") {
+    return NextResponse.json({ error: "Solo se puede publicar un torneo en estado de inscripción" }, { status: 400 });
+  }
+
   const updated = await prisma.tournament.update({
     where: { id },
     data: {

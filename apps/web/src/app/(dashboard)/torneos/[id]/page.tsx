@@ -14,6 +14,7 @@ import { DeleteButton } from "@/components/ui/DeleteButton";
 import { FollowButton } from "@/components/ui/FollowButton";
 import { ReglamentoCollapsible } from "@/components/ui/ReglamentoCollapsible";
 import { InvitarJugadorModal } from "@/components/ui/InvitarJugadorModal";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { canGenerateGroups, canInviteTournament, canManageTournament, canPublishTournament } from "@/lib/tournament-auth";
 
 type Props = {
@@ -354,14 +355,10 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <p className="text-gray-400 text-sm">No hay equipos inscriptos.</p>
-              {canManage && (
-                <Link href={`/torneos/${tournament.id}/equipos/nuevo`} className="mt-2 inline-block text-red-600 hover:underline text-sm font-medium">
-                  Agregar el primero →
-                </Link>
-              )}
-            </div>
+            <EmptyState
+              message="No hay equipos inscriptos."
+              submessage={canManage ? "Usá el botón de arriba para agregar equipos." : undefined}
+            />
           )}
         </section>
       )}

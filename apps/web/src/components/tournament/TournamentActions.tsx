@@ -118,7 +118,7 @@ export function TournamentActions({
   return (
     <>
       <div className="flex gap-2 flex-wrap">
-        {canPublish ? (
+        {status === "REGISTRATION" && canPublish ? (
           <button
             onClick={togglePublish}
             disabled={publishLoading}

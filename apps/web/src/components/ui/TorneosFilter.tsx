@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArgentinaGeoSelect } from "@/components/ui/ArgentinaGeoSelect";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Torneo = {
   id: string;
@@ -156,9 +157,7 @@ export function TorneosFilter({ torneos, showRolFilter = false }: Props) {
 
       {/* Resultados */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-gray-400 text-sm">No se encontraron torneos</p>
-        </div>
+        <EmptyState message="No se encontraron torneos" />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((t) => {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
 
 type Admin = { id: string; name: string };
@@ -36,10 +37,7 @@ export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props
 
   if (reglamentos.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-400">
-        <p className="text-lg mb-1">No hay reglamentos</p>
-        <p className="text-sm">Creá el primero desde el botón de arriba.</p>
-      </div>
+      <EmptyState message="No hay reglamentos" submessage="Creá el primero desde el botón de arriba." />
     );
   }
 

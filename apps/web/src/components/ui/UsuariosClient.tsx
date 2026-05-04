@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Usuario = {
   id: string;
@@ -97,9 +98,7 @@ export function UsuariosClient({ usuarios, isAdmin }: Props) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p>No se encontraron usuarios</p>
-        </div>
+        <EmptyState message="No se encontraron usuarios" />
       ) : (
         <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
           <table className="w-full text-sm">

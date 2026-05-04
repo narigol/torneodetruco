@@ -67,15 +67,6 @@ export default async function TorneosPage() {
       </div>
 
       <TorneosFilter torneos={torneos} />
-      {torneos.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="text-5xl mb-4">🃏</div>
-          <p className="text-gray-500 font-medium">No hay torneos todavía</p>
-          <Link href="/torneos/nuevo" className="mt-3 text-sm text-red-600 hover:underline font-medium">
-            Crear el primer torneo →
-          </Link>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Phase, TournamentFormat, TournamentStatus } from "@tdt/db";
 import { ResultadoModal } from "@/components/ui/ResultadoModal";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type TeamSummary = {
   id: string;
@@ -106,8 +107,8 @@ export function TournamentOverview({ tournament }: Props) {
           </div>
 
           {pendingMatches.length === 0 ? (
-            <div className="px-5 py-12 text-center text-sm text-gray-400">
-              No hay partidos pendientes por cargar.
+            <div className="px-5">
+              <EmptyState message="No hay partidos pendientes por cargar." />
             </div>
           ) : (
             <div className="divide-y divide-gray-50">

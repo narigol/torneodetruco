@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { MarkReadButton } from "@/components/ui/MarkReadButton";
 import { NotificationItem } from "@/components/ui/NotificationItem";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function NotificacionesPage() {
   const session = await getServerSession(authOptions);
@@ -70,13 +71,10 @@ export default async function NotificacionesPage() {
       </div>
 
       {notifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="text-4xl mb-3">🔔</div>
-          <p className="text-gray-400 text-sm">No tenés notificaciones todavía</p>
-          <p className="text-gray-300 text-xs mt-1">
-            Seguí a organizadores desde un torneo para enterarte de sus novedades
-          </p>
-        </div>
+        <EmptyState
+          message="No tenés notificaciones todavía"
+          submessage="Seguí a organizadores desde un torneo para enterarte de sus novedades"
+        />
       ) : (
         <div className="space-y-2">
           {notifications.map((n) => (

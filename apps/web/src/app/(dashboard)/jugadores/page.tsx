@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import Link from "next/link";
 import { JugadoresFilter } from "@/components/ui/JugadoresFilter";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function JugadoresPage() {
   const session = await getServerSession(authOptions);
@@ -50,14 +51,10 @@ export default async function JugadoresPage() {
       </div>
 
       {jugadores.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p>No hay jugadores registrados</p>
-          {isAdmin && (
-            <Link href="/jugadores/nuevo" className="mt-2 inline-block text-red-600 hover:underline text-sm">
-              Registrar el primero
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          message="No hay jugadores registrados"
+          submessage={isAdmin ? undefined : undefined}
+        />
       ) : (
         <JugadoresFilter jugadores={jugadores} isAdmin={isAdmin} />
       )}

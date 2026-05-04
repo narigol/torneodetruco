@@ -3,6 +3,7 @@
 import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
 import { PROVINCIAS } from "@/lib/argentina";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 
 type Jugador = {
@@ -64,17 +65,10 @@ export function JugadoresFilter({ jugadores, isAdmin }: Props) {
 
       {/* Tabla */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p className="text-sm">No se encontraron jugadores</p>
-          {hasFilters && (
-            <button
-              onClick={() => { setSearch(""); setProvinciaFilter(""); }}
-              className="mt-2 text-sm text-red-600 hover:underline"
-            >
-              Limpiar filtros
-            </button>
-          )}
-        </div>
+        <EmptyState
+          message="No se encontraron jugadores"
+          submessage={hasFilters ? "Probá limpiar los filtros" : undefined}
+        />
       ) : (
         <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-50 text-xs text-gray-400">
