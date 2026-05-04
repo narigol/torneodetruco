@@ -61,7 +61,6 @@ const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
   status: z.enum(["DRAFT", "REGISTRATION", "IN_PROGRESS", "FINISHED"]).optional(),
-  published: z.boolean().optional(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   startTime: z.string().max(50).nullable().optional(),
@@ -70,6 +69,7 @@ const updateSchema = z.object({
   province: z.string().max(100).nullable().optional(),
   playersPerTeam: z.number().int().min(1).max(3).optional(),
   maxPlayers: z.number().int().min(2).max(10000).nullable().optional(),
+  inscriptionFee: z.number().int().min(0).nullable().optional(),
   reglamentoId: z.string().nullable().optional(),
 });
 
@@ -79,7 +79,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
-    select: { adminId: true, status: true, published: true },
+    select: { adminId: true, status: true },
   });
   if (!tournament) return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
   if (!canManageTournament(session, tournament.adminId)) {
@@ -93,14 +93,6 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 
   const { startDate, endDate, startTime, location, locality, province, reglamentoId, ...rest } = parsed.data;
-
-  if (rest.published === true && session?.user?.role === "PLAYER") {
-    return NextResponse.json({ error: "No autorizado para publicar torneos" }, { status: 403 });
-  }
-
-  if (rest.published !== undefined && tournament.status !== "REGISTRATION") {
-    return NextResponse.json({ error: "Solo se puede publicar un torneo en estado de inscripción" }, { status: 400 });
-  }
 
   const updated = await prisma.tournament.update({
     where: { id },
@@ -133,10 +125,9 @@ export async function PATCH(req: Request, { params }: Params) {
     }
   }
 
-  // Cuando abre inscripción en un torneo publicado, notificar a jugadores de la misma zona
+  // Al abrir inscripción, notificar a jugadores de la misma zona
   const becomesRegistration = rest.status === "REGISTRATION" && tournament.status !== "REGISTRATION";
-  const isOrWillBePublished = rest.published === true || tournament.published;
-  if (becomesRegistration && isOrWillBePublished) {
+  if (becomesRegistration) {
     notifyByLocation(tournament.adminId, id).catch(() => {});
   }
 

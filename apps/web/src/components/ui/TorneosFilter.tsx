@@ -11,7 +11,6 @@ type Torneo = {
   status: string;
   format: string;
   adminId: string;
-  published: boolean;
   locality: string | null;
   province: string | null;
   startDate: Date | string | null;
@@ -179,9 +178,6 @@ export function TorneosFilter({ torneos, showRolFilter = false, showDraft = fals
                     {sc.label}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    {t.published && (
-                      <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">Público</span>
-                    )}
                     <span className="text-xs text-gray-300">{FORMAT_LABEL[t.format]}</span>
                   </div>
                 </div>

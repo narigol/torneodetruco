@@ -18,6 +18,8 @@ type Props = {
   teamName: string;
   players: Player[];
   canDelete?: boolean;
+  inscriptionFee?: number | null;
+  hasPaid?: boolean;
 };
 
 function DataRow({ label, value }: { label: string; value: string | null }) {
@@ -30,10 +32,14 @@ function DataRow({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-export function EquipoDetailModal({ teamId, teamName, players, canDelete }: Props) {
+export function EquipoDetailModal({ teamId, teamName, players, canDelete, inscriptionFee, hasPaid: initialHasPaid }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [hasPaid, setHasPaid] = useState(initialHasPaid ?? false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  const hasFee = inscriptionFee != null && inscriptionFee > 0;
 
   async function handleDelete() {
     setDeleting(true);
@@ -42,6 +48,19 @@ export function EquipoDetailModal({ teamId, teamName, players, canDelete }: Prop
     if (res.ok) {
       setOpen(false);
       router.refresh();
+    }
+  }
+
+  async function handleTogglePayment() {
+    setPaymentLoading(true);
+    const res = await fetch(`/api/equipos/${teamId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "togglePayment" }),
+    });
+    setPaymentLoading(false);
+    if (res.ok) {
+      setHasPaid((prev) => !prev);
     }
   }
 
@@ -55,6 +74,13 @@ export function EquipoDetailModal({ teamId, teamName, players, canDelete }: Prop
         <p className="text-xs text-gray-400 mt-1 leading-relaxed">
           {players.map((p) => p.name).join(" · ")}
         </p>
+        {hasFee && (
+          <span className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full ${
+            hasPaid ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
+          }`}>
+            {hasPaid ? "✓ Pagado" : "Sin pagar"}
+          </span>
+        )}
       </button>
 
       {open && (
@@ -97,6 +123,36 @@ export function EquipoDetailModal({ teamId, teamName, players, canDelete }: Prop
                 </div>
               ))}
             </div>
+
+            {hasFee && (
+              <div className="px-6 pb-4">
+                <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Arancel</p>
+                    <p className="text-sm font-medium text-gray-900 mt-0.5">
+                      ${inscriptionFee!.toLocaleString("es-AR")}
+                      {" · "}
+                      <span className={hasPaid ? "text-green-600" : "text-gray-400"}>
+                        {hasPaid ? "Pagado ✓" : "Sin pagar"}
+                      </span>
+                    </p>
+                  </div>
+                  {canDelete && (
+                    <button
+                      onClick={handleTogglePayment}
+                      disabled={paymentLoading}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 ${
+                        hasPaid
+                          ? "border border-gray-200 text-gray-600 hover:bg-gray-100"
+                          : "bg-green-600 text-white hover:bg-green-700"
+                      }`}
+                    >
+                      {paymentLoading ? "..." : hasPaid ? "Marcar impago" : "Marcar pagado"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
 
             {canDelete && (
               <div className="px-6 pb-6">

@@ -51,7 +51,8 @@
       "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" npx prisma migrate dev --name add_contact_preferences --schema packages/db/prisma/schema.prisma)",
       "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" npx prisma db push --schema packages/db/prisma/schema.prisma)",
       "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" npx prisma generate --schema packages/db/prisma/schema.prisma)",
-      "Bash(taskkill //F //IM node.exe)"
+      "Bash(taskkill //F //IM node.exe)",
+      "PowerShell(taskkill /F /IM node.exe 2>&1)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\Desktop\\tdt\\apps\\web\\src\\app\\(dashboard)\\usuarios\\[id]"

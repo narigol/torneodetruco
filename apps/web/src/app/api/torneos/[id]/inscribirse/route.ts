@@ -36,10 +36,10 @@ export async function POST(req: Request, { params }: Params) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
-    select: { id: true, status: true, published: true, playersPerTeam: true, maxPlayers: true },
+    select: { id: true, status: true, playersPerTeam: true, maxPlayers: true },
   });
 
-  if (!tournament || !tournament.published) {
+  if (!tournament || tournament.status === "DRAFT") {
     return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
   }
   if (tournament.status !== "REGISTRATION") {
@@ -148,6 +148,7 @@ export async function POST(req: Request, { params }: Params) {
     data: {
       name: teamName,
       tournamentId,
+      registrationStatus: "PENDING",
       teamPlayers: { create: playerIds.map((playerId) => ({ playerId })) },
     },
     select: { id: true, name: true },

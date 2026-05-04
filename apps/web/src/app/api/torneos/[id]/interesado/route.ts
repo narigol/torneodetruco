@@ -12,9 +12,9 @@ export async function POST(_req: Request, { params }: Params) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
-    select: { id: true, status: true, published: true },
+    select: { id: true, status: true },
   });
-  if (!tournament || !tournament.published) {
+  if (!tournament || tournament.status === "DRAFT") {
     return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
   }
   if (tournament.status === "FINISHED") {

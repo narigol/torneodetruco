@@ -15,8 +15,9 @@ import { FollowButton } from "@/components/ui/FollowButton";
 import { ReglamentoCollapsible } from "@/components/ui/ReglamentoCollapsible";
 import { InvitarJugadorModal } from "@/components/ui/InvitarJugadorModal";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { canGenerateGroups, canInviteTournament, canManageTournament, canPublishTournament } from "@/lib/tournament-auth";
+import { canGenerateGroups, canInviteTournament, canManageTournament } from "@/lib/tournament-auth";
 import { PublicTournamentActions } from "@/components/tournament/PublicTournamentActions";
+import { PendingTeamsPanel } from "@/components/tournament/PendingTeamsPanel";
 import { EquipoDetailModal } from "@/components/ui/EquipoDetailModal";
 
 type Props = {
@@ -105,8 +106,14 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
 
   const myPlayerId = myUserData?.player?.id ?? null;
 
+  const pendingTeams = tournament.teams.filter((t) => t.registrationStatus === "PENDING");
+  const approvedTeams = tournament.teams.filter((t) => t.registrationStatus === "APPROVED");
+
   const alreadyInscripto = myPlayerId
     ? tournament.teams.some((t) => t.teamPlayers.some((tp) => tp.player.id === myPlayerId))
+    : false;
+  const myTeamIsPending = myPlayerId
+    ? pendingTeams.some((t) => t.teamPlayers.some((tp) => tp.player.id === myPlayerId))
     : false;
   const canGenerateGroupsPermission = canManage && canGenerateGroups(session);
 
@@ -133,9 +140,12 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     ? rawTab
     : (canManage ? "resumen" : "equipos");
 
+  const hasFee = tournament.inscriptionFee != null && tournament.inscriptionFee > 0;
+  const unpaidCount = hasFee ? approvedTeams.filter((t) => !t.hasPaid).length : 0;
+
   const tabLabels: Record<Tab, string> = {
     resumen: "Resumen",
-    equipos: `Equipos (${tournament.teams.length})`,
+    equipos: `Equipos (${approvedTeams.length}${pendingTeams.length > 0 ? ` · ${pendingTeams.length} pend.` : ""}${unpaidCount > 0 ? ` · ${unpaidCount} sin pagar` : ""})`,
     grupos: "Grupos",
     llave: "Llave",
   };
@@ -177,7 +187,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
               <p className="text-gray-500 text-sm mt-1.5">{tournament.description}</p>
             )}
             <div className="flex items-center gap-4 mt-3 text-xs text-gray-400 flex-wrap">
-              <span>{tournament._count.teams} equipos</span>
+              <span>{approvedTeams.length} equipos{pendingTeams.length > 0 ? ` · ${pendingTeams.length} pendiente${pendingTeams.length !== 1 ? "s" : ""}` : ""}</span>
               {tournament.maxPlayers && (
                 <span>Cupo: {tournament.maxPlayers} jugadores</span>
               )}
@@ -259,11 +269,9 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 tournamentId={tournament.id}
                 status={tournament.status}
                 format={tournament.format}
-                teamCount={tournament._count.teams}
+                teamCount={approvedTeams.length}
                 hasGroups={hasGroups}
                 hasBracket={hasBracket}
-                published={tournament.published}
-                canPublish={canPublishTournament(session)}
                 canGenerateGroups={canGenerateGroupsPermission}
               />
             </div>
@@ -329,7 +337,8 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 playersPerTeam={tournament.playersPerTeam}
                 loggedIn={true}
                 callbackUrl={`/torneos/${tournament.id}`}
-                initialInscripto={alreadyInscripto}
+                initialInscripto={alreadyInscripto && !myTeamIsPending}
+                initialPending={myTeamIsPending}
                 userData={myUserData ? {
                   name: myUserData.name ?? "",
                   email: myUserData.email ?? "",
@@ -338,6 +347,17 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 } : undefined}
               />
             </div>
+          )}
+
+          {/* Solicitudes pendientes — solo visible para el organizador */}
+          {canManage && (
+            <PendingTeamsPanel
+              teams={pendingTeams.map((t) => ({
+                id: t.id,
+                name: t.name,
+                players: t.teamPlayers.map((tp) => ({ name: tp.player.name })),
+              }))}
+            />
           )}
 
           {/* Interesados — solo visible para el admin */}
@@ -368,9 +388,9 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             </div>
           )}
 
-          {tournament.teams.length > 0 ? (
+          {approvedTeams.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {tournament.teams.map((team) => (
+              {approvedTeams.map((team) => (
                 canManage ? (
                   <EquipoDetailModal
                     key={team.id}
@@ -378,6 +398,8 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                     players={team.teamPlayers.map((tp) => tp.player)}
                     canDelete={["DRAFT", "REGISTRATION"].includes(tournament.status)}
                     teamId={team.id}
+                    inscriptionFee={tournament.inscriptionFee}
+                    hasPaid={team.hasPaid}
                   />
                 ) : (
                   <div key={team.id} className="bg-white border border-gray-100 rounded-xl px-4 py-3.5">

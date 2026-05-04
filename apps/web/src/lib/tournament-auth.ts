@@ -14,10 +14,6 @@ export function canManageTournament(session: Session | null, tournamentAdminId: 
   return session.user.id === tournamentAdminId; // el creador siempre puede gestionar su torneo
 }
 
-export function canPublishTournament(session: Session | null): boolean {
-  return isOrganizer(session?.user?.role ?? "");
-}
-
 export function canInviteTournament(session: Session | null): boolean {
   return isOrganizer(session?.user?.role ?? "");
 }

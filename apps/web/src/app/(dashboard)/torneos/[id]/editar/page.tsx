@@ -27,6 +27,7 @@ export default async function EditarTorneoPage({ params }: Params) {
       province: true,
       playersPerTeam: true,
       maxPlayers: true,
+      inscriptionFee: true,
       adminId: true,
       reglamentoId: true,
     },

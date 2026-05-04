@@ -11,8 +11,6 @@ type Props = {
   teamCount: number;
   hasGroups: boolean;
   hasBracket: boolean;
-  published: boolean;
-  canPublish?: boolean;
   canGenerateGroups?: boolean;
 };
 
@@ -35,13 +33,10 @@ export function TournamentActions({
   teamCount,
   hasGroups,
   hasBracket,
-  published,
-  canPublish = true,
   canGenerateGroups = true,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [publishLoading, setPublishLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
@@ -61,17 +56,6 @@ export function TournamentActions({
     (format === TournamentFormat.SINGLE_ELIMINATION ||
       (format === TournamentFormat.GROUPS_AND_KNOCKOUT && hasGroups)) &&
     !hasBracket;
-
-  async function togglePublish() {
-    setPublishLoading(true);
-    await fetch(`/api/torneos/${tournamentId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ published: !published }),
-    });
-    setPublishLoading(false);
-    router.refresh();
-  }
 
   async function advanceStatus() {
     if (!nextStatus) return;
@@ -118,26 +102,6 @@ export function TournamentActions({
   return (
     <>
       <div className="flex gap-2 flex-wrap">
-        {status === "REGISTRATION" && canPublish ? (
-          <button
-            onClick={togglePublish}
-            disabled={publishLoading}
-            className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50 ${
-              published
-                ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            {publishLoading ? "..." : published ? "⊙ Público" : "Publicar"}
-          </button>
-        ) : (
-          published && (
-            <span className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
-              ⊙ Público
-            </span>
-          )
-        )}
-
         {needsGroups && canGenerateGroups && (
           <button
             onClick={() => setShowGroupModal(true)}

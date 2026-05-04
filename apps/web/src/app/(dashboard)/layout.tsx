@@ -12,9 +12,24 @@ export default async function DashboardLayout({
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const unreadCount = await prisma.notification.count({
-    where: { userId: session.user.id, read: false },
-  });
+  const [unreadCount, followData] = await Promise.all([
+    prisma.notification.count({
+      where: { userId: session.user.id, read: false },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        _count: { select: { followers: true } },
+        following: {
+          select: { following: { select: { id: true, name: true } } },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    }),
+  ]);
+
+  const followingList = followData?.following.map((f) => f.following) ?? [];
+  const followersCount = followData?._count.followers ?? 0;
 
   return (
     <div className="flex h-screen bg-[#f6f5f3]">
@@ -23,6 +38,8 @@ export default async function DashboardLayout({
         name={session.user.name ?? "Usuario"}
         plan={session.user.plan ?? "FREE"}
         unreadNotifications={unreadCount}
+        followingList={followingList}
+        followersCount={followersCount}
       />
       <main className="flex-1 overflow-auto">
         <div className="p-8 max-w-6xl">{children}</div>

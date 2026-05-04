@@ -22,7 +22,6 @@ export default async function MisTorneosPage() {
     status: true,
     format: true,
     adminId: true,
-    published: true,
     locality: true,
     province: true,
     startDate: true,

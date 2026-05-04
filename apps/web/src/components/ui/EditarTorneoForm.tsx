@@ -21,6 +21,7 @@ type Props = {
     province: string | null;
     playersPerTeam: number;
     maxPlayers: number | null;
+    inscriptionFee: number | null;
     reglamentoId: string | null;
   };
   reglamentos: ReglamentoOption[];
@@ -59,6 +60,7 @@ export function EditarTorneoForm({ torneo, reglamentos }: Props) {
       locality: locality.trim() || null,
       province: province || null,
       maxPlayers: form.get("maxPlayers") ? Number(form.get("maxPlayers")) : null,
+      inscriptionFee: form.get("inscriptionFee") ? Number(form.get("inscriptionFee")) : null,
       reglamentoId: reglamentoId || null,
     };
 
@@ -207,6 +209,20 @@ export function EditarTorneoForm({ torneo, reglamentos }: Props) {
               placeholder="Sin límite"
             />
             <p className="text-xs text-gray-400 mt-1">Opcional. Dejá vacío para no limitar.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Arancel de inscripción ($)</label>
+            <input
+              name="inscriptionFee"
+              type="number"
+              min="0"
+              step="1"
+              defaultValue={torneo.inscriptionFee ?? ""}
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
+              placeholder="Sin arancel"
+            />
+            <p className="text-xs text-gray-400 mt-1">Opcional. El cobro se gestiona fuera de la app.</p>
           </div>
 
           {reglamentos.length > 0 && (

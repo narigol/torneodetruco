@@ -29,7 +29,7 @@ export async function POST(_req: Request, { params }: Params) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
-    include: { teams: true, groups: true },
+    include: { teams: { where: { registrationStatus: "APPROVED" } }, groups: true },
   });
 
   if (!tournament) {

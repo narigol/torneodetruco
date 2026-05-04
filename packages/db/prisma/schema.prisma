@@ -59,6 +59,11 @@ enum InvitationStatus {
   REJECTED
 }
 
+enum TeamRegistrationStatus {
+  PENDING
+  APPROVED
+}
+
 model User {
   id                     String    @id @default(cuid())
   email                  String    @unique
@@ -123,7 +128,6 @@ model Tournament {
   description     String?
   format          TournamentFormat
   status          TournamentStatus @default(DRAFT)
-  published       Boolean          @default(false)
   startDate       DateTime?
   endDate         DateTime?
   startTime       String?
@@ -133,6 +137,7 @@ model Tournament {
   qualifyPerGroup Int              @default(2)
   playersPerTeam  Int              @default(2)
   maxPlayers      Int?
+  inscriptionFee  Int?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -240,10 +245,12 @@ model Notification {
 }
 
 model Team {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String                 @id @default(cuid())
+  name               String
+  registrationStatus TeamRegistrationStatus @default(APPROVED)
+  hasPaid            Boolean                @default(false)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
 
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)

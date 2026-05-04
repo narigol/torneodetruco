@@ -72,9 +72,18 @@ function roleLabel(role: string) {
   return "Jugador";
 }
 
-type Props = { role: string; name: string; plan: string; unreadNotifications?: number };
+type FollowingUser = { id: string; name: string };
 
-export function Sidebar({ role, name, plan, unreadNotifications = 0 }: Props) {
+type Props = {
+  role: string;
+  name: string;
+  plan: string;
+  unreadNotifications?: number;
+  followingList?: FollowingUser[];
+  followersCount?: number;
+};
+
+export function Sidebar({ role, name, plan, unreadNotifications = 0, followingList = [], followersCount = 0 }: Props) {
   const pathname = usePathname();
   const isPro = plan === "PRO";
   const canOrganize = role === "ADMIN" || role === "ORGANIZER";
@@ -154,6 +163,44 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0 }: Props) {
             </Link>
           );
         })()}
+
+        {/* Seguidos / Seguidores */}
+        {(followingList.length > 0 || followersCount > 0) && (
+          <div className="pt-3 mt-2 border-t border-gray-100">
+            <div className="flex items-center gap-3 px-3 pb-1.5">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Comunidad</span>
+              {followersCount > 0 && (
+                <span className="ml-auto text-xs text-gray-400">
+                  {followersCount} seguidor{followersCount !== 1 ? "es" : ""}
+                </span>
+              )}
+            </div>
+            {followingList.map((user) => {
+              const active = pathname === `/usuarios/${user.id}`;
+              return (
+                <Link
+                  key={user.id}
+                  href={`/usuarios/${user.id}`}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all ${
+                    active
+                      ? "bg-red-50 text-red-700 font-medium"
+                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  }`}
+                >
+                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <span className="text-gray-500 text-[9px] font-bold">
+                      {user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="truncate">{user.name}</span>
+                </Link>
+              );
+            })}
+            {followingList.length === 0 && (
+              <p className="px-3 py-1 text-xs text-gray-400">No seguís a nadie aún</p>
+            )}
+          </div>
+        )}
 
         {/* Membresía */}
         {(() => {

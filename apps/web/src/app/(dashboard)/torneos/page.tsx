@@ -16,7 +16,7 @@ export default async function TorneosPage() {
     orderBy: { createdAt: "desc" },
     where: isSuperAdmin
       ? undefined
-      : { OR: [{ published: true }, ...(userId ? [{ adminId: userId }] : [])] },
+      : { OR: [{ status: { not: "DRAFT" } }, ...(userId ? [{ adminId: userId }] : [])] },
     include: {
       admin: { select: { id: true, name: true } },
       _count: { select: { teams: true, matches: true } },

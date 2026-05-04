@@ -17,6 +17,7 @@ type Props = {
   loggedIn: boolean;
   callbackUrl: string;
   initialInscripto?: boolean;
+  initialPending?: boolean;
   userData?: UserData;
 };
 
@@ -67,10 +68,12 @@ export function PublicTournamentActions({
   loggedIn,
   callbackUrl,
   initialInscripto,
+  initialPending,
   userData,
 }: Props) {
   const router = useRouter();
   const [inscripto, setInscripto] = useState(initialInscripto ?? false);
+  const [pending, setPending] = useState(initialPending ?? false);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -125,7 +128,7 @@ export function PublicTournamentActions({
       return;
     }
 
-    setInscripto(true);
+    setPending(true);
     setShowForm(false);
     router.refresh();
   }
@@ -147,12 +150,30 @@ export function PublicTournamentActions({
     setCancelLoading(false);
     if (res.ok) {
       setInscripto(false);
+      setPending(false);
       setPartnerName("");
       setPartnerDni("");
       setPartnerEmail("");
       setPartnerPhone("");
       router.refresh();
     }
+  }
+
+  if (pending) {
+    return (
+      <div className="flex items-center gap-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+        <span className="text-sm font-medium text-amber-700 flex-1">
+          Tu inscripción está pendiente de aprobación por el organizador.
+        </span>
+        <button
+          onClick={handleCancelar}
+          disabled={cancelLoading}
+          className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors shrink-0"
+        >
+          {cancelLoading ? "..." : "Cancelar"}
+        </button>
+      </div>
+    );
   }
 
   if (inscripto) {
