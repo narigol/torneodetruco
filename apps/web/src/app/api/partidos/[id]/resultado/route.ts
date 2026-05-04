@@ -5,7 +5,7 @@ import { prisma, Phase } from "@tdt/db";
 import { z } from "zod";
 import { createPhaseMatches } from "@/lib/bracket";
 import { canManageTournament } from "@/lib/tournament-auth";
-import { sendMatchResultEmails } from "@/lib/email-notifications";
+import { sendMatchResultEmails, sendTournamentFinishedEmails } from "@/lib/email-notifications";
 
 const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
   ROUND_OF_16: "QUARTERFINAL",
@@ -220,6 +220,12 @@ export async function PATCH(req: Request, { params }: Params) {
   sendMatchResultEmails(match.id).catch((error) => {
     console.error("[match-result-email]", error);
   });
+
+  if (match.phase === "FINAL") {
+    sendTournamentFinishedEmails(match.tournamentId).catch((error) => {
+      console.error("[tournament-finished-email]", error);
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

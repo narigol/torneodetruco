@@ -145,11 +145,14 @@ export async function DELETE(_req: Request, { params }: Params) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
-    select: { adminId: true },
+    select: { adminId: true, status: true },
   });
   if (!tournament) return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
   if (!canManageTournament(session, tournament.adminId)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+  if (tournament.status !== "DRAFT") {
+    return NextResponse.json({ error: "Solo se pueden eliminar torneos en estado borrador" }, { status: 400 });
   }
 
   await prisma.tournament.delete({ where: { id } });

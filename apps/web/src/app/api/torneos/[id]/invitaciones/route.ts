@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@tdt/db";
 import { authOptions } from "@/lib/auth";
 import { canManageTournament } from "@/lib/tournament-auth";
+import { sendInvitationEmail } from "@/lib/email-notifications";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -84,6 +85,8 @@ export async function POST(req: Request, { params }: Params) {
       invitationId: invitation.id,
     },
   }).catch((e) => console.error("notification:create failed", e));
+
+  sendInvitationEmail(invitation.id).catch((e) => console.error("[invitation-email]", e));
 
   return NextResponse.json(invitation, { status: 201 });
 }

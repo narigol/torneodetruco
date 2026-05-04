@@ -73,9 +73,13 @@ model User {
   province               String?
   country                String?
   instagram              String?   // Solo para ORGANIZER
-  acceptsLocationInvites Boolean   @default(false)
-  acceptsEmailNotifications Boolean @default(true)
-  pendingActivation      Boolean   @default(false)
+  acceptsLocationInvites    Boolean  @default(false)
+  acceptsEmailNotifications Boolean  @default(true)
+  acceptsContactByEmail     Boolean  @default(true)
+  acceptsContactByPhone     Boolean  @default(true)
+  acceptsAppNotifications   Boolean  @default(true)
+  acceptsWhatsAppContact    Boolean  @default(false)
+  pendingActivation         Boolean  @default(false)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 

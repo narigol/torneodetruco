@@ -51,7 +51,7 @@ function emptyWinsByPhase(): Record<Phase, number> {
   };
 }
 
-export async function getRankingRows(config: RankingConfig, organizerId?: string): Promise<RankingRow[]> {
+export async function getRankingRows(config: RankingConfig, organizerId?: string, tournamentId?: string): Promise<RankingRow[]> {
   const [users, orphanPlayers, organizerTournaments] = await Promise.all([
     prisma.user.findMany({
       orderBy: { name: "asc" },
@@ -72,7 +72,7 @@ export async function getRankingRows(config: RankingConfig, organizerId?: string
       orderBy: { createdAt: "asc" },
       select: { id: true, email: true, dni: true },
     }),
-    organizerId
+    organizerId && !tournamentId
       ? prisma.tournament.findMany({
           where: { adminId: organizerId },
           select: { id: true },
@@ -80,7 +80,12 @@ export async function getRankingRows(config: RankingConfig, organizerId?: string
       : Promise.resolve([]),
   ]);
 
-  const organizerTournamentIds = organizerId ? new Set(organizerTournaments.map((t) => t.id)) : null;
+  // Si hay un torneo específico, filtrar solo por ese torneo
+  const organizerTournamentIds = tournamentId
+    ? new Set([tournamentId])
+    : organizerId
+    ? new Set(organizerTournaments.map((t) => t.id))
+    : null;
 
   const userEmailSet = new Set(users.map((u) => u.email.toLowerCase()));
   const userDniSet = new Set(users.filter((u) => u.dni).map((u) => u.dni!));
@@ -116,11 +121,18 @@ export async function getRankingRows(config: RankingConfig, organizerId?: string
 
   const trackedPlayerIds = [...new Set(playerIdByUserId.values())];
 
+  const tournamentFilter = organizerTournamentIds
+    ? { tournamentId: { in: [...organizerTournamentIds] } }
+    : {};
+
   const [teamEntries, playedMatches] = await Promise.all([
     trackedPlayerIds.length === 0
       ? Promise.resolve([])
       : prisma.teamPlayer.findMany({
-          where: { playerId: { in: trackedPlayerIds } },
+          where: {
+            playerId: { in: trackedPlayerIds },
+            team: organizerTournamentIds ? { tournamentId: { in: [...organizerTournamentIds] } } : {},
+          },
           select: {
             playerId: true,
             team: {
@@ -135,6 +147,7 @@ export async function getRankingRows(config: RankingConfig, organizerId?: string
       where: {
         status: "FINISHED",
         awayTeamId: { not: null },
+        ...tournamentFilter,
       },
       select: {
         phase: true,
@@ -195,11 +208,13 @@ export async function getRankingRows(config: RankingConfig, organizerId?: string
   }
 
   return users
-    .map((user) => {
+    .flatMap((user): RankingRow[] => {
       const playerId = playerIdByUserId.get(user.id);
       const tournamentsPlayed = playerId ? (tournamentIdsByPlayerId.get(playerId)?.size ?? 0) : 0;
       const matchesPlayed = playerId ? (matchesPlayedByPlayerId.get(playerId) ?? 0) : 0;
       const winsByPhase = playerId ? (winsByPhaseByPlayerId.get(playerId) ?? emptyWinsByPhase()) : emptyWinsByPhase();
+
+      if (organizerTournamentIds && tournamentsPlayed === 0) return [];
 
       const pointsBreakdown = {
         tournamentsPlayed: tournamentsPlayed * config.tournamentPlayedPoints,
@@ -211,11 +226,11 @@ export async function getRankingRows(config: RankingConfig, organizerId?: string
         finalWins: winsByPhase.FINAL * config.finalWinPoints,
       };
 
-      return {
+      return [{
         userId: user.id,
         userName: user.name,
         userEmail: user.email,
-        role: user.role,
+        role: user.role as string,
         totalPoints:
           pointsBreakdown.tournamentsPlayed +
           pointsBreakdown.matchesPlayed +
@@ -228,7 +243,7 @@ export async function getRankingRows(config: RankingConfig, organizerId?: string
         matchesPlayed,
         winsByPhase,
         pointsBreakdown,
-      };
+      }];
     })
     .sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;

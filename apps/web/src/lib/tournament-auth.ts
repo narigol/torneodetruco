@@ -5,13 +5,13 @@ export const isOrganizer = (role: string) => role === "ORGANIZER" || role === "A
 
 export function canCreateTournament(session: Session | null): boolean {
   if (!session?.user?.id) return false;
-  return isSuperAdmin(session.user.role) || session.user.role === "ORGANIZER" || session.user.role === "PLAYER";
+  return true; // todos los usuarios autenticados pueden crear torneos (con límites según plan)
 }
 
 export function canManageTournament(session: Session | null, tournamentAdminId: string): boolean {
   if (!session?.user?.id) return false;
   if (isSuperAdmin(session.user.role)) return true;
-  return session.user.id === tournamentAdminId;
+  return session.user.id === tournamentAdminId; // el creador siempre puede gestionar su torneo
 }
 
 export function canPublishTournament(session: Session | null): boolean {

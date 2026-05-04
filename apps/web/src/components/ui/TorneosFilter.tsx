@@ -16,6 +16,7 @@ type Torneo = {
   startDate: Date | string | null;
   admin: { id: string; name: string };
   _count: { teams: number; matches: number };
+  _rol?: "jugador" | "organizador";
 };
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; text: string }> = {
@@ -40,11 +41,13 @@ const STATUS_FILTERS = [
 
 type Props = {
   torneos: Torneo[];
+  showRolFilter?: boolean;
 };
 
-export function TorneosFilter({ torneos }: Props) {
+export function TorneosFilter({ torneos, showRolFilter = false }: Props) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [rolFilter, setRolFilter] = useState<"" | "jugador" | "organizador">("");
   const [locality, setLocality] = useState("");
   const [province, setProvince] = useState("");
   const [organizerId, setOrganizerId] = useState("");
@@ -65,6 +68,7 @@ export function TorneosFilter({ torneos }: Props) {
     return torneos.filter((t) => {
       if (q && !t.name.toLowerCase().includes(q)) return false;
       if (statusFilter && t.status !== statusFilter) return false;
+      if (rolFilter && t._rol !== rolFilter) return false;
       if (loc && !(t.locality ?? "").toLowerCase().includes(loc)) return false;
       if (prov && !(t.province ?? "").toLowerCase().includes(prov)) return false;
       if (organizerId && t.admin.id !== organizerId) return false;
@@ -96,18 +100,39 @@ export function TorneosFilter({ torneos }: Props) {
           />
         </div>
 
-        <select
-          value={organizerId}
-          onChange={(e) => setOrganizerId(e.target.value)}
-          className="min-w-[14rem] px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-        >
-          <option value="">Todos los organizadores</option>
-          {organizers.map((o) => (
-            <option key={o.id} value={o.id}>{o.name}</option>
-          ))}
-        </select>
+        {organizers.length > 1 && (
+          <select
+            value={organizerId}
+            onChange={(e) => setOrganizerId(e.target.value)}
+            className="min-w-[14rem] px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+          >
+            <option value="">Todos los organizadores</option>
+            {organizers.map((o) => (
+              <option key={o.id} value={o.id}>{o.name}</option>
+            ))}
+          </select>
+        )}
 
       </div>
+
+      {showRolFilter && (
+        <div className="flex gap-2">
+          {([["", "Todos"], ["jugador", "Como jugador"], ["organizador", "Como organizador"]] as const).map(([val, label]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setRolFilter(val)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                rolFilter === val
+                  ? "bg-gray-800 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map((filter) => {

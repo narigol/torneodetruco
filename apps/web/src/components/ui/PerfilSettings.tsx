@@ -3,125 +3,175 @@
 import { useState } from "react";
 
 type Props = {
+  role: string;
   acceptsLocationInvites: boolean;
   acceptsEmailNotifications: boolean;
+  acceptsContactByEmail: boolean;
+  acceptsContactByPhone: boolean;
+  acceptsAppNotifications: boolean;
+  acceptsWhatsAppContact: boolean;
 };
 
-export function PerfilSettings({ acceptsLocationInvites: initial, acceptsEmailNotifications: initialEmail }: Props) {
-  const [enabled, setEnabled] = useState(initial);
-  const [emailEnabled, setEmailEnabled] = useState(initialEmail);
-  const [loading, setLoading] = useState(false);
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [emailSaved, setEmailSaved] = useState(false);
+type Field = keyof Omit<Props, "role">;
 
-  async function toggle() {
-    setLoading(true);
-    setSaved(false);
-    const next = !enabled;
+function Toggle({
+  label,
+  description,
+  value,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  value: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <button
+      onClick={onChange}
+      className="w-full flex items-center justify-between gap-4 text-left"
+    >
+      <div>
+        <p className="text-sm font-medium text-gray-800">{label}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+      </div>
+      <div className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${value ? "bg-red-600" : "bg-gray-200"}`}>
+        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${value ? "translate-x-5" : "translate-x-0"}`} />
+      </div>
+    </button>
+  );
+}
+
+export function PerfilSettings({
+  role,
+  acceptsLocationInvites: il,
+  acceptsEmailNotifications: ien,
+  acceptsContactByEmail: ice,
+  acceptsContactByPhone: icp,
+  acceptsAppNotifications: ian,
+  acceptsWhatsAppContact: iwc,
+}: Props) {
+  const isOrganizer = role === "ORGANIZER" || role === "ADMIN";
+  const [values, setValues] = useState({
+    acceptsLocationInvites: il,
+    acceptsEmailNotifications: ien,
+    acceptsContactByEmail: ice,
+    acceptsContactByPhone: icp,
+    acceptsAppNotifications: ian,
+    acceptsWhatsAppContact: iwc,
+  });
+  const [saving, setSaving] = useState<Field | null>(null);
+  const [saved, setSaved] = useState<Field | null>(null);
+
+  async function toggle(field: Field) {
+    const next = !values[field];
+    setSaving(field);
+    setSaved(null);
     const res = await fetch("/api/perfil", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ acceptsLocationInvites: next }),
+      body: JSON.stringify({ [field]: next }),
     });
-    setLoading(false);
+    setSaving(null);
     if (res.ok) {
-      setEnabled(next);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
+      setValues((v) => ({ ...v, [field]: next }));
+      setSaved(field);
+      setTimeout(() => setSaved(null), 2500);
     }
   }
 
-  async function toggleEmail() {
-    setEmailLoading(true);
-    setEmailSaved(false);
-    const next = !emailEnabled;
-    const res = await fetch("/api/perfil", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ acceptsEmailNotifications: next }),
-    });
-    setEmailLoading(false);
-    if (res.ok) {
-      setEmailEnabled(next);
-      setEmailSaved(true);
-      setTimeout(() => setEmailSaved(false), 2500);
-    }
-  }
+  const sections = [
+    {
+      title: "Invitaciones",
+      mobile: false,
+      items: [
+        {
+          field: "acceptsLocationInvites" as Field,
+          label: "Recibir invitaciones por zona",
+          description: "Los organizadores con plan PRO podrán buscarte por tu provincia o localidad e invitarte a sus torneos.",
+        },
+      ],
+    },
+    {
+      title: "Notificaciones",
+      mobile: false,
+      items: [
+        {
+          field: "acceptsEmailNotifications" as Field,
+          label: "Notificaciones por email",
+          description: "Recibí avisos por correo sobre torneos, resultados e invitaciones.",
+        },
+      ],
+    },
+    ...(isOrganizer ? [{
+      title: "Contacto",
+      mobile: false,
+      items: [
+        {
+          field: "acceptsWhatsAppContact" as Field,
+          label: "Permitir contacto por WhatsApp",
+          description: "Los jugadores podrán ver un botón para contactarte por WhatsApp desde la página del torneo. Requiere tener teléfono cargado en tu perfil.",
+        },
+      ],
+    }] : []),
+    {
+      title: "App móvil",
+      mobile: true,
+      items: [
+        {
+          field: "acceptsAppNotifications" as Field,
+          label: "Notificaciones en la app",
+          description: "Recibirás alertas en tu celular cuando la app móvil esté disponible.",
+        },
+        {
+          field: "acceptsContactByEmail" as Field,
+          label: "Contactar por email",
+          description: "Permitís que otros usuarios te contacten a través de tu dirección de email.",
+        },
+        {
+          field: "acceptsContactByPhone" as Field,
+          label: "Contactar por teléfono / WhatsApp",
+          description: "Permitís que otros usuarios te contacten a través de tu número de teléfono.",
+        },
+      ],
+    },
+  ];
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-6">
-      <h2 className="text-sm font-semibold text-gray-700 mb-1">Notificaciones e invitaciones</h2>
-      <p className="text-xs text-gray-400 mb-5">
-        Controlá si los organizadores pueden encontrarte e invitarte a torneos según tu zona.
-      </p>
+    <div className="bg-white border border-gray-100 rounded-xl p-6 space-y-6">
+      <div>
+        <h2 className="text-sm font-semibold text-gray-700">Privacidad y notificaciones</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Controlá cómo y cuándo te contactan.</p>
+      </div>
 
-      <button
-        onClick={toggle}
-        disabled={loading}
-        className="w-full flex items-center justify-between gap-4 text-left group disabled:opacity-60"
-      >
-        <div>
-          <p className="text-sm font-medium text-gray-800">
-            Recibir invitaciones por zona
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Los organizadores con plan PRO podrán buscarte por tu provincia o localidad e invitarte a sus torneos.
-            También te llegarán notificaciones y mails cuando se creen torneos públicos cerca tuyo.
-          </p>
+      {sections.map((section, si) => (
+        <div key={section.title}>
+          {si > 0 && <div className="h-px bg-gray-100 mb-5" />}
+          <div className="flex items-center gap-2 mb-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{section.title}</p>
+            {section.mobile && (
+              <span className="text-xs bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-medium">Próximamente</span>
+            )}
+          </div>
+          <div className={`space-y-4 ${section.mobile ? "opacity-60 pointer-events-none" : ""}`}>
+            {section.items.map(({ field, label, description }) => (
+              <div key={field}>
+                <Toggle
+                  label={label}
+                  description={description}
+                  value={values[field]}
+                  onChange={() => toggle(field)}
+                />
+                {saving === field && (
+                  <p className="text-xs text-gray-400 mt-2">Guardando...</p>
+                )}
+                {saved === field && (
+                  <p className="text-xs text-green-600 mt-2">Preferencia guardada.</p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-        <div
-          className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${
-            enabled ? "bg-red-600" : "bg-gray-200"
-          }`}
-        >
-          <span
-            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-              enabled ? "translate-x-5" : "translate-x-0"
-            }`}
-          />
-        </div>
-      </button>
-
-      {saved && (
-        <p className="text-xs text-green-600 mt-4">
-          Preferencia guardada.
-        </p>
-      )}
-
-      <div className="h-px bg-gray-100 my-5" />
-
-      <button
-        onClick={toggleEmail}
-        disabled={emailLoading}
-        className="w-full flex items-center justify-between gap-4 text-left group disabled:opacity-60"
-      >
-        <div>
-          <p className="text-sm font-medium text-gray-800">
-            Recibir emails de TdT
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Activa o desactiva avisos por correo para torneos, recordatorios y novedades de tu actividad.
-          </p>
-        </div>
-        <div
-          className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${
-            emailEnabled ? "bg-red-600" : "bg-gray-200"
-          }`}
-        >
-          <span
-            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-              emailEnabled ? "translate-x-5" : "translate-x-0"
-            }`}
-          />
-        </div>
-      </button>
-
-      {emailSaved && (
-        <p className="text-xs text-green-600 mt-4">
-          Preferencia de email guardada.
-        </p>
-      )}
+      ))}
     </div>
   );
 }

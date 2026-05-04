@@ -1,93 +1,63 @@
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@tdt/db";
+import { isOrganizer } from "@/lib/tournament-auth";
 import { getRankingConfig, getRankingRows } from "@/lib/ranking";
-import { RankingConfigForm } from "@/components/ui/RankingConfigForm";
-import { RankingOrganizerFilter } from "@/components/ui/RankingOrganizerFilter";
+import { prisma } from "@tdt/db";
+import { MiRankingFilter } from "@/components/ui/MiRankingFilter";
 import { Suspense } from "react";
 import Link from "next/link";
 
-type Props = { searchParams: Promise<{ organizador?: string; torneo?: string; usuario?: string }> };
+type Props = { searchParams: Promise<{ torneo?: string; usuario?: string }> };
 
-export default async function RankingPage({ searchParams }: Props) {
-  const { organizador, torneo, usuario } = await searchParams;
+export default async function MiRankingPage({ searchParams }: Props) {
   const session = await getServerSession(authOptions);
-  const isAdmin = session?.user?.role === "ADMIN";
+  if (!session?.user?.id || !isOrganizer(session.user.role)) redirect("/torneos");
 
-  const [config, organizers] = await Promise.all([
+  const { torneo, usuario } = await searchParams;
+
+  const [config, tournaments] = await Promise.all([
     getRankingConfig(),
-    prisma.user.findMany({
-      where: {
-        role: { in: ["ORGANIZER", "ADMIN"] },
-        tournaments: { some: {} },
-      },
+    prisma.tournament.findMany({
+      where: { adminId: session.user.id },
       select: { id: true, name: true },
-      orderBy: { name: "asc" },
+      orderBy: { createdAt: "desc" },
     }),
   ]);
 
-  const tournaments = organizador
-    ? await prisma.tournament.findMany({
-        where: { adminId: organizador },
-        select: { id: true, name: true },
-        orderBy: { createdAt: "desc" },
-      })
-    : [];
-
-  let rows = await getRankingRows(config, organizador || undefined, torneo || undefined);
+  let rows = await getRankingRows(config, session.user.id, torneo || undefined);
 
   if (usuario) {
     const q = usuario.toLowerCase();
     rows = rows.filter((r) => r.userName.toLowerCase().includes(q));
   }
 
-  const selectedOrganizer = organizers.find((o) => o.id === organizador);
-  const selectedTournament = tournaments.find((t) => t.id === torneo);
-  const title = selectedTournament
-    ? `Ranking — ${selectedTournament.name}`
-    : selectedOrganizer
-    ? `Ranking — ${selectedOrganizer.name}`
-    : "Ranking general";
+  const subtitle = torneo
+    ? tournaments.find((t) => t.id === torneo)?.name ?? "Torneo"
+    : "todos tus torneos";
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Mi ranking</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Puntaje acumulado por torneos jugados, partidos jugados y victorias por etapa.
+          Jugadores de {subtitle}, ordenados por puntos acumulados.
         </p>
       </div>
-
-      {isAdmin && (
-        <RankingConfigForm
-          initial={{
-            tournamentPlayedPoints: config.tournamentPlayedPoints,
-            matchPlayedPoints: config.matchPlayedPoints,
-            groupWinPoints: config.groupWinPoints,
-            roundOf16WinPoints: config.roundOf16WinPoints,
-            quarterfinalWinPoints: config.quarterfinalWinPoints,
-            semifinalWinPoints: config.semifinalWinPoints,
-            finalWinPoints: config.finalWinPoints,
-          }}
-        />
-      )}
 
       <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Tabla general</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Tabla de jugadores</h2>
             <p className="text-sm text-gray-500 mt-1">
-              {rows.length} usuario{rows.length !== 1 ? "s" : ""} en el ranking
+              {rows.length === 0
+                ? "Sin resultados"
+                : `${rows.length} jugador${rows.length !== 1 ? "es" : ""} en el ranking`}
             </p>
           </div>
-          {organizers.length > 0 && (
-            <Suspense>
-              <RankingOrganizerFilter
-                organizers={organizers}
-                tournaments={tournaments}
-              />
-            </Suspense>
-          )}
+          <Suspense>
+            <MiRankingFilter tournaments={tournaments} />
+          </Suspense>
         </div>
 
         <div className="overflow-x-auto">
@@ -95,7 +65,7 @@ export default async function RankingPage({ searchParams }: Props) {
             <thead>
               <tr className="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-100">
                 <th className="text-left px-5 py-3 font-medium">Puesto</th>
-                <th className="text-left px-5 py-3 font-medium">Usuario</th>
+                <th className="text-left px-5 py-3 font-medium">Jugador</th>
                 <th className="text-right px-5 py-3 font-medium">Total</th>
                 <th className="text-right px-5 py-3 font-medium">Torneos</th>
                 <th className="text-right px-5 py-3 font-medium">Partidos</th>
@@ -109,14 +79,12 @@ export default async function RankingPage({ searchParams }: Props) {
             <tbody className="divide-y divide-gray-50">
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-5 py-12 text-center text-sm text-gray-400">
+                  <td colSpan={10} className="px-5 py-16 text-center text-sm text-gray-400">
                     {usuario
                       ? `No se encontraron jugadores con el nombre "${usuario}".`
                       : torneo
                       ? "Este torneo todavía no tiene partidos jugados."
-                      : organizador
-                      ? "Este organizador todavía no tiene jugadores con partidos jugados."
-                      : "Todavía no hay datos de ranking. Jugá torneos para aparecer acá."}
+                      : "Cuando tus torneos tengan partidos jugados, los jugadores apareceran aqui."}
                   </td>
                 </tr>
               )}
@@ -127,14 +95,23 @@ export default async function RankingPage({ searchParams }: Props) {
                     <Link href={`/usuarios/${row.userId}`} className="font-medium text-gray-900 hover:text-red-600 transition-colors">
                       {row.userName}
                     </Link>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {row.userEmail} · {row.role === "ADMIN" || row.role === "ORGANIZER" ? "Organizador" : "Jugador"}
-                    </div>
+                    <div className="text-xs text-gray-400 mt-1">{row.userEmail}</div>
                   </td>
                   <td className="px-5 py-4 text-right">
                     <div className="font-semibold text-gray-900">{row.totalPoints}</div>
-                    <div className="text-xs text-gray-400 mt-1" title={`Torneos: ${row.pointsBreakdown.tournamentsPlayed} · Partidos: ${row.pointsBreakdown.matchesPlayed} · Grupos: ${row.pointsBreakdown.groupWins} · Octavos: ${row.pointsBreakdown.roundOf16Wins} · Cuartos: ${row.pointsBreakdown.quarterfinalWins} · Semis: ${row.pointsBreakdown.semifinalWins} · Final: ${row.pointsBreakdown.finalWins}`}>
-                      {[row.pointsBreakdown.tournamentsPlayed, row.pointsBreakdown.matchesPlayed, row.pointsBreakdown.groupWins, row.pointsBreakdown.roundOf16Wins, row.pointsBreakdown.quarterfinalWins, row.pointsBreakdown.semifinalWins, row.pointsBreakdown.finalWins].join(" + ")}
+                    <div
+                      className="text-xs text-gray-400 mt-1"
+                      title={`Torneos: ${row.pointsBreakdown.tournamentsPlayed} · Partidos: ${row.pointsBreakdown.matchesPlayed} · Grupos: ${row.pointsBreakdown.groupWins} · Octavos: ${row.pointsBreakdown.roundOf16Wins} · Cuartos: ${row.pointsBreakdown.quarterfinalWins} · Semis: ${row.pointsBreakdown.semifinalWins} · Final: ${row.pointsBreakdown.finalWins}`}
+                    >
+                      {[
+                        row.pointsBreakdown.tournamentsPlayed,
+                        row.pointsBreakdown.matchesPlayed,
+                        row.pointsBreakdown.groupWins,
+                        row.pointsBreakdown.roundOf16Wins,
+                        row.pointsBreakdown.quarterfinalWins,
+                        row.pointsBreakdown.semifinalWins,
+                        row.pointsBreakdown.finalWins,
+                      ].join(" + ")}
                     </div>
                   </td>
                   <td className="px-5 py-4 text-right text-gray-700">

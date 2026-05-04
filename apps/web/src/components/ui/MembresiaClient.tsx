@@ -29,6 +29,7 @@ const benefits: { label: string; pro: string | boolean; free: string | boolean }
   { label: "Ver torneos y posiciones", pro: true,      free: true },
   { label: "Publicar torneos (alcance público)", pro: true, free: false },
   { label: "Invitá jugadores por zona", pro: true,     free: false },
+  { label: "Ranking propio de jugadores", pro: true,  free: false },
 ];
 
 export function MembresiaClient({ plan, planExpiresAt, precio }: Props) {

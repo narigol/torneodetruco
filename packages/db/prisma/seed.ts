@@ -77,6 +77,53 @@ async function main() {
   );
   console.log(`✓ ${jugadores.length} jugadores creados`);
 
+  // Usuarios con localidad (La Plata, Berisso, San Telmo)
+  const usuariosConLocalidad = [
+    // La Plata
+    { name: "Marcos Alderete",     email: "marcos.alderete@gmail.com",   locality: "La Plata",  province: "Buenos Aires" },
+    { name: "Soledad Mansilla",    email: "sole.mansilla@gmail.com",     locality: "La Plata",  province: "Buenos Aires" },
+    { name: "Rubén Palavecino",    email: "ruben.palavecino@gmail.com",  locality: "La Plata",  province: "Buenos Aires" },
+    { name: "Cecilia Bordón",      email: "ceci.bordon@gmail.com",       locality: "La Plata",  province: "Buenos Aires" },
+    { name: "Norberto Salas",      email: "norber.salas@gmail.com",      locality: "La Plata",  province: "Buenos Aires" },
+    { name: "Analía Pereyra",      email: "analia.pereyra@gmail.com",    locality: "La Plata",  province: "Buenos Aires" },
+    { name: "Claudio Echeverría",  email: "claudio.echev@gmail.com",     locality: "La Plata",  province: "Buenos Aires" },
+    // Berisso
+    { name: "Dante Cáceres",       email: "dante.caceres@gmail.com",     locality: "Berisso",   province: "Buenos Aires" },
+    { name: "Patricia Ledesma",    email: "pati.ledesma@gmail.com",      locality: "Berisso",   province: "Buenos Aires" },
+    { name: "Oscar Maidana",       email: "oscar.maidana@gmail.com",     locality: "Berisso",   province: "Buenos Aires" },
+    { name: "Roxana Ferreyra",     email: "roxi.ferreyra@gmail.com",     locality: "Berisso",   province: "Buenos Aires" },
+    { name: "Héctor Zavaleta",     email: "hector.zavaleta@gmail.com",   locality: "Berisso",   province: "Buenos Aires" },
+    { name: "Miriam Ojeda",        email: "miriam.ojeda@gmail.com",      locality: "Berisso",   province: "Buenos Aires" },
+    // San Telmo
+    { name: "Federico Quiroga",    email: "fede.quiroga@gmail.com",      locality: "San Telmo", province: "Buenos Aires" },
+    { name: "Valentina Rojas",     email: "vale.rojas@gmail.com",        locality: "San Telmo", province: "Buenos Aires" },
+    { name: "Ramón Giménez",       email: "ramon.gimenez@gmail.com",     locality: "San Telmo", province: "Buenos Aires" },
+    { name: "Lorena Bustamante",   email: "lore.bustamante@gmail.com",   locality: "San Telmo", province: "Buenos Aires" },
+    { name: "Ismael Taborda",      email: "ismael.taborda@gmail.com",    locality: "San Telmo", province: "Buenos Aires" },
+    { name: "Graciela Montes",     email: "graciela.montes@gmail.com",   locality: "San Telmo", province: "Buenos Aires" },
+  ];
+
+  const pwdDefault = await bcrypt.hash("jugador123", 10);
+  await Promise.all(
+    usuariosConLocalidad.map(({ name, email, locality, province }) =>
+      prisma.user.upsert({
+        where: { email },
+        update: { locality, province },
+        create: {
+          name,
+          email,
+          password: pwdDefault,
+          role: "PLAYER",
+          locality,
+          province,
+          country: "Argentina",
+          player: { create: { name, locality, provincia: province } },
+        },
+      })
+    )
+  );
+  console.log(`✓ ${usuariosConLocalidad.length} usuarios con localidad creados (La Plata, Berisso, San Telmo)`);
+
   // Torneo de ejemplo en inscripción
   const existingTorneo = await prisma.tournament.findFirst({
     where: { name: "Copa Truco 2026" },

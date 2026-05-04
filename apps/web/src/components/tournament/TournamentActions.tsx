@@ -42,6 +42,8 @@ export function TournamentActions({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [showBracketModal, setShowBracketModal] = useState(false);
   const [numGroups, setNumGroups] = useState(2);
@@ -92,6 +94,14 @@ export function TournamentActions({
       body: JSON.stringify({ numGroups, qualifyPerGroup }),
     });
     setLoading(false);
+    router.refresh();
+  }
+
+  async function deleteTournament() {
+    setDeleteLoading(true);
+    await fetch(`/api/torneos/${tournamentId}`, { method: "DELETE" });
+    setDeleteLoading(false);
+    router.push("/torneos");
     router.refresh();
   }
 
@@ -157,7 +167,44 @@ export function TournamentActions({
             {loading ? "..." : nextLabel}
           </button>
         )}
+
+        {status === "DRAFT" && (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={deleteLoading}
+            className="px-4 py-2 text-sm font-medium bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+          >
+            Eliminar torneo
+          </button>
+        )}
       </div>
+
+      {/* Modal: confirmar eliminar */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-80 shadow-xl">
+            <h3 className="font-semibold text-gray-900 mb-1">Eliminar torneo</h3>
+            <p className="text-sm text-gray-500 mb-5">
+              Esta acción es irreversible. Se eliminarán el torneo y todos sus datos.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={deleteTournament}
+                disabled={deleteLoading}
+                className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteLoading ? "Eliminando..." : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal: generar grupos */}
       {showGroupModal && (

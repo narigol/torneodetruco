@@ -15,24 +15,49 @@ export default async function MisTorneosPage() {
   });
 
   const playerId = user?.player?.id;
-  const torneos = playerId
-    ? await prisma.tournament.findMany({
-        orderBy: { createdAt: "desc" },
-        where: {
-          teams: {
-            some: {
-              teamPlayers: {
-                some: { playerId },
-              },
-            },
+
+  const tournamentSelect = {
+    id: true,
+    name: true,
+    status: true,
+    format: true,
+    adminId: true,
+    published: true,
+    locality: true,
+    province: true,
+    startDate: true,
+    admin: { select: { id: true, name: true } },
+    _count: { select: { teams: true, matches: true } },
+  } as const;
+
+  const [playerTorneos, organizerTorneos] = await Promise.all([
+    playerId
+      ? prisma.tournament.findMany({
+          orderBy: { createdAt: "desc" },
+          where: {
+            teams: { some: { teamPlayers: { some: { playerId } } } },
           },
-        },
-        include: {
-          admin: { select: { id: true, name: true } },
-          _count: { select: { teams: true, matches: true } },
-        },
-      })
-    : [];
+          select: tournamentSelect,
+        })
+      : [],
+    prisma.tournament.findMany({
+      orderBy: { createdAt: "desc" },
+      where: { adminId: session.user.id },
+      select: tournamentSelect,
+    }),
+  ]);
+
+  // Combinar deduplicando: si aparece en ambos, priorizamos el rol organizador
+  const byId = new Map<string, (typeof playerTorneos[0]) & { _rol: "jugador" | "organizador" }>();
+  for (const t of playerTorneos) byId.set(t.id, { ...t, _rol: "jugador" });
+  for (const t of organizerTorneos) byId.set(t.id, { ...t, _rol: "organizador" });
+
+  const torneos = [...byId.values()].sort(
+    (a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime()
+  );
+
+  const hasOrganizer = organizerTorneos.length > 0;
+  const hasPlayer = playerTorneos.length > 0;
 
   return (
     <div>
@@ -40,33 +65,19 @@ export default async function MisTorneosPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mis torneos</h1>
           <p className="text-gray-400 text-sm mt-0.5">
-            {torneos.length} torneo{torneos.length !== 1 ? "s" : ""} jugado{torneos.length !== 1 ? "s" : ""}
+            {torneos.length} torneo{torneos.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link
-          href="/torneos"
-          className="text-sm text-red-600 hover:underline font-medium"
-        >
+        <Link href="/torneos" className="text-sm text-red-600 hover:underline font-medium">
           Ver todos los torneos →
         </Link>
       </div>
 
-      <TorneosFilter
-        torneos={torneos}
-      />
-      {torneos.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-24 text-center bg-white border border-gray-100 rounded-2xl">
-          <div className="text-5xl mb-4">🃏</div>
-          <p className="text-gray-500 font-medium">
-            {playerId
-              ? "Todavía no participaste en ningún torneo."
-              : "No hay un jugador vinculado a tu cuenta."
-            }
-          </p>
-          <p className="text-sm text-gray-400 mt-2">
-            Para ver los torneos que jugaste, vinculá tu usuario a un jugador en tu perfil.
-          </p>
-        </div>
+      {torneos.length > 0 && (
+        <TorneosFilter
+          torneos={torneos}
+          showRolFilter={hasOrganizer && hasPlayer}
+        />
       )}
     </div>
   );

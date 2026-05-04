@@ -207,6 +207,69 @@ export async function sendMatchResultEmails(matchId: string) {
   );
 }
 
+export async function sendTournamentFinishedEmails(tournamentId: string) {
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+    select: {
+      id: true,
+      name: true,
+      teams: {
+        select: {
+          teamPlayers: {
+            select: {
+              player: {
+                select: {
+                  user: {
+                    select: { email: true, name: true, acceptsEmailNotifications: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!tournament) return;
+
+  const recipients = tournament.teams
+    .flatMap((team) => team.teamPlayers)
+    .map((tp) => tp.player.user)
+    .filter((user): user is NonNullable<typeof user> => Boolean(user))
+    .filter((user) => user.acceptsEmailNotifications);
+
+  const unique = dedupeRecipients(recipients);
+  await sendBulkEmails(
+    unique,
+    `El torneo ${tournament.name} finalizo`,
+    (name) => `Hola ${name}, el torneo ${tournament.name} llego a su fin. Entra a TdT para ver los resultados finales y el campeon.`,
+    `${getAppUrl()}/torneos/${tournament.id}`,
+    "Ver resultados"
+  );
+}
+
+export async function sendInvitationEmail(invitationId: string) {
+  const invitation = await prisma.invitation.findUnique({
+    where: { id: invitationId },
+    include: {
+      tournament: { select: { id: true, name: true } },
+      inviter: { select: { name: true } },
+      user: { select: { email: true, name: true, acceptsEmailNotifications: true } },
+    },
+  });
+
+  if (!invitation || !invitation.user.acceptsEmailNotifications) return;
+
+  await sendBulkEmails(
+    [{ email: invitation.user.email, name: invitation.user.name }],
+    `Te invitaron al torneo ${invitation.tournament.name}`,
+    (name) => `Hola ${name}, ${invitation.inviter.name} te invito a participar en el torneo "${invitation.tournament.name}". Entra a TdT para aceptar o rechazar la invitacion.`,
+    `${getAppUrl()}/torneos/${invitation.tournament.id}`,
+    "Ver invitacion"
+  );
+}
+
 function dedupeRecipients(recipients: Array<{ email: string; name: string }>) {
   const map = new Map<string, { email: string; name: string }>();
   for (const recipient of recipients) {

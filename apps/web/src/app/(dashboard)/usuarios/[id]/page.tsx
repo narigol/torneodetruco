@@ -34,8 +34,6 @@ export default async function UsuarioDetailPage({ params }: Props) {
       id: true,
       name: true,
       email: true,
-      dni: true,
-      phone: true,
       locality: true,
       province: true,
       role: true,
@@ -185,18 +183,6 @@ export default async function UsuarioDetailPage({ params }: Props) {
         </div>
 
         <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
-          {usuario.dni && (
-            <>
-              <dt className="text-gray-400">DNI</dt>
-              <dd className="text-gray-700 font-medium">{usuario.dni}</dd>
-            </>
-          )}
-          {usuario.phone && (
-            <>
-              <dt className="text-gray-400">Teléfono</dt>
-              <dd className="text-gray-700">{usuario.phone}</dd>
-            </>
-          )}
           {(usuario.locality || usuario.province) && (
             <>
               <dt className="text-gray-400">Localidad</dt>
@@ -383,8 +369,8 @@ function ProgressChart({
       </div>
     </div>
   );
+}
 
-// Calcula la progresión acumulada de puntos torneo por torneo, aplicando la config de ranking
 function buildProgression(
   torneos: Array<{
     torneo: { name: string };
@@ -438,7 +424,6 @@ function buildProgression(
   });
 }
 
-// Agrupa enfrentamientos contra rivales únicos, cuenta victorias/derrotas. Top 6 ordenado por frecuencia
 function buildRivalries(
   torneos: Array<{
     teamName: string;
@@ -470,7 +455,6 @@ function buildRivalries(
   }).slice(0, 6);
 }
 
-// Busca el nombre del equipo del jugador en un partido dado (necesario para W/L calc)
 function torneoDePartido(
   partido: {
     id: string;

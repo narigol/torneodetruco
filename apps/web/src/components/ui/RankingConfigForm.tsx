@@ -70,20 +70,20 @@ export function RankingConfigForm({ initial }: Props) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
         {fields.map((field) => (
           <div key={field.key}>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-xs font-medium text-gray-600 mb-1 leading-tight">
               {field.label}
             </label>
             <input
               type="number"
               min={0}
+              title={field.hint}
               value={values[field.key]}
               onChange={(e) => updateValue(field.key, Number(e.target.value))}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
             />
-            <p className="text-xs text-gray-400 mt-1">{field.hint}</p>
           </div>
         ))}
       </div>
