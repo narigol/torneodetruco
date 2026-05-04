@@ -105,7 +105,7 @@ export function TorneosFilter({ torneos, showRolFilter = false, showDraft = fals
           />
         </div>
 
-        {organizers.length > 1 && (
+        {organizers.length > 0 && (
           <select
             value={organizerId}
             onChange={(e) => setOrganizerId(e.target.value)}

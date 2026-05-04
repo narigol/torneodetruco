@@ -156,7 +156,7 @@ export function EditarTorneoForm({ torneo, reglamentos }: Props) {
             onProvinceChange={setProvince}
           />
 
-          <MapaPreview location={location} onLocationChange={setLocation} />
+          <MapaPreview location={location} onLocationChange={setLocation} onProvinceChange={setProvince} onLocalityChange={setLocality} />
         </div>
 
         {/* Tarjeta derecha — Configuración */}

@@ -1,27 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { FollowButton } from "@/components/ui/FollowButton";
 
 type Usuario = {
   id: string;
   name: string;
-  email: string;
-  dni: string | null;
-  phone: string | null;
   locality: string | null;
   province: string | null;
   role: string;
   plan: string;
   pendingActivation: boolean;
-  createdAt: Date;
 };
 
 type Props = {
   usuarios: Usuario[];
-  isAdmin: boolean;
+  currentUserId: string;
 };
 
 function RolBadge({ role }: { role: string }) {
@@ -51,46 +47,24 @@ function EstadoBadge({ pendingActivation }: { pendingActivation: boolean }) {
   );
 }
 
-export function UsuariosClient({ usuarios, isAdmin }: Props) {
-  const router = useRouter();
+export function UsuariosClient({ usuarios, currentUserId }: Props) {
   const [search, setSearch] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [changingRole, setChangingRole] = useState<string | null>(null);
 
   const filtered = usuarios.filter((u) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
       u.name.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q) ||
-      (u.dni ?? "").includes(q) ||
       (u.locality ?? "").toLowerCase().includes(q)
     );
   });
-
-  async function handleDelete(id: string) {
-    await fetch(`/api/usuarios/${id}`, { method: "DELETE" });
-    setConfirmDelete(null);
-    router.refresh();
-  }
-
-  async function handleRoleChange(id: string, newRole: "ORGANIZER" | "PLAYER") {
-    setChangingRole(id);
-    await fetch(`/api/usuarios/${id}/rol`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: newRole }),
-    });
-    setChangingRole(null);
-    router.refresh();
-  }
 
   return (
     <div>
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Buscar por nombre, email, DNI o localidad..."
+          placeholder="Buscar por nombre o localidad..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-sm px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
@@ -105,12 +79,10 @@ export function UsuariosClient({ usuarios, isAdmin }: Props) {
             <thead>
               <tr className="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-100">
                 <th className="text-left px-5 py-3 font-medium">Nombre</th>
-                <th className="text-left px-5 py-3 font-medium">DNI</th>
-                <th className="text-left px-5 py-3 font-medium">Email</th>
                 <th className="text-left px-5 py-3 font-medium">Localidad</th>
                 <th className="text-left px-5 py-3 font-medium">Rol</th>
                 <th className="text-left px-5 py-3 font-medium">Estado</th>
-                {isAdmin && <th className="px-5 py-3" />}
+                <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -119,50 +91,16 @@ export function UsuariosClient({ usuarios, isAdmin }: Props) {
                   <td className="px-5 py-3 font-medium text-gray-900">
                     <Link href={`/usuarios/${u.id}`} className="hover:text-red-600 transition-colors">{u.name}</Link>
                   </td>
-                  <td className="px-5 py-3 text-gray-500">{u.dni ?? <span className="text-gray-300">—</span>}</td>
-                  <td className="px-5 py-3 text-gray-500">
-                    {u.email ? (
-                      <a href={`mailto:${u.email}`} className="hover:text-red-600 transition-colors">{u.email}</a>
-                    ) : (
-                      <span className="text-gray-300">—</span>
-                    )}
-                  </td>
                   <td className="px-5 py-3 text-gray-500">
                     {[u.locality, u.province].filter(Boolean).join(", ") || <span className="text-gray-300">—</span>}
                   </td>
                   <td className="px-5 py-3"><RolBadge role={u.role} /></td>
                   <td className="px-5 py-3"><EstadoBadge pendingActivation={u.pendingActivation} /></td>
-                  {isAdmin && (
-                    <td className="px-5 py-3 text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        <Link href={`/usuarios/${u.id}/editar`} className="text-xs text-gray-400 hover:text-gray-700">
-                          Editar
-                        </Link>
-                        {u.role !== "ADMIN" && (
-                          <button
-                            onClick={() => handleRoleChange(u.id, u.role === "ORGANIZER" ? "PLAYER" : "ORGANIZER")}
-                            disabled={changingRole === u.id}
-                            className="text-xs text-blue-500 hover:text-blue-700 disabled:opacity-50"
-                          >
-                            {changingRole === u.id ? "..." : u.role === "ORGANIZER" ? "Quitar organizador" : "Hacer organizador"}
-                          </button>
-                        )}
-                        {u.role !== "ADMIN" && (
-                          confirmDelete === u.id ? (
-                            <span className="inline-flex items-center gap-2">
-                              <span className="text-xs text-gray-500">¿Eliminar a {u.name}?</span>
-                              <button onClick={() => handleDelete(u.id)} className="text-xs text-red-600 hover:underline">Confirmar</button>
-                              <button onClick={() => setConfirmDelete(null)} className="text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
-                            </span>
-                          ) : (
-                            <button onClick={() => setConfirmDelete(u.id)} className="text-xs text-gray-400 hover:text-red-600 transition-colors">
-                              Eliminar
-                            </button>
-                          )
-                        )}
-                      </div>
-                    </td>
-                  )}
+                  <td className="px-5 py-3 text-right">
+                    {u.id !== currentUserId && (
+                      <FollowButton organizerId={u.id} organizerName={u.name} />
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

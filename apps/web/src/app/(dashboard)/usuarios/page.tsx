@@ -17,15 +17,11 @@ export default async function UsuariosPage() {
     select: {
       id: true,
       name: true,
-      email: true,
-      dni: true,
-      phone: true,
       locality: true,
       province: true,
       role: true,
       plan: true,
       pendingActivation: true,
-      createdAt: true,
     },
   });
 
@@ -48,7 +44,7 @@ export default async function UsuariosPage() {
         )}
       </div>
 
-      <UsuariosClient usuarios={usuarios} isAdmin={isAdmin} />
+      <UsuariosClient usuarios={usuarios} currentUserId={session?.user?.id ?? ""} />
     </div>
   );
 }

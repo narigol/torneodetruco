@@ -5,6 +5,8 @@ import { prisma } from "@tdt/db";
 import Link from "next/link";
 import { isOrganizer } from "@/lib/tournament-auth";
 import { getRankingConfig } from "@/lib/ranking";
+import { FollowButton } from "@/components/ui/FollowButton";
+import { UsuarioAdminActions } from "@/components/ui/UsuarioAdminActions";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -25,7 +27,9 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function UsuarioDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (!session?.user || !isOrganizer(session.user.role)) redirect("/torneos");
+  if (!session?.user) redirect("/login");
+  const viewerIsOrganizer = isOrganizer(session.user.role);
+  const viewerIsSuperAdmin = session.user.role === "ADMIN";
   const rankingConfig = await getRankingConfig();
 
   const usuario = await prisma.user.findUnique({
@@ -151,24 +155,32 @@ export default async function UsuarioDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-3xl">
-      <div className="mb-6">
-        <Link href="/usuarios" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-          ← Usuarios
-        </Link>
-      </div>
+      {viewerIsOrganizer && (
+        <div className="mb-6">
+          <Link href="/usuarios" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+            ← Usuarios
+          </Link>
+        </div>
+      )}
 
       {/* Perfil */}
       <div className="bg-white border border-gray-100 rounded-2xl p-6 mb-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <h1 className="text-xl font-bold text-gray-900">{usuario.name}</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{usuario.email}</p>
+            {viewerIsOrganizer && (
+              <p className="text-sm text-gray-500 mt-0.5">{usuario.email}</p>
+            )}
           </div>
-          <div className="flex flex-wrap gap-2 justify-end">
-            {usuario.pendingActivation ? (
-              <span className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-100 px-2 py-0.5 rounded-full font-medium">Pendiente</span>
-            ) : (
-              <span className="text-xs bg-green-50 text-green-700 border border-green-100 px-2 py-0.5 rounded-full font-medium">Activo</span>
+          <div className="flex flex-wrap gap-2 items-center justify-end">
+            {viewerIsOrganizer && (
+              <>
+                {usuario.pendingActivation ? (
+                  <span className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-100 px-2 py-0.5 rounded-full font-medium">Pendiente</span>
+                ) : (
+                  <span className="text-xs bg-green-50 text-green-700 border border-green-100 px-2 py-0.5 rounded-full font-medium">Activo</span>
+                )}
+              </>
             )}
             {usuario.role === "ADMIN" && (
               <span className="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2 py-0.5 rounded-full font-medium">Super Admin</span>
@@ -178,6 +190,9 @@ export default async function UsuarioDetailPage({ params }: Props) {
             )}
             {usuario.plan === "PRO" && (
               <span className="text-xs bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full font-medium">PRO</span>
+            )}
+            {session.user.id !== usuario.id && (
+              <FollowButton organizerId={usuario.id} organizerName={usuario.name ?? ""} />
             )}
           </div>
         </div>
@@ -193,6 +208,10 @@ export default async function UsuarioDetailPage({ params }: Props) {
           <dd className="text-gray-700">{new Date(usuario.createdAt).toLocaleDateString("es-AR", { year: "numeric", month: "long" })}</dd>
         </dl>
       </div>
+
+      {viewerIsSuperAdmin && session.user.id !== usuario.id && (
+        <UsuarioAdminActions userId={usuario.id} userName={usuario.name ?? ""} userRole={usuario.role} />
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
         <StatCard label="Torneos" value={String(tournamentsPlayed)} detail="Participaciones registradas" />

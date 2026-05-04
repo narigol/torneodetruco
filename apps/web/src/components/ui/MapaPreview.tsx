@@ -1,19 +1,35 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { PROVINCES } from "@/lib/argentina-geo";
 
 type Props = {
   location: string;
   onLocationChange?: (address: string) => void;
+  onProvinceChange?: (province: string) => void;
+  onLocalityChange?: (locality: string) => void;
 };
 
-export function MapaPreview({ location, onLocationChange }: Props) {
+function normalize(s: string) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+}
+
+function matchProvince(state: string): string {
+  const norm = normalize(state);
+  return PROVINCES.find((p) => normalize(p) === norm) ?? "";
+}
+
+export function MapaPreview({ location, onLocationChange, onProvinceChange, onLocalityChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const onChangeRef = useRef(onLocationChange);
+  const onProvinceRef = useRef(onProvinceChange);
+  const onLocalityRef = useRef(onLocalityChange);
 
   useEffect(() => { onChangeRef.current = onLocationChange; }, [onLocationChange]);
+  useEffect(() => { onProvinceRef.current = onProvinceChange; }, [onProvinceChange]);
+  useEffect(() => { onLocalityRef.current = onLocalityChange; }, [onLocalityChange]);
 
   // Init Leaflet map once
   useEffect(() => {
@@ -46,11 +62,18 @@ export function MapaPreview({ location, onLocationChange }: Props) {
       const reverseGeocode = async (lat: number, lng: number) => {
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
             { headers: { "Accept-Language": "es" } }
           );
           const data = await res.json();
           if (data.display_name) onChangeRef.current?.(data.display_name);
+          if (data.address) {
+            const addr = data.address;
+            const province = matchProvince(addr.state ?? "");
+            const locality = addr.city ?? addr.town ?? addr.municipality ?? addr.village ?? addr.county ?? "";
+            if (province) onProvinceRef.current?.(province);
+            if (locality) onLocalityRef.current?.(locality);
+          }
         } catch {}
       };
 
