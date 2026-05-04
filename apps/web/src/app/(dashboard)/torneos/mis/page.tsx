@@ -73,12 +73,11 @@ export default async function MisTorneosPage() {
         </Link>
       </div>
 
-      {torneos.length > 0 && (
-        <TorneosFilter
-          torneos={torneos}
-          showRolFilter={hasOrganizer && hasPlayer}
-        />
-      )}
+      <TorneosFilter
+        torneos={torneos}
+        showRolFilter={hasOrganizer && hasPlayer}
+        showDraft
+      />
     </div>
   );
 }

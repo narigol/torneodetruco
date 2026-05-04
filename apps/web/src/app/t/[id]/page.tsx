@@ -14,7 +14,7 @@ export default async function PublicTournamentPage({ params }: Props) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
   const tournament = await prisma.tournament.findFirst({
-    where: { id, published: true },
+    where: { id },
     include: {
       admin: { select: { name: true, phone: true, acceptsWhatsAppContact: true } },
       _count: { select: { teams: true } },

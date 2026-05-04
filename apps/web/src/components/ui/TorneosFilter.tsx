@@ -36,16 +36,21 @@ const STATUS_FILTERS = [
   { value: "", label: "Todos los estados" },
   { value: "REGISTRATION", label: "Inscripción abierta" },
   { value: "IN_PROGRESS",  label: "En curso" },
-  { value: "DRAFT",        label: "Borrador" },
   { value: "FINISHED",     label: "Finalizados" },
+];
+
+const STATUS_FILTERS_WITH_DRAFT = [
+  ...STATUS_FILTERS,
+  { value: "DRAFT", label: "Borrador" },
 ];
 
 type Props = {
   torneos: Torneo[];
   showRolFilter?: boolean;
+  showDraft?: boolean;
 };
 
-export function TorneosFilter({ torneos, showRolFilter = false }: Props) {
+export function TorneosFilter({ torneos, showRolFilter = false, showDraft = false }: Props) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [rolFilter, setRolFilter] = useState<"" | "jugador" | "organizador">("");
@@ -136,7 +141,7 @@ export function TorneosFilter({ torneos, showRolFilter = false }: Props) {
       )}
 
       <div className="flex flex-wrap gap-2">
-        {STATUS_FILTERS.map((filter) => {
+        {(showDraft ? STATUS_FILTERS_WITH_DRAFT : STATUS_FILTERS).map((filter) => {
           const active = statusFilter === filter.value;
           return (
             <button
