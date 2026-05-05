@@ -138,7 +138,7 @@ export function NuevoEquipoForm({ tournamentId, players: initialPlayers, players
       return;
     }
 
-    router.push(`/torneos/${tournamentId}`);
+    router.push(`/torneos/${tournamentId}?tab=equipos`);
     router.refresh();
   }
 

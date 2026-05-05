@@ -10,6 +10,9 @@ type Props = {
   onLocalityChange?: (locality: string) => void;
 };
 
+const LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+const LEAFLET_JS  = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+
 function normalize(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
@@ -17,6 +20,32 @@ function normalize(s: string) {
 function matchProvince(state: string): string {
   const norm = normalize(state);
   return PROVINCES.find((p) => normalize(p) === norm) ?? "";
+}
+
+function loadLeaflet(): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if ((window as any).L) { resolve((window as any).L); return; }
+
+    if (!document.querySelector(`link[href="${LEAFLET_CSS}"]`)) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = LEAFLET_CSS;
+      document.head.appendChild(link);
+    }
+
+    if (document.querySelector(`script[src="${LEAFLET_JS}"]`)) {
+      const wait = setInterval(() => {
+        if ((window as any).L) { clearInterval(wait); resolve((window as any).L); }
+      }, 50);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = LEAFLET_JS;
+    script.onload = () => resolve((window as any).L);
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
 }
 
 export function MapaPreview({ location, onLocationChange, onProvinceChange, onLocalityChange }: Props) {
@@ -31,17 +60,14 @@ export function MapaPreview({ location, onLocationChange, onProvinceChange, onLo
   useEffect(() => { onProvinceRef.current = onProvinceChange; }, [onProvinceChange]);
   useEffect(() => { onLocalityRef.current = onLocalityChange; }, [onLocalityChange]);
 
-  // Init Leaflet map once
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-
     let cancelled = false;
 
-    import("leaflet").then((L) => {
+    loadLeaflet().then((L: any) => {
       if (cancelled || !containerRef.current || mapRef.current) return;
 
-      // Fix default icon paths broken by webpack
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      delete L.Icon.Default.prototype._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
         iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -87,20 +113,15 @@ export function MapaPreview({ location, onLocationChange, onProvinceChange, onLo
         const { lat, lng } = marker.getLatLng();
         reverseGeocode(lat, lng);
       });
-    });
+    }).catch(() => {});
 
     return () => { cancelled = true; };
   }, []);
 
-  // When location input changes, forward-geocode and move map (debounced)
   useEffect(() => {
     const query = location.trim();
     if (!mapRef.current) return;
-
-    if (!query) {
-      markerRef.current?.remove();
-      return;
-    }
+    if (!query) { markerRef.current?.remove(); return; }
 
     const timer = setTimeout(async () => {
       try {
@@ -122,14 +143,8 @@ export function MapaPreview({ location, onLocationChange, onProvinceChange, onLo
   }, [location]);
 
   return (
-    <>
-      <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      />
-      <div className="rounded-xl overflow-hidden border border-gray-100 h-48 mt-3">
-        <div ref={containerRef} className="w-full h-full" />
-      </div>
-    </>
+    <div className="rounded-xl overflow-hidden border border-gray-100 h-48 mt-3">
+      <div ref={containerRef} className="w-full h-full" />
+    </div>
   );
 }

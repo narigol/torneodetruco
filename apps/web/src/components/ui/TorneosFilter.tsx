@@ -79,7 +79,7 @@ export function TorneosFilter({ torneos, showRolFilter = false, showDraft = fals
       if (organizerId && t.admin.id !== organizerId) return false;
       return true;
     });
-  }, [torneos, search, statusFilter, locality, province, organizerId]);
+  }, [torneos, search, statusFilter, rolFilter, locality, province, organizerId]);
 
   return (
     <div className="space-y-5">
