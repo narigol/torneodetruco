@@ -52,6 +52,18 @@ export async function POST(_req: Request, { params }: Params) {
     return NextResponse.json({ error: "La llave ya fue generada" }, { status: 400 });
   }
 
+  if (tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT) {
+    const playedCount = await prisma.match.count({
+      where: { tournamentId: id, groupId: { not: null }, status: "FINISHED" },
+    });
+    if (playedCount === 0) {
+      return NextResponse.json(
+        { error: "Debe haber al menos un partido de grupos jugado antes de generar la eliminatoria" },
+        { status: 400 }
+      );
+    }
+  }
+
   let teamsForBracket = tournament.teams;
 
   if (tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT) {

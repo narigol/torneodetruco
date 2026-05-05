@@ -5,7 +5,7 @@ import { prisma } from "@tdt/db";
 import { z } from "zod";
 import { canManageTournament } from "@/lib/tournament-auth";
 import { notifyFollowers, notifyByLocation } from "@/lib/notifications";
-import { sendTournamentStartedEmails } from "@/lib/email-notifications";
+import { sendTournamentStartedEmails, sendRegistrationOpenEmails } from "@/lib/email-notifications";
 import type { NotificationType } from "@tdt/db";
 
 type Params = { params: Promise<{ id: string }> };
@@ -125,10 +125,13 @@ export async function PATCH(req: Request, { params }: Params) {
     }
   }
 
-  // Al abrir inscripción, notificar a jugadores de la misma zona
+  // Al abrir inscripción, notificar a usuarios de la misma zona + email a seguidores
   const becomesRegistration = rest.status === "REGISTRATION" && tournament.status !== "REGISTRATION";
   if (becomesRegistration) {
     notifyByLocation(tournament.adminId, id).catch(() => {});
+    sendRegistrationOpenEmails(id).catch((error) => {
+      console.error("[registration-open-email]", error);
+    });
   }
 
   return NextResponse.json(updated);

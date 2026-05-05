@@ -8,7 +8,7 @@ import { UsuariosClient } from "@/components/ui/UsuariosClient";
 
 export default async function UsuariosPage() {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !isOrganizer(session.user.role)) redirect("/torneos");
+  if (!session?.user || !isSuperAdmin(session.user.role)) redirect("/torneos");
 
   const isAdmin = isSuperAdmin(session.user.role);
 

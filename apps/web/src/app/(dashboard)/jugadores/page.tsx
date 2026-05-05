@@ -4,6 +4,7 @@ import { prisma } from "@tdt/db";
 import Link from "next/link";
 import { JugadoresFilter } from "@/components/ui/JugadoresFilter";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { resolveContact } from "@/lib/resolve-player";
 
 export default async function JugadoresPage() {
   const session = await getServerSession(authOptions);
@@ -18,6 +19,8 @@ export default async function JugadoresPage() {
       phone: true,
       locality: true,
       provincia: true,
+      userId: true,
+      user: { select: { email: true, phone: true, locality: true, province: true } },
       teamPlayers: {
         include: {
           team: {
@@ -56,7 +59,10 @@ export default async function JugadoresPage() {
           submessage={isAdmin ? undefined : undefined}
         />
       ) : (
-        <JugadoresFilter jugadores={jugadores} isAdmin={isAdmin} />
+        <JugadoresFilter
+          jugadores={jugadores.map((j) => ({ ...resolveContact(j), teamPlayers: j.teamPlayers }))}
+          isAdmin={isAdmin}
+        />
       )}
     </div>
   );

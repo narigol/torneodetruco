@@ -1,6 +1,5 @@
 import { Phase } from "@tdt/db";
 import { ResultadoModal } from "@/components/ui/ResultadoModal";
-import { ScheduleMatchModal } from "@/components/ui/ScheduleMatchModal";
 import { MatchAuditModal } from "@/components/ui/MatchAuditModal";
 
 type GameScore = { home: number; away: number };
@@ -16,8 +15,6 @@ type BracketMatch = {
   awayScore: number | null;
   winner: { id: string; name: string } | null;
   games?: unknown;
-  scheduledAt?: string | Date | null;
-  location?: string | null;
 };
 
 const PHASE_ORDER: Phase[] = ["ROUND_OF_16", "QUARTERFINAL", "SEMIFINAL", "FINAL"];
@@ -142,24 +139,8 @@ function BracketCard({ match, isAdmin }: { match: BracketMatch; isAdmin?: boolea
         </div>
       )}
 
-      {(match.scheduledAt || match.location) && (
-        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
-          {match.scheduledAt && (
-            <p>{new Date(match.scheduledAt).toLocaleString("es-AR")}</p>
-          )}
-          {match.location && (
-            <p className="mt-0.5 truncate">{match.location}</p>
-          )}
-        </div>
-      )}
-
       {isAdmin && !finished && (
-        <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
-          <ScheduleMatchModal
-            matchId={match.id}
-            initialScheduledAt={typeof match.scheduledAt === "string" ? match.scheduledAt : match.scheduledAt?.toISOString()}
-            initialLocation={match.location}
-          />
+        <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
           <ResultadoModal
             matchId={match.id}
             homeTeam={match.homeTeam.name}

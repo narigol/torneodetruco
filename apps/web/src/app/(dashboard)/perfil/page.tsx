@@ -22,7 +22,9 @@ export default async function PerfilPage() {
       phone: true,
       locality: true,
       province: true,
-      acceptsLocationInvites: true,
+      acceptsLocalityInvites: true,
+      acceptsProvinceInvites: true,
+      acceptsCountryInvites: true,
       acceptsEmailNotifications: true,
       acceptsContactByEmail: true,
       acceptsContactByPhone: true,
@@ -58,7 +60,9 @@ export default async function PerfilPage() {
 
         <PerfilSettings
           role={user.role}
-          acceptsLocationInvites={user.acceptsLocationInvites}
+          acceptsLocalityInvites={user.acceptsLocalityInvites}
+          acceptsProvinceInvites={user.acceptsProvinceInvites}
+          acceptsCountryInvites={user.acceptsCountryInvites}
           acceptsEmailNotifications={user.acceptsEmailNotifications}
           acceptsContactByEmail={user.acceptsContactByEmail}
           acceptsContactByPhone={user.acceptsContactByPhone}

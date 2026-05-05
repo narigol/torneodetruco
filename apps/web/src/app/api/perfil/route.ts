@@ -5,7 +5,9 @@ import { prisma } from "@tdt/db";
 import { z } from "zod";
 
 const updateSchema = z.object({
-  acceptsLocationInvites: z.boolean().optional(),
+  acceptsLocalityInvites: z.boolean().optional(),
+  acceptsProvinceInvites: z.boolean().optional(),
+  acceptsCountryInvites: z.boolean().optional(),
   acceptsEmailNotifications: z.boolean().optional(),
   acceptsContactByEmail: z.boolean().optional(),
   acceptsContactByPhone: z.boolean().optional(),
@@ -26,7 +28,7 @@ export async function PATCH(req: Request) {
   const updated = await prisma.user.update({
     where: { id: session.user.id },
     data: parsed.data,
-    select: { acceptsLocationInvites: true, acceptsEmailNotifications: true, acceptsContactByEmail: true, acceptsContactByPhone: true, acceptsAppNotifications: true, acceptsWhatsAppContact: true },
+    select: { acceptsLocalityInvites: true, acceptsProvinceInvites: true, acceptsCountryInvites: true, acceptsEmailNotifications: true, acceptsContactByEmail: true, acceptsContactByPhone: true, acceptsAppNotifications: true, acceptsWhatsAppContact: true },
   });
 
   return NextResponse.json(updated);

@@ -13,6 +13,7 @@ type Jugador = {
   phone: string | null;
   locality: string | null;
   provincia: string | null;
+  userId: string | null;
   teamPlayers: { team: { name: string; tournament: { name: string } } }[];
 };
 

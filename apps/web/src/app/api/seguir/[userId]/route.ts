@@ -26,8 +26,9 @@ export async function POST(_req: Request, { params }: Params) {
     return NextResponse.json({ error: "No podés seguirte a vos mismo" }, { status: 400 });
   }
 
-  const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true } });
   if (!target) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+  if (target.role === "ADMIN") return NextResponse.json({ error: "No permitido" }, { status: 403 });
 
   await prisma.follow.upsert({
     where: { followerId_followingId: { followerId: session.user.id, followingId: userId } },

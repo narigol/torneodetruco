@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import Link from "next/link";
 import { FollowButton } from "@/components/ui/FollowButton";
+import { BuscarOrganizadoresClient } from "@/components/ui/BuscarOrganizadoresClient";
 
 type Props = { searchParams: Promise<{ tab?: string }> };
 
@@ -12,32 +13,42 @@ export default async function ComunidadPage({ searchParams }: Props) {
   if (!session?.user) redirect("/login");
 
   const { tab } = await searchParams;
-  const activeTab = tab === "seguidores" ? "seguidores" : "siguiendo";
+  const activeTab = tab === "seguidores" ? "seguidores" : tab === "buscar" ? "buscar" : "siguiendo";
 
-  const data = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      following: {
-        orderBy: { createdAt: "desc" },
-        select: {
-          following: { select: { id: true, name: true, locality: true, province: true, role: true } },
+  const [data, organizadores] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        following: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            following: { select: { id: true, name: true, locality: true, province: true, role: true } },
+          },
+        },
+        followers: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            follower: { select: { id: true, name: true, locality: true, province: true, role: true } },
+          },
         },
       },
-      followers: {
-        orderBy: { createdAt: "desc" },
-        select: {
-          follower: { select: { id: true, name: true, locality: true, province: true, role: true } },
-        },
-      },
-    },
-  });
+    }),
+    activeTab === "buscar"
+      ? prisma.user.findMany({
+          where: { role: "ORGANIZER", id: { not: session.user.id } },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true, locality: true, province: true, role: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
-  const following = data?.following.map((f: { following: { id: string; name: string; locality: string | null; province: string | null; role: string } }) => f.following) ?? [];
-  const followers = data?.followers.map((f: { follower: { id: string; name: string; locality: string | null; province: string | null; role: string } }) => f.follower) ?? [];
+  const following = data?.following.map((f) => f.following) ?? [];
+  const followers = data?.followers.map((f) => f.follower) ?? [];
 
   const tabs = [
-    { key: "siguiendo", label: `Seguís a`, count: following.length },
-    { key: "seguidores", label: `Te siguen`, count: followers.length },
+    { key: "siguiendo", label: "Seguís a", count: following.length },
+    { key: "seguidores", label: "Te siguen", count: followers.length },
+    { key: "buscar", label: "Buscar organizadores", count: null },
   ];
 
   return (
@@ -47,7 +58,7 @@ export default async function ComunidadPage({ searchParams }: Props) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-white border border-gray-100 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 mb-6 bg-white border border-gray-100 rounded-xl p-1 w-fit flex-wrap">
         {tabs.map((t) => {
           const isActive = t.key === activeTab;
           return (
@@ -61,21 +72,22 @@ export default async function ComunidadPage({ searchParams }: Props) {
               }`}
             >
               {t.label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                isActive ? "bg-red-500 text-white" : "bg-gray-100 text-gray-500"
-              }`}>
-                {t.count}
-              </span>
+              {t.count !== null && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
+                  isActive ? "bg-red-500 text-white" : "bg-gray-100 text-gray-500"
+                }`}>
+                  {t.count}
+                </span>
+              )}
             </Link>
           );
         })}
       </div>
 
-      {/* Contenido */}
       {activeTab === "siguiendo" && (
         following.length === 0 ? (
           <p className="text-sm text-gray-400 bg-white border border-gray-100 rounded-xl px-5 py-6">
-            No seguís a nadie todavía. Podés seguir jugadores desde su perfil.
+            No seguís a nadie todavía. Buscá organizadores en la pestaña &quot;Buscar organizadores&quot;.
           </p>
         ) : (
           <div className="bg-white border border-gray-100 rounded-xl divide-y divide-gray-50">
@@ -98,6 +110,13 @@ export default async function ComunidadPage({ searchParams }: Props) {
             ))}
           </div>
         )
+      )}
+
+      {activeTab === "buscar" && (
+        <BuscarOrganizadoresClient
+          organizadores={organizadores}
+          currentUserId={session.user.id}
+        />
       )}
     </div>
   );
@@ -131,7 +150,7 @@ function UserRow({
           {(user.locality || user.province) && ` · ${[user.locality, user.province].filter(Boolean).join(", ")}`}
         </p>
       </div>
-      {user.id !== currentUserId && (
+      {user.id !== currentUserId && user.role !== "ADMIN" && (
         <FollowButton organizerId={user.id} organizerName={user.name} />
       )}
     </div>

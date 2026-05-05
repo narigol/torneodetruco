@@ -100,7 +100,7 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCo
     { href: "/ranking", label: "Ranking", icon: <RankingIcon /> },
     ...(canOrganize ? [
       { href: "/organizador/ranking", label: "Mi Ranking", icon: <MyRankingIcon /> },
-      { href: "/usuarios", label: "Usuarios", icon: <UsersIcon /> },
+      ...(role === "ADMIN" ? [{ href: "/usuarios", label: "Usuarios", icon: <UsersIcon /> }] : []),
       { href: "/contactos", label: "Contactos", icon: <ContactsIcon /> },
       { href: "/reglamentos", label: "Reglamentos", icon: <DocIcon /> },
     ] : []),

@@ -51,6 +51,7 @@ enum NotificationType {
   TOURNAMENT_FINISHED
   LOCATION_INVITE
   TOURNAMENT_INVITATION
+  TEAM_REGISTERED
 }
 
 enum InvitationStatus {
@@ -78,7 +79,9 @@ model User {
   province               String?
   country                String?
   instagram              String?   // Solo para ORGANIZER
-  acceptsLocationInvites    Boolean  @default(false)
+  acceptsLocalityInvites    Boolean  @default(false)
+  acceptsProvinceInvites    Boolean  @default(false)
+  acceptsCountryInvites     Boolean  @default(false)
   acceptsEmailNotifications Boolean  @default(true)
   acceptsContactByEmail     Boolean  @default(true)
   acceptsContactByPhone     Boolean  @default(true)
@@ -102,6 +105,7 @@ model User {
   tournamentRegistrations TournamentRegistration[]
   matchAudits           MatchAudit[]
   passwordResetTokens   PasswordResetToken[]
+  organizerContacts     OrganizerContact[] @relation("OrganizerContacts")
 }
 
 model Player {
@@ -356,6 +360,20 @@ model PasswordResetToken {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OrganizerContact {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  dni       String?
+  locality  String?
+  province  String?
+  createdAt DateTime @default(now())
+
+  organizerId String
+  organizer   User   @relation("OrganizerContacts", fields: [organizerId], references: [id], onDelete: Cascade)
 }
 
 model RankingConfig {

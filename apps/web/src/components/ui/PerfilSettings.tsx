@@ -4,7 +4,9 @@ import { useState } from "react";
 
 type Props = {
   role: string;
-  acceptsLocationInvites: boolean;
+  acceptsLocalityInvites: boolean;
+  acceptsProvinceInvites: boolean;
+  acceptsCountryInvites: boolean;
   acceptsEmailNotifications: boolean;
   acceptsContactByEmail: boolean;
   acceptsContactByPhone: boolean;
@@ -43,7 +45,9 @@ function Toggle({
 
 export function PerfilSettings({
   role,
-  acceptsLocationInvites: il,
+  acceptsLocalityInvites: ili,
+  acceptsProvinceInvites: ipi,
+  acceptsCountryInvites: ici,
   acceptsEmailNotifications: ien,
   acceptsContactByEmail: ice,
   acceptsContactByPhone: icp,
@@ -52,7 +56,9 @@ export function PerfilSettings({
 }: Props) {
   const isOrganizer = role === "ORGANIZER" || role === "ADMIN";
   const [values, setValues] = useState({
-    acceptsLocationInvites: il,
+    acceptsLocalityInvites: ili,
+    acceptsProvinceInvites: ipi,
+    acceptsCountryInvites: ici,
     acceptsEmailNotifications: ien,
     acceptsContactByEmail: ice,
     acceptsContactByPhone: icp,
@@ -79,15 +85,26 @@ export function PerfilSettings({
     }
   }
 
-  const sections = [
+  type Section = { title: string; mobile: boolean; fixed?: boolean; items: { field: Field; label: string; description: string }[] };
+  const sections: Section[] = [
     {
-      title: "Invitaciones",
+      title: "Notificaciones de torneos por zona",
       mobile: false,
       items: [
         {
-          field: "acceptsLocationInvites" as Field,
-          label: "Recibir invitaciones por zona",
-          description: "Los organizadores con plan PRO podrán buscarte por tu provincia o localidad e invitarte a sus torneos.",
+          field: "acceptsLocalityInvites" as Field,
+          label: "Torneos en mi localidad",
+          description: "Recibís notificaciones cuando se abra la inscripción de un torneo en tu localidad.",
+        },
+        {
+          field: "acceptsProvinceInvites" as Field,
+          label: "Torneos en mi provincia",
+          description: "Recibís notificaciones cuando se abra la inscripción de un torneo en tu provincia.",
+        },
+        {
+          field: "acceptsCountryInvites" as Field,
+          label: "Torneos en cualquier provincia",
+          description: "Recibís notificaciones de torneos de todo el país, sin importar la ubicación.",
         },
       ],
     },
@@ -101,6 +118,12 @@ export function PerfilSettings({
           description: "Recibí avisos por correo sobre torneos, resultados e invitaciones.",
         },
       ],
+    },
+    {
+      title: "Organizadores que seguís",
+      mobile: false,
+      fixed: true,
+      items: [],
     },
     ...(isOrganizer ? [{
       title: "Contacto",
@@ -152,24 +175,30 @@ export function PerfilSettings({
               <span className="text-xs bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-medium">Próximamente</span>
             )}
           </div>
-          <div className={`space-y-4 ${section.mobile ? "opacity-60 pointer-events-none" : ""}`}>
-            {section.items.map(({ field, label, description }) => (
-              <div key={field}>
-                <Toggle
-                  label={label}
-                  description={description}
-                  value={values[field]}
-                  onChange={() => toggle(field)}
-                />
-                {saving === field && (
-                  <p className="text-xs text-gray-400 mt-2">Guardando...</p>
-                )}
-                {saved === field && (
-                  <p className="text-xs text-green-600 mt-2">Preferencia guardada.</p>
-                )}
-              </div>
-            ))}
-          </div>
+          {section.fixed ? (
+            <p className="text-xs text-gray-500 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5">
+              Siempre recibís notificaciones de los torneos de los organizadores que seguís. Esta opción no se puede desactivar.
+            </p>
+          ) : (
+            <div className={`space-y-4 ${section.mobile ? "opacity-60 pointer-events-none" : ""}`}>
+              {section.items.map(({ field, label, description }) => (
+                <div key={field}>
+                  <Toggle
+                    label={label}
+                    description={description}
+                    value={values[field]}
+                    onChange={() => toggle(field)}
+                  />
+                  {saving === field && (
+                    <p className="text-xs text-gray-400 mt-2">Guardando...</p>
+                  )}
+                  {saved === field && (
+                    <p className="text-xs text-green-600 mt-2">Preferencia guardada.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>

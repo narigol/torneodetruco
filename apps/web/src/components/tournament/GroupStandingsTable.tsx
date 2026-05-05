@@ -1,5 +1,4 @@
 import { ResultadoModal } from "@/components/ui/ResultadoModal";
-import { ScheduleMatchModal } from "@/components/ui/ScheduleMatchModal";
 import { MatchAuditModal } from "@/components/ui/MatchAuditModal";
 
 type Standing = {
@@ -18,8 +17,6 @@ type MatchWithWinner = {
   homeScore: number | null;
   awayScore: number | null;
   winner?: { id: string; name: string } | null;
-  scheduledAt?: string | Date | null;
-  location?: string | null;
 };
 
 type Group = {
@@ -206,11 +203,6 @@ function MatchRow({ match, isAdmin }: { match: MatchWithWinner; isAdmin?: boolea
         </span>
         {isAdmin && !finished && (
           <div className="flex items-center gap-3">
-            <ScheduleMatchModal
-              matchId={match.id}
-              initialScheduledAt={typeof match.scheduledAt === "string" ? match.scheduledAt : match.scheduledAt?.toISOString()}
-              initialLocation={match.location}
-            />
             <ResultadoModal
               matchId={match.id}
               homeTeam={match.homeTeam.name}
@@ -222,16 +214,6 @@ function MatchRow({ match, isAdmin }: { match: MatchWithWinner; isAdmin?: boolea
           <MatchAuditModal matchId={match.id} />
         )}
       </div>
-      {(match.scheduledAt || match.location) && (
-        <div className="mt-2 border-t border-gray-50 pt-2 text-xs text-gray-500">
-          {match.scheduledAt && (
-            <p>{new Date(match.scheduledAt).toLocaleString("es-AR")}</p>
-          )}
-          {match.location && (
-            <p className="mt-0.5">{match.location}</p>
-          )}
-        </div>
-      )}
     </div>
   );
 }

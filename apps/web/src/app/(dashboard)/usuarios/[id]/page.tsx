@@ -191,7 +191,7 @@ export default async function UsuarioDetailPage({ params }: Props) {
             {usuario.plan === "PRO" && (
               <span className="text-xs bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full font-medium">PRO</span>
             )}
-            {session.user.id !== usuario.id && (
+            {session.user.id !== usuario.id && usuario.role !== "ADMIN" && (
               <FollowButton organizerId={usuario.id} organizerName={usuario.name ?? ""} />
             )}
           </div>

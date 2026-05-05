@@ -23,15 +23,25 @@ export async function notifyFollowers(
 }
 
 export async function notifyByLocation(organizerId: string, tournamentId: string) {
-  const organizer = await prisma.user.findUnique({
-    where: { id: organizerId },
+  // Prefer tournament location; fall back to organizer's location
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
     select: { province: true, locality: true },
   });
 
-  const province = organizer?.province;
-  if (!province) return;
+  let province = tournament?.province ?? null;
+  let locality = tournament?.locality ?? null;
 
-  const locality = organizer?.locality;
+  if (!province) {
+    const organizer = await prisma.user.findUnique({
+      where: { id: organizerId },
+      select: { province: true, locality: true },
+    });
+    province = organizer?.province ?? null;
+    locality = organizer?.locality ?? null;
+  }
+
+  if (!province) return;
 
   // Find existing notification recipients to avoid duplicates (e.g. followers)
   const alreadyNotified = await prisma.notification.findMany({
@@ -40,18 +50,31 @@ export async function notifyByLocation(organizerId: string, tournamentId: string
   });
   const alreadyNotifiedIds = new Set(alreadyNotified.map((n) => n.userId));
 
-  // Find users who opted in and are in the same province (and locality if set)
-  const targets = await prisma.user.findMany({
-    where: {
-      id: { not: organizerId },
-      acceptsLocationInvites: true,
-      province,
-      ...(locality ? { locality } : {}),
-    },
+  // Users who opted in by locality (exact match) or by province (broader)
+  const byLocality = locality
+    ? await prisma.user.findMany({
+        where: { id: { not: organizerId }, acceptsLocalityInvites: true, province, locality },
+        select: { id: true },
+      })
+    : [];
+
+  const byProvince = await prisma.user.findMany({
+    where: { id: { not: organizerId }, acceptsProvinceInvites: true, province },
     select: { id: true },
   });
 
-  const newTargets = targets.filter((u) => !alreadyNotifiedIds.has(u.id));
+  const byCountry = await prisma.user.findMany({
+    where: { id: { not: organizerId }, acceptsCountryInvites: true },
+    select: { id: true },
+  });
+
+  const localityIds = new Set(byLocality.map((u) => u.id));
+  const provinceDeduped = byProvince.filter((u) => !localityIds.has(u.id));
+  const seenSoFar = new Set([...localityIds, ...provinceDeduped.map((u) => u.id)]);
+  const countryDeduped = byCountry.filter((u) => !seenSoFar.has(u.id));
+  const combined = [...byLocality, ...provinceDeduped, ...countryDeduped];
+
+  const newTargets = combined.filter((u) => !alreadyNotifiedIds.has(u.id));
   if (newTargets.length === 0) return;
 
   await prisma.notification.createMany({

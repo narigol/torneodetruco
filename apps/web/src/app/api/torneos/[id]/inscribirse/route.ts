@@ -36,7 +36,7 @@ export async function POST(req: Request, { params }: Params) {
 
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
-    select: { id: true, status: true, playersPerTeam: true, maxPlayers: true },
+    select: { id: true, status: true, playersPerTeam: true, maxPlayers: true, adminId: true },
   });
 
   if (!tournament || tournament.status === "DRAFT") {
@@ -158,6 +158,16 @@ export async function POST(req: Request, { params }: Params) {
   await prisma.tournamentInterest.deleteMany({
     where: { userId: session.user.id, tournamentId },
   });
+
+  // Notificar al organizador
+  prisma.notification.create({
+    data: {
+      userId: tournament.adminId,
+      tournamentId,
+      type: "TEAM_REGISTERED",
+      message: `${team.name} se inscribió al torneo.`,
+    },
+  }).catch(() => {});
 
   return NextResponse.json({ team }, { status: 201 });
 }

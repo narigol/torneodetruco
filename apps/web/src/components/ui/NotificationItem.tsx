@@ -10,6 +10,7 @@ const TYPE_LABEL: Record<string, { text: string; color: string }> = {
   TOURNAMENT_FINISHED:   { text: "Torneo finalizado",   color: "bg-gray-100 text-gray-600" },
   LOCATION_INVITE:       { text: "Torneo en tu zona",   color: "bg-purple-100 text-purple-700" },
   TOURNAMENT_INVITATION: { text: "Invitación",          color: "bg-purple-100 text-purple-700" },
+  TEAM_REGISTERED:       { text: "Nueva inscripción",   color: "bg-green-100 text-green-700" },
 };
 
 type Props = {

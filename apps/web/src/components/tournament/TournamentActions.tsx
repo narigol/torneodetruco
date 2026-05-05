@@ -11,6 +11,7 @@ type Props = {
   teamCount: number;
   hasGroups: boolean;
   hasBracket: boolean;
+  hasPlayedGroupMatches: boolean;
   canGenerateGroups?: boolean;
 };
 
@@ -33,6 +34,7 @@ export function TournamentActions({
   teamCount,
   hasGroups,
   hasBracket,
+  hasPlayedGroupMatches,
   canGenerateGroups = true,
 }: Props) {
   const router = useRouter();
@@ -42,7 +44,19 @@ export function TournamentActions({
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [showBracketModal, setShowBracketModal] = useState(false);
   const [numGroups, setNumGroups] = useState(2);
-  const [qualifyPerGroup, setQualifyPerGroup] = useState(2);
+  const [qualifyPerGroup, setQualifyPerGroup] = useState(1);
+
+  const teamsPerGroup = Math.ceil(teamCount / numGroups);
+  const maxQualify = teamsPerGroup - 1;
+  const groupConfigValid = qualifyPerGroup >= 1 && qualifyPerGroup < teamsPerGroup;
+
+  function handleNumGroupsChange(val: number) {
+    setNumGroups(val);
+    const newTeamsPerGroup = Math.ceil(teamCount / val);
+    if (qualifyPerGroup >= newTeamsPerGroup) {
+      setQualifyPerGroup(newTeamsPerGroup - 1);
+    }
+  }
 
   const nextStatus = NEXT_STATUS[status];
   const nextLabel = NEXT_STATUS_LABEL[status];
@@ -54,7 +68,7 @@ export function TournamentActions({
   const canGenerateBracket =
     isInProgress &&
     (format === TournamentFormat.SINGLE_ELIMINATION ||
-      (format === TournamentFormat.GROUPS_AND_KNOCKOUT && hasGroups)) &&
+      (format === TournamentFormat.GROUPS_AND_KNOCKOUT && hasGroups && hasPlayedGroupMatches)) &&
     !hasBracket;
 
   async function advanceStatus() {
@@ -186,11 +200,11 @@ export function TournamentActions({
               min={2}
               max={Math.floor(teamCount / 2)}
               value={numGroups}
-              onChange={(e) => setNumGroups(Number(e.target.value))}
+              onChange={(e) => handleNumGroupsChange(Number(e.target.value))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2"
             />
             <p className="text-xs text-gray-400 mb-4">
-              {teamCount} equipos → ~{Math.ceil(teamCount / numGroups)} por grupo
+              {teamCount} equipos → ~{teamsPerGroup} por grupo
             </p>
             <label className="block text-sm text-gray-600 mb-2">
               Clasificados por grupo
@@ -198,14 +212,20 @@ export function TournamentActions({
             <input
               type="number"
               min={1}
-              max={Math.ceil(teamCount / numGroups) - 1}
+              max={maxQualify}
               value={qualifyPerGroup}
               onChange={(e) => setQualifyPerGroup(Number(e.target.value))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-1"
+              className={`w-full border rounded-lg px-3 py-2 text-sm mb-1 ${!groupConfigValid ? "border-red-300 bg-red-50" : "border-gray-300"}`}
             />
-            <p className="text-xs text-gray-400 mb-4">
-              Máx {Math.ceil(teamCount / numGroups) - 1} (menos que los equipos por grupo)
-            </p>
+            {!groupConfigValid ? (
+              <p className="text-xs text-red-500 mb-4">
+                Con {teamsPerGroup} equipo{teamsPerGroup !== 1 ? "s" : ""} por grupo, el máximo es {maxQualify} clasificado{maxQualify !== 1 ? "s" : ""}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400 mb-4">
+                Clasifican {qualifyPerGroup * numGroups} equipos en total a la eliminatoria
+              </p>
+            )}
             <div className="flex gap-2">
               <button
                 onClick={() => setShowGroupModal(false)}
@@ -215,7 +235,8 @@ export function TournamentActions({
               </button>
               <button
                 onClick={generateGroups}
-                className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
+                disabled={!groupConfigValid}
+                className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
                 Generar
               </button>

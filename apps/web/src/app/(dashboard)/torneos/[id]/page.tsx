@@ -13,20 +13,21 @@ import { TournamentShareCard } from "@/components/tournament/TournamentShareCard
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { FollowButton } from "@/components/ui/FollowButton";
 import { ReglamentoCollapsible } from "@/components/ui/ReglamentoCollapsible";
-import { InvitarJugadorModal } from "@/components/ui/InvitarJugadorModal";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { canGenerateGroups, canInviteTournament, canManageTournament } from "@/lib/tournament-auth";
+import { canGenerateGroups, canManageTournament } from "@/lib/tournament-auth";
+import { resolveContact } from "@/lib/resolve-player";
 import { PublicTournamentActions } from "@/components/tournament/PublicTournamentActions";
 import { PendingTeamsPanel } from "@/components/tournament/PendingTeamsPanel";
 import { EquipoDetailModal } from "@/components/ui/EquipoDetailModal";
 import { ContactosTab } from "@/components/tournament/ContactosTab";
+import { ConfirmadosTab } from "@/components/tournament/ConfirmadosTab";
 
 type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ tab?: string }>;
 };
 
-const TABS = ["resumen", "equipos", "grupos", "llave", "contactos"] as const;
+const TABS = ["resumen", "equipos", "grupos", "llave", "confirmados", "contactos"] as const;
 type Tab = (typeof TABS)[number];
 
 export default async function TorneoDetailPage({ params, searchParams }: Props) {
@@ -41,12 +42,12 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
     include: {
-      admin: { select: { id: true, name: true, phone: true, acceptsWhatsAppContact: true } },
+      admin: { select: { id: true, name: true, role: true, phone: true, acceptsWhatsAppContact: true } },
       reglamento: { select: { id: true, nombre: true, descripcion: true, contenido: true } },
       teams: {
         include: {
           teamPlayers: {
-            include: { player: { select: { id: true, name: true, email: true, dni: true, phone: true, locality: true, provincia: true } } },
+            include: { player: { select: { id: true, name: true, email: true, dni: true, phone: true, locality: true, provincia: true, userId: true, user: { select: { email: true, phone: true, locality: true, province: true } } } } },
           },
         },
         orderBy: { name: "asc" },
@@ -96,7 +97,6 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   if (!tournament) notFound();
 
   const canManage = canManageTournament(session, tournament.adminId);
-  const canInvite = canManage && canInviteTournament(session);
 
   const myUserData = !canManage && session?.user?.id
     ? await prisma.user.findUnique({
@@ -118,23 +118,119 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     : false;
   const canGenerateGroupsPermission = canManage && canGenerateGroups(session);
 
-  const invitations = canInvite
-    ? await prisma.invitation.findMany({
-        where: { tournamentId: id },
-        select: { userId: true, status: true },
-      })
-    : [];
+  // Fetch organizer contacts for Contactos tab (same sources as /contactos page)
+  const [orgOtherTournaments, orgFollowers, orgManualContacts] = canManage
+    ? await Promise.all([
+        prisma.tournament.findMany({
+          where: { adminId: tournament.adminId, id: { not: id } },
+          select: {
+            teams: {
+              where: { registrationStatus: "APPROVED" },
+              select: {
+                teamPlayers: {
+                  select: {
+                    player: {
+                      select: {
+                        id: true, name: true, email: true, phone: true,
+                        locality: true, provincia: true, userId: true,
+                        user: { select: { email: true, phone: true, locality: true, province: true, dni: true } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
+        prisma.follow.findMany({
+          where: { followingId: tournament.adminId },
+          select: { follower: { select: { id: true, name: true, phone: true, email: true, locality: true, province: true } } },
+        }),
+        prisma.organizerContact.findMany({
+          where: { organizerId: tournament.adminId },
+          select: { id: true, name: true, phone: true, email: true, locality: true, province: true },
+          orderBy: { createdAt: "asc" },
+        }),
+      ])
+    : [[], [], []];
+
+  // Build deduplicated contact map (same logic as /contactos page)
+  const registeredUserIds = new Set(
+    approvedTeams.flatMap((t) => t.teamPlayers.map((tp) => tp.player.userId)).filter(Boolean)
+  );
+  const registeredPlayerIds = new Set(
+    approvedTeams.flatMap((t) => t.teamPlayers.map((tp) => tp.player.id))
+  );
+
+  type TournamentContact = { id: string; name: string; phone: string | null; email: string | null; locality: string | null; province: string | null; isRegistered: boolean };
+  const contactMap = new Map<string, TournamentContact>();
+
+  // Players from other organizer tournaments
+  for (const t of orgOtherTournaments) {
+    for (const team of t.teams) {
+      for (const tp of team.teamPlayers) {
+        const r = resolveContact(tp.player);
+        if (!contactMap.has(r.id)) {
+          contactMap.set(r.id, {
+            id: r.id,
+            name: r.name,
+            phone: r.phone,
+            email: r.email,
+            locality: r.locality,
+            province: r.provincia,
+            isRegistered: registeredPlayerIds.has(r.id) || (!!r.userId && registeredUserIds.has(r.userId)),
+          });
+        }
+      }
+    }
+  }
+
+  // Followers (skip if already in map by userId)
+  const linkedUserIds = new Set([...contactMap.values()].map((c) => c.id));
+  for (const { follower } of orgFollowers) {
+    if (linkedUserIds.has(follower.id)) continue;
+    contactMap.set(`u:${follower.id}`, {
+      id: `u:${follower.id}`,
+      name: follower.name,
+      phone: follower.phone,
+      email: follower.email,
+      locality: follower.locality,
+      province: follower.province,
+      isRegistered: registeredUserIds.has(follower.id),
+    });
+  }
+
+  // Manual contacts
+  for (const mc of orgManualContacts) {
+    contactMap.set(`mc:${mc.id}`, {
+      id: `mc:${mc.id}`,
+      name: mc.name,
+      phone: mc.phone,
+      email: mc.email,
+      locality: mc.locality,
+      province: mc.province,
+      isRegistered: false,
+    });
+  }
+
+  const tournamentContacts = [...contactMap.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "es")
+  );
 
   const hasGroupFormat = tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT;
   const hasGroups = tournament.groups.length > 0;
   const hasBracket = tournament.matches.length > 0;
+  const hasPlayedGroupMatches = hasGroupFormat && tournament.groups.some((g) =>
+    g.matches.some((m) => m.status === "FINISHED")
+  );
 
   const availableTabs: Tab[] = [
     ...(canManage ? ["resumen" as Tab] : []),
     "equipos",
+    ...(canManage ? ["confirmados" as Tab] : []),
     ...(hasGroupFormat ? ["grupos" as Tab] : []),
     "llave" as Tab,
-    ...(canManage ? ["contactos" as Tab] : []),
+    ...(canManage && tournament.status === "REGISTRATION" ? ["contactos" as Tab] : []),
   ];
 
   const rawTab = rawTabParam as Tab | undefined;
@@ -143,13 +239,15 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     : (canManage ? "resumen" : "equipos");
 
   const hasFee = tournament.inscriptionFee != null && tournament.inscriptionFee > 0;
-  const unpaidCount = hasFee ? approvedTeams.filter((t) => !t.hasPaid).length : 0;
+  const isOwner = session?.user?.id === tournament.adminId;
+  const unpaidCount = hasFee && isOwner ? approvedTeams.filter((t) => !t.hasPaid).length : 0;
 
   const tabLabels: Record<Tab, string> = {
     resumen: "Resumen",
     equipos: `Equipos (${approvedTeams.length}${pendingTeams.length > 0 ? ` · ${pendingTeams.length} pend.` : ""}${unpaidCount > 0 ? ` · ${unpaidCount} sin pagar` : ""})`,
     grupos: "Grupos",
     llave: "Llave",
+    confirmados: `Confirmados (${approvedTeams.length})`,
     contactos: "Contactos",
   };
 
@@ -221,7 +319,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                   WhatsApp
                 </a>
               )}
-              {!canManage && (
+              {!canManage && tournament.admin.role !== "ADMIN" && (
                 <FollowButton
                   organizerId={tournament.admin.id}
                   organizerName={tournament.admin.name}
@@ -275,6 +373,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 teamCount={approvedTeams.length}
                 hasGroups={hasGroups}
                 hasBracket={hasBracket}
+                hasPlayedGroupMatches={hasPlayedGroupMatches}
                 canGenerateGroups={canGenerateGroupsPermission}
               />
             </div>
@@ -316,13 +415,6 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
         <section>
           {canManage && (
             <div className="flex items-center justify-end gap-3 mb-4">
-              {canInvite && (
-                <InvitarJugadorModal
-                  tournamentId={tournament.id}
-                  alreadyInvited={invitations}
-                  currentUserId={session!.user.id}
-                />
-              )}
               <Link
                 href={`/torneos/${tournament.id}/equipos/nuevo`}
                 className="inline-flex items-center gap-1 text-sm text-red-600 hover:text-red-700 font-medium"
@@ -441,20 +533,29 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
         </section>
       )}
 
+      {/* Tab: Confirmados */}
+      {activeTab === "confirmados" && canManage && (
+        <section>
+          <ConfirmadosTab
+            hasFee={hasFee}
+            teams={approvedTeams.map((t) => ({
+              id: t.id,
+              name: t.name,
+              hasPaid: t.hasPaid,
+              players: t.teamPlayers.map((tp) => {
+                const r = resolveContact(tp.player);
+                return { id: r.id, name: r.name, phone: r.phone, email: r.email };
+              }),
+            }))}
+          />
+        </section>
+      )}
+
       {/* Tab: Contactos */}
       {activeTab === "contactos" && canManage && (
         <section>
           <ContactosTab
-            teams={approvedTeams.map((t) => ({
-              id: t.id,
-              name: t.name,
-              players: t.teamPlayers.map((tp) => ({
-                id: tp.player.id,
-                name: tp.player.name,
-                phone: tp.player.phone,
-                email: tp.player.email,
-              })),
-            }))}
+            contacts={tournamentContacts}
             tournament={{
               name: tournament.name,
               startDate: tournament.startDate?.toISOString() ?? null,
