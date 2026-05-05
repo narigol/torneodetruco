@@ -455,6 +455,17 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 email: tp.player.email,
               })),
             }))}
+            tournament={{
+              name: tournament.name,
+              startDate: tournament.startDate?.toISOString() ?? null,
+              startTime: tournament.startTime,
+              location: tournament.location,
+              locality: tournament.locality,
+              province: tournament.province,
+              playersPerTeam: tournament.playersPerTeam,
+              inscriptionFee: tournament.inscriptionFee,
+              publicUrl: publicTournamentUrl,
+            }}
           />
         </section>
       )}

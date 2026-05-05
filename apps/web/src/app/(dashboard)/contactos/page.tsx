@@ -28,6 +28,7 @@ export default async function ContactosPage() {
                   dni: true,
                   locality: true,
                   provincia: true,
+                  userId: true,
                 },
               },
             },
@@ -46,6 +47,7 @@ export default async function ContactosPage() {
     dni: string | null;
     locality: string | null;
     provincia: string | null;
+    userId: string | null;
     torneos: string[];
   }>();
 

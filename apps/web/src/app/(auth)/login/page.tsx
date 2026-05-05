@@ -67,7 +67,8 @@ function LoginPageContent() {
         name,
         email,
         password,
-        dni: form.get("dni") || null,
+        dni: form.get("dni"),
+        phone: form.get("phone"),
         locality: form.get("locality") || null,
         province: form.get("province") || null,
         country: "Argentina",
@@ -259,16 +260,32 @@ function LoginPageContent() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">DNI</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">DNI *</label>
                     <input
                       name="dni"
                       type="text"
+                      required
+                      minLength={6}
                       inputMode="numeric"
                       autoComplete="off"
                       className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
                       placeholder="12345678"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Teléfono *</label>
+                  <input
+                    name="phone"
+                    type="tel"
+                    required
+                    minLength={6}
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent focus:bg-white transition-colors"
+                    placeholder="Ej: 2215551234"
+                  />
                 </div>
 
                 <ArgentinaGeoSelect />

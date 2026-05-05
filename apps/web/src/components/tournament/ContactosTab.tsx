@@ -15,14 +15,55 @@ type Team = {
   players: Player[];
 };
 
-type Props = {
-  teams: Team[];
+type TournamentInfo = {
+  name: string;
+  startDate: string | null;
+  startTime: string | null;
+  location: string | null;
+  locality: string | null;
+  province: string | null;
+  playersPerTeam: number;
+  inscriptionFee: number | null;
+  publicUrl: string;
 };
 
-function waLink(phone: string) {
+type Props = {
+  teams: Team[];
+  tournament: TournamentInfo;
+};
+
+const MODALIDAD: Record<number, string> = { 1: "1 vs 1", 2: "2 vs 2", 3: "3 vs 3" };
+
+function buildInviteMessage(playerName: string, t: TournamentInfo): string {
+  const firstName = playerName.split(" ")[0];
+  const lines: string[] = [`Hola ${firstName}! 👋`, `Te invitamos a participar en *${t.name}*.`, ""];
+
+  const dateStr = t.startDate
+    ? new Date(t.startDate).toLocaleDateString("es-AR", { day: "numeric", month: "long" })
+    : null;
+  if (dateStr || t.startTime) {
+    lines.push(`📅 ${[dateStr, t.startTime].filter(Boolean).join(" · ")}`);
+  }
+
+  const lugar = t.location || [t.locality, t.province].filter(Boolean).join(", ");
+  if (lugar) lines.push(`📍 ${lugar}`);
+
+  const modalidad = MODALIDAD[t.playersPerTeam] ?? `${t.playersPerTeam} vs ${t.playersPerTeam}`;
+  lines.push(`👥 Modalidad: ${modalidad}`);
+
+  if (t.inscriptionFee && t.inscriptionFee > 0) {
+    lines.push(`💰 Inscripción: $${t.inscriptionFee.toLocaleString("es-AR")}`);
+  }
+
+  lines.push("", "Inscribite acá:", t.publicUrl);
+  return lines.join("\n");
+}
+
+function waInviteLink(phone: string, playerName: string, tournament: TournamentInfo) {
   const digits = phone.replace(/\D/g, "").replace(/^0/, "");
   const number = /^54/.test(digits) ? digits : `549${digits}`;
-  return `https://wa.me/${number}`;
+  const text = encodeURIComponent(buildInviteMessage(playerName, tournament));
+  return `https://wa.me/${number}?text=${text}`;
 }
 
 function WhatsAppIcon() {
@@ -52,7 +93,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export function ContactosTab({ teams }: Props) {
+export function ContactosTab({ teams, tournament }: Props) {
   const allPlayers = teams.flatMap((t) => t.players.map((p) => ({ ...p, teamName: t.name })));
   const allPhones = allPlayers.filter((p) => p.phone).map((p) => p.phone!).join("\n");
   const allEmails = allPlayers.filter((p) => p.email).map((p) => p.email!).join("\n");
@@ -97,9 +138,10 @@ export function ContactosTab({ teams }: Props) {
                     {player.phone ? (
                       <div className="flex items-center gap-2">
                         <a
-                          href={waLink(player.phone)}
+                          href={waInviteLink(player.phone, player.name, tournament)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          title="Enviar invitación por WhatsApp"
                           className="inline-flex items-center gap-1.5 text-xs text-green-600 hover:text-green-700 font-medium transition-colors"
                         >
                           <WhatsAppIcon />

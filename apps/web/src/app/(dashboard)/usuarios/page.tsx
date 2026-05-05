@@ -12,18 +12,37 @@ export default async function UsuariosPage() {
 
   const isAdmin = isSuperAdmin(session.user.role);
 
-  const usuarios = await prisma.user.findMany({
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-      locality: true,
-      province: true,
-      role: true,
-      plan: true,
-      pendingActivation: true,
-    },
-  });
+  const [usuarios, contactRows] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        locality: true,
+        province: true,
+        role: true,
+        plan: true,
+        pendingActivation: true,
+      },
+    }),
+    prisma.user.findMany({
+      where: {
+        player: {
+          teamPlayers: {
+            some: {
+              team: {
+                registrationStatus: "APPROVED",
+                tournament: { adminId: session.user.id },
+              },
+            },
+          },
+        },
+      },
+      select: { id: true },
+    }),
+  ]);
+
+  const contactIds = new Set(contactRows.map((r) => r.id));
 
   return (
     <div>
@@ -44,7 +63,7 @@ export default async function UsuariosPage() {
         )}
       </div>
 
-      <UsuariosClient usuarios={usuarios} currentUserId={session?.user?.id ?? ""} />
+      <UsuariosClient usuarios={usuarios} currentUserId={session?.user?.id ?? ""} contactIds={[...contactIds]} />
     </div>
   );
 }

@@ -18,6 +18,7 @@ type Usuario = {
 type Props = {
   usuarios: Usuario[];
   currentUserId: string;
+  contactIds: string[];
 };
 
 function RolBadge({ role }: { role: string }) {
@@ -47,10 +48,13 @@ function EstadoBadge({ pendingActivation }: { pendingActivation: boolean }) {
   );
 }
 
-export function UsuariosClient({ usuarios, currentUserId }: Props) {
+export function UsuariosClient({ usuarios, currentUserId, contactIds }: Props) {
   const [search, setSearch] = useState("");
+  const [soloContactos, setSoloContactos] = useState(false);
+  const contactSet = new Set(contactIds);
 
   const filtered = usuarios.filter((u) => {
+    if (soloContactos && !contactSet.has(u.id)) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return (
@@ -61,7 +65,7 @@ export function UsuariosClient({ usuarios, currentUserId }: Props) {
 
   return (
     <div>
-      <div className="mb-4">
+      <div className="flex items-center gap-3 mb-4">
         <input
           type="text"
           placeholder="Buscar por nombre o localidad..."
@@ -69,6 +73,18 @@ export function UsuariosClient({ usuarios, currentUserId }: Props) {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-sm px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
         />
+        {contactIds.length > 0 && (
+          <button
+            onClick={() => setSoloContactos((v) => !v)}
+            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
+              soloContactos
+                ? "bg-red-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            Mis contactos ({contactIds.length})
+          </button>
+        )}
       </div>
 
       {filtered.length === 0 ? (

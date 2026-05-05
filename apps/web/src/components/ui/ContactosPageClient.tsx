@@ -11,6 +11,7 @@ type Contacto = {
   dni: string | null;
   locality: string | null;
   provincia: string | null;
+  userId: string | null;
   torneos: string[];
 };
 
@@ -93,8 +94,15 @@ export function ContactosPageClient({ contactos }: Props) {
               {filtered.map((c) => (
                 <tr key={c.id} className="hover:bg-gray-50/50">
                   <td className="px-5 py-3">
-                    <p className="font-medium text-gray-900">{c.name}</p>
-                    {c.dni && <p className="text-xs text-gray-400 font-mono">DNI {c.dni}</p>}
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900">{c.name}</p>
+                      {c.userId ? (
+                        <span className="text-xs bg-green-50 text-green-700 border border-green-100 px-1.5 py-0.5 rounded-full font-medium">Registrado</span>
+                      ) : (
+                        <span className="text-xs bg-gray-50 text-gray-400 border border-gray-100 px-1.5 py-0.5 rounded-full font-medium">Jugador</span>
+                      )}
+                    </div>
+                    {c.dni && <p className="text-xs text-gray-400 font-mono mt-0.5">DNI {c.dni}</p>}
                   </td>
                   <td className="px-5 py-3">
                     {c.phone ? (

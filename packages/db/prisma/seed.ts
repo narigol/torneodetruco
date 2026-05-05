@@ -72,43 +72,58 @@ async function main() {
     "Ignacio Iribarne", "Jonás Jurado", "Leandro Leguizamón", "Mateo Meléndez",
   ];
 
+  function fakePhone(index: number): string {
+    const base = 60000000 + index * 137;
+    return `11 ${String(base).slice(0, 4)}-${String(base).slice(4, 8)}`;
+  }
+
+  function fakeEmail(name: string, index: number): string {
+    const slug = name.normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .toLowerCase().replace(/\s+/g, ".").replace(/[^a-z.]/g, "");
+    return `${slug}${index}@mail.com`;
+  }
+
   const jugadores = await Promise.all(
-    nombres.map((name) => prisma.player.create({ data: { name } }))
+    nombres.map((name, i) =>
+      prisma.player.create({
+        data: { name, phone: fakePhone(i), email: fakeEmail(name, i) },
+      })
+    )
   );
   console.log(`✓ ${jugadores.length} jugadores creados`);
 
   // Usuarios con localidad (La Plata, Berisso, San Telmo)
   const usuariosConLocalidad = [
     // La Plata
-    { name: "Marcos Alderete",     email: "marcos.alderete@gmail.com",   locality: "La Plata",  province: "Buenos Aires" },
-    { name: "Soledad Mansilla",    email: "sole.mansilla@gmail.com",     locality: "La Plata",  province: "Buenos Aires" },
-    { name: "Rubén Palavecino",    email: "ruben.palavecino@gmail.com",  locality: "La Plata",  province: "Buenos Aires" },
-    { name: "Cecilia Bordón",      email: "ceci.bordon@gmail.com",       locality: "La Plata",  province: "Buenos Aires" },
-    { name: "Norberto Salas",      email: "norber.salas@gmail.com",      locality: "La Plata",  province: "Buenos Aires" },
-    { name: "Analía Pereyra",      email: "analia.pereyra@gmail.com",    locality: "La Plata",  province: "Buenos Aires" },
-    { name: "Claudio Echeverría",  email: "claudio.echev@gmail.com",     locality: "La Plata",  province: "Buenos Aires" },
+    { name: "Marcos Alderete",     email: "marcos.alderete@gmail.com",   locality: "La Plata",  province: "Buenos Aires", phone: "221 4100-001" },
+    { name: "Soledad Mansilla",    email: "sole.mansilla@gmail.com",     locality: "La Plata",  province: "Buenos Aires", phone: "221 4100-002" },
+    { name: "Rubén Palavecino",    email: "ruben.palavecino@gmail.com",  locality: "La Plata",  province: "Buenos Aires", phone: "221 4100-003" },
+    { name: "Cecilia Bordón",      email: "ceci.bordon@gmail.com",       locality: "La Plata",  province: "Buenos Aires", phone: "221 4100-004" },
+    { name: "Norberto Salas",      email: "norber.salas@gmail.com",      locality: "La Plata",  province: "Buenos Aires", phone: "221 4100-005" },
+    { name: "Analía Pereyra",      email: "analia.pereyra@gmail.com",    locality: "La Plata",  province: "Buenos Aires", phone: "221 4100-006" },
+    { name: "Claudio Echeverría",  email: "claudio.echev@gmail.com",     locality: "La Plata",  province: "Buenos Aires", phone: "221 4100-007" },
     // Berisso
-    { name: "Dante Cáceres",       email: "dante.caceres@gmail.com",     locality: "Berisso",   province: "Buenos Aires" },
-    { name: "Patricia Ledesma",    email: "pati.ledesma@gmail.com",      locality: "Berisso",   province: "Buenos Aires" },
-    { name: "Oscar Maidana",       email: "oscar.maidana@gmail.com",     locality: "Berisso",   province: "Buenos Aires" },
-    { name: "Roxana Ferreyra",     email: "roxi.ferreyra@gmail.com",     locality: "Berisso",   province: "Buenos Aires" },
-    { name: "Héctor Zavaleta",     email: "hector.zavaleta@gmail.com",   locality: "Berisso",   province: "Buenos Aires" },
-    { name: "Miriam Ojeda",        email: "miriam.ojeda@gmail.com",      locality: "Berisso",   province: "Buenos Aires" },
+    { name: "Dante Cáceres",       email: "dante.caceres@gmail.com",     locality: "Berisso",   province: "Buenos Aires", phone: "221 4200-001" },
+    { name: "Patricia Ledesma",    email: "pati.ledesma@gmail.com",      locality: "Berisso",   province: "Buenos Aires", phone: "221 4200-002" },
+    { name: "Oscar Maidana",       email: "oscar.maidana@gmail.com",     locality: "Berisso",   province: "Buenos Aires", phone: "221 4200-003" },
+    { name: "Roxana Ferreyra",     email: "roxi.ferreyra@gmail.com",     locality: "Berisso",   province: "Buenos Aires", phone: "221 4200-004" },
+    { name: "Héctor Zavaleta",     email: "hector.zavaleta@gmail.com",   locality: "Berisso",   province: "Buenos Aires", phone: "221 4200-005" },
+    { name: "Miriam Ojeda",        email: "miriam.ojeda@gmail.com",      locality: "Berisso",   province: "Buenos Aires", phone: "221 4200-006" },
     // San Telmo
-    { name: "Federico Quiroga",    email: "fede.quiroga@gmail.com",      locality: "San Telmo", province: "Buenos Aires" },
-    { name: "Valentina Rojas",     email: "vale.rojas@gmail.com",        locality: "San Telmo", province: "Buenos Aires" },
-    { name: "Ramón Giménez",       email: "ramon.gimenez@gmail.com",     locality: "San Telmo", province: "Buenos Aires" },
-    { name: "Lorena Bustamante",   email: "lore.bustamante@gmail.com",   locality: "San Telmo", province: "Buenos Aires" },
-    { name: "Ismael Taborda",      email: "ismael.taborda@gmail.com",    locality: "San Telmo", province: "Buenos Aires" },
-    { name: "Graciela Montes",     email: "graciela.montes@gmail.com",   locality: "San Telmo", province: "Buenos Aires" },
+    { name: "Federico Quiroga",    email: "fede.quiroga@gmail.com",      locality: "San Telmo", province: "Buenos Aires", phone: "11 5100-001" },
+    { name: "Valentina Rojas",     email: "vale.rojas@gmail.com",        locality: "San Telmo", province: "Buenos Aires", phone: "11 5100-002" },
+    { name: "Ramón Giménez",       email: "ramon.gimenez@gmail.com",     locality: "San Telmo", province: "Buenos Aires", phone: "11 5100-003" },
+    { name: "Lorena Bustamante",   email: "lore.bustamante@gmail.com",   locality: "San Telmo", province: "Buenos Aires", phone: "11 5100-004" },
+    { name: "Ismael Taborda",      email: "ismael.taborda@gmail.com",    locality: "San Telmo", province: "Buenos Aires", phone: "11 5100-005" },
+    { name: "Graciela Montes",     email: "graciela.montes@gmail.com",   locality: "San Telmo", province: "Buenos Aires", phone: "11 5100-006" },
   ];
 
   const pwdDefault = await bcrypt.hash("jugador123", 10);
   await Promise.all(
-    usuariosConLocalidad.map(({ name, email, locality, province }) =>
+    usuariosConLocalidad.map(({ name, email, locality, province, phone }) =>
       prisma.user.upsert({
         where: { email },
-        update: { locality, province },
+        update: { locality, province, phone },
         create: {
           name,
           email,
@@ -116,8 +131,9 @@ async function main() {
           role: "PLAYER",
           locality,
           province,
+          phone,
           country: "Argentina",
-          player: { create: { name, locality, provincia: province } },
+          player: { create: { name, locality, provincia: province, phone, email } },
         },
       })
     )
