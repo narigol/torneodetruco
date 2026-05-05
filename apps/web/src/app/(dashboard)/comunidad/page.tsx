@@ -32,8 +32,8 @@ export default async function ComunidadPage({ searchParams }: Props) {
     },
   });
 
-  const following = data?.following.map((f) => f.following) ?? [];
-  const followers = data?.followers.map((f) => f.follower) ?? [];
+  const following = data?.following.map((f: { following: { id: string; name: string; locality: string | null; province: string | null; role: string } }) => f.following) ?? [];
+  const followers = data?.followers.map((f: { follower: { id: string; name: string; locality: string | null; province: string | null; role: string } }) => f.follower) ?? [];
 
   const tabs = [
     { key: "siguiendo", label: `Seguís a`, count: following.length },

@@ -35,7 +35,10 @@
       "Bash(Write-Output \"created\")",
       "Bash(node node_modules/prisma/build/index.js migrate dev --schema=packages/db/prisma/schema.prisma)",
       "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" node ../../node_modules/prisma/build/index.js migrate dev --schema=prisma/schema.prisma --name auto)",
-      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" node ../../node_modules/prisma/build/index.js db push --schema=prisma/schema.prisma --accept-data-loss)"
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" node ../../node_modules/prisma/build/index.js db push --schema=prisma/schema.prisma --accept-data-loss)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\torneodetruco\" | Where-Object { $_.PSIsContainer -eq $false } | Select-Object Name)",
+      "Bash(grep -E \"\\\\.\\(yml|yaml|toml|json|dockerfile\\)$\")",
+      "Bash(grep -E \"\\\\.\\(yml|yaml|toml|json|config|Dockerfile\\)$\")"
     ]
   }
 }
