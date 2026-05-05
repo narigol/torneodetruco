@@ -196,9 +196,10 @@ export function NuevoEquipoForm({ tournamentId, players: initialPlayers, players
                     <div className="min-w-0 flex-1">
                       <span className="block text-sm text-gray-800">{player.name}</span>
                       <span className="text-xs text-gray-400">
-                        {player.dni && `DNI ${player.dni}`}
-                        {player.dni && player.isFollowed && " · "}
-                        {player.isFollowed && <span className="text-red-500">Lo seguís</span>}
+                        <span className="font-mono">
+                          {player.dni ? `DNI ${player.dni}` : "Sin DNI"}
+                        </span>
+                        {player.isFollowed && <span className="text-red-500 ml-1.5">· Lo seguís</span>}
                       </span>
                     </div>
                   </label>

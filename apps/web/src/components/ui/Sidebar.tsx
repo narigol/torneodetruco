@@ -66,24 +66,29 @@ const RankingIcon = () => (
   </svg>
 );
 
+const ContactsIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+  </svg>
+);
+
 function roleLabel(role: string) {
   if (role === "ADMIN") return "Super Admin";
   if (role === "ORGANIZER") return "Organizador";
   return "Jugador";
 }
 
-type FollowingUser = { id: string; name: string };
-
 type Props = {
   role: string;
   name: string;
   plan: string;
   unreadNotifications?: number;
-  followingList?: FollowingUser[];
+  followingCount?: number;
   followersCount?: number;
 };
 
-export function Sidebar({ role, name, plan, unreadNotifications = 0, followingList = [], followersCount = 0 }: Props) {
+export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCount = 0, followersCount = 0 }: Props) {
   const pathname = usePathname();
   const isPro = plan === "PRO";
   const canOrganize = role === "ADMIN" || role === "ORGANIZER";
@@ -95,6 +100,7 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, followingLi
     ...(canOrganize ? [
       { href: "/organizador/ranking", label: "Mi Ranking", icon: <MyRankingIcon /> },
       { href: "/usuarios", label: "Usuarios", icon: <UsersIcon /> },
+      { href: "/contactos", label: "Contactos", icon: <ContactsIcon /> },
       { href: "/reglamentos", label: "Reglamentos", icon: <DocIcon /> },
     ] : []),
   ];
@@ -164,43 +170,29 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, followingLi
           );
         })()}
 
-        {/* Seguidos / Seguidores */}
-        {(followingList.length > 0 || followersCount > 0) && (
-          <div className="pt-3 mt-2 border-t border-gray-100">
-            <div className="flex items-center gap-3 px-3 pb-1.5">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Comunidad</span>
-              {followersCount > 0 && (
-                <span className="ml-auto text-xs text-gray-400">
-                  {followersCount} seguidor{followersCount !== 1 ? "es" : ""}
+        {/* Comunidad */}
+        {(() => {
+          const active = pathname.startsWith("/comunidad");
+          const total = followingCount + followersCount;
+          return (
+            <Link
+              href="/comunidad"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                active
+                  ? "bg-red-50 text-red-700"
+                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+              }`}
+            >
+              <span className={active ? "text-red-500" : "text-gray-400"}><UsersIcon /></span>
+              Comunidad
+              {total > 0 && (
+                <span className="ml-auto text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center">
+                  {total}
                 </span>
               )}
-            </div>
-            {followingList.map((user) => {
-              const active = pathname === `/usuarios/${user.id}`;
-              return (
-                <Link
-                  key={user.id}
-                  href={`/usuarios/${user.id}`}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all ${
-                    active
-                      ? "bg-red-50 text-red-700 font-medium"
-                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                  }`}
-                >
-                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <span className="text-gray-500 text-[9px] font-bold">
-                      {user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="truncate">{user.name}</span>
-                </Link>
-              );
-            })}
-            {followingList.length === 0 && (
-              <p className="px-3 py-1 text-xs text-gray-400">No seguís a nadie aún</p>
-            )}
-          </div>
-        )}
+            </Link>
+          );
+        })()}
 
         {/* Membresía */}
         {(() => {

@@ -19,13 +19,14 @@ import { canGenerateGroups, canInviteTournament, canManageTournament } from "@/l
 import { PublicTournamentActions } from "@/components/tournament/PublicTournamentActions";
 import { PendingTeamsPanel } from "@/components/tournament/PendingTeamsPanel";
 import { EquipoDetailModal } from "@/components/ui/EquipoDetailModal";
+import { ContactosTab } from "@/components/tournament/ContactosTab";
 
 type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ tab?: string }>;
 };
 
-const TABS = ["resumen", "equipos", "grupos", "llave"] as const;
+const TABS = ["resumen", "equipos", "grupos", "llave", "contactos"] as const;
 type Tab = (typeof TABS)[number];
 
 export default async function TorneoDetailPage({ params, searchParams }: Props) {
@@ -133,6 +134,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     "equipos",
     ...(hasGroupFormat ? ["grupos" as Tab] : []),
     "llave" as Tab,
+    ...(canManage ? ["contactos" as Tab] : []),
   ];
 
   const rawTab = rawTabParam as Tab | undefined;
@@ -148,6 +150,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     equipos: `Equipos (${approvedTeams.length}${pendingTeams.length > 0 ? ` · ${pendingTeams.length} pend.` : ""}${unpaidCount > 0 ? ` · ${unpaidCount} sin pagar` : ""})`,
     grupos: "Grupos",
     llave: "Llave",
+    contactos: "Contactos",
   };
 
   const formatLabel: Record<string, string> = {
@@ -435,6 +438,24 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       {activeTab === "llave" && (
         <section>
           <Bracket matches={tournament.matches} isAdmin={canManage} />
+        </section>
+      )}
+
+      {/* Tab: Contactos */}
+      {activeTab === "contactos" && canManage && (
+        <section>
+          <ContactosTab
+            teams={approvedTeams.map((t) => ({
+              id: t.id,
+              name: t.name,
+              players: t.teamPlayers.map((tp) => ({
+                id: tp.player.id,
+                name: tp.player.name,
+                phone: tp.player.phone,
+                email: tp.player.email,
+              })),
+            }))}
+          />
         </section>
       )}
     </div>

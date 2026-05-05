@@ -6,6 +6,7 @@ type Usuario = {
   id: string;
   name: string;
   email: string;
+  dni: string | null;
   locality: string | null;
   province: string | null;
 };
@@ -114,6 +115,7 @@ export function InvitarJugadorModal({ tournamentId, alreadyInvited, currentUserI
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{u.name}</p>
                     <p className="text-xs text-gray-400 truncate">
+                      {u.dni && <span className="font-mono mr-1.5">DNI {u.dni}</span>}
                       {[u.locality, u.province].filter(Boolean).join(", ") || u.email}
                     </p>
                   </div>

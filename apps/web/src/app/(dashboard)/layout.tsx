@@ -19,16 +19,12 @@ export default async function DashboardLayout({
     prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
-        _count: { select: { followers: true } },
-        following: {
-          select: { following: { select: { id: true, name: true } } },
-          orderBy: { createdAt: "desc" },
-        },
+        _count: { select: { followers: true, following: true } },
       },
     }),
   ]);
 
-  const followingList = followData?.following.map((f) => f.following) ?? [];
+  const followingCount = followData?._count.following ?? 0;
   const followersCount = followData?._count.followers ?? 0;
 
   return (
@@ -38,7 +34,7 @@ export default async function DashboardLayout({
         name={session.user.name ?? "Usuario"}
         plan={session.user.plan ?? "FREE"}
         unreadNotifications={unreadCount}
-        followingList={followingList}
+        followingCount={followingCount}
         followersCount={followersCount}
       />
       <main className="flex-1 overflow-auto">
