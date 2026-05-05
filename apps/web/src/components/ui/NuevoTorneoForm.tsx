@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { MapaPreview } from "./MapaPreview";
+import dynamic from "next/dynamic";
 import { ArgentinaGeoSelect } from "./ArgentinaGeoSelect";
+const MapaPreview = dynamic(() => import("./MapaPreview").then((m) => m.MapaPreview), { ssr: false });
 import { useRouter } from "next/navigation";
 
 type ReglamentoOption = { id: string; nombre: string };
@@ -128,6 +129,7 @@ export function NuevoTorneoForm({ reglamentos }: Props) {
           />
 
           <MapaPreview location={location} onLocationChange={setLocation} onProvinceChange={setProvince} onLocalityChange={setLocality} />
+
         </div>
 
         {/* Tarjeta derecha — Configuración del torneo */}

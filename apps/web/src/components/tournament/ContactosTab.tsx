@@ -34,35 +34,28 @@ type Props = {
 
 const MODALIDAD: Record<number, string> = { 1: "1 vs 1", 2: "2 vs 2", 3: "3 vs 3" };
 
-function buildInviteMessage(playerName: string, t: TournamentInfo): string {
-  const firstName = playerName.split(" ")[0];
-  const lines: string[] = [`Hola ${firstName}! 👋`, `Te invitamos a participar en *${t.name}*.`, ""];
 
+function buildDefaultTemplate(t: TournamentInfo): string {
+  const lines: string[] = [`Hola [nombre]! 👋`, `Te invitamos a participar en *${t.name}*.`, ""];
   const dateStr = t.startDate
     ? new Date(t.startDate).toLocaleDateString("es-AR", { day: "numeric", month: "long" })
     : null;
-  if (dateStr || t.startTime) {
-    lines.push(`📅 ${[dateStr, t.startTime].filter(Boolean).join(" · ")}`);
-  }
-
+  if (dateStr || t.startTime) lines.push(`📅 ${[dateStr, t.startTime].filter(Boolean).join(" · ")}`);
   const lugar = t.location || [t.locality, t.province].filter(Boolean).join(", ");
   if (lugar) lines.push(`📍 ${lugar}`);
-
   const modalidad = MODALIDAD[t.playersPerTeam] ?? `${t.playersPerTeam} vs ${t.playersPerTeam}`;
   lines.push(`👥 Modalidad: ${modalidad}`);
-
-  if (t.inscriptionFee && t.inscriptionFee > 0) {
+  if (t.inscriptionFee && t.inscriptionFee > 0)
     lines.push(`💰 Inscripción: $${t.inscriptionFee.toLocaleString("es-AR")}`);
-  }
-
   lines.push("", "Inscribite acá:", t.publicUrl);
   return lines.join("\n");
 }
 
-function waInviteLink(phone: string, playerName: string, tournament: TournamentInfo) {
+function waInviteLink(phone: string, playerName: string, template: string) {
+  const firstName = playerName.split(" ")[0];
   const digits = phone.replace(/\D/g, "").replace(/^0/, "");
   const number = /^54/.test(digits) ? digits : `549${digits}`;
-  const text = encodeURIComponent(buildInviteMessage(playerName, tournament));
+  const text = encodeURIComponent(template.replace(/\[nombre\]/g, firstName));
   return `https://wa.me/${number}?text=${text}`;
 }
 
@@ -94,6 +87,9 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export function ContactosTab({ teams, tournament }: Props) {
+  const [template, setTemplate] = useState(() => buildDefaultTemplate(tournament));
+  const [showTemplate, setShowTemplate] = useState(false);
+
   const allPlayers = teams.flatMap((t) => t.players.map((p) => ({ ...p, teamName: t.name })));
   const allPhones = allPlayers.filter((p) => p.phone).map((p) => p.phone!).join("\n");
   const allEmails = allPlayers.filter((p) => p.email).map((p) => p.email!).join("\n");
@@ -101,6 +97,37 @@ export function ContactosTab({ teams, tournament }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Mensaje de WhatsApp */}
+      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+        <button
+          onClick={() => setShowTemplate((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <span className="flex items-center gap-2">
+            <WhatsAppIcon />
+            Mensaje de invitación
+          </span>
+          <span className="text-xs text-gray-400">{showTemplate ? "Cerrar" : "Editar"}</span>
+        </button>
+        {showTemplate && (
+          <div className="px-5 pb-4 space-y-2 border-t border-gray-50">
+            <p className="text-xs text-gray-400 pt-3">Usá <code className="bg-gray-100 px-1 rounded">[nombre]</code> para insertar el nombre del jugador.</p>
+            <textarea
+              value={template}
+              onChange={(e) => setTemplate(e.target.value)}
+              rows={10}
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 font-mono focus:outline-none focus:ring-2 focus:ring-green-400 resize-y"
+            />
+            <button
+              onClick={() => setTemplate(buildDefaultTemplate(tournament))}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Restaurar mensaje original
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Accesos rápidos */}
       <div className="flex flex-wrap gap-3">
         {allPhones && (
@@ -138,7 +165,7 @@ export function ContactosTab({ teams, tournament }: Props) {
                     {player.phone ? (
                       <div className="flex items-center gap-2">
                         <a
-                          href={waInviteLink(player.phone, player.name, tournament)}
+                          href={waInviteLink(player.phone, player.name, template)}
                           target="_blank"
                           rel="noopener noreferrer"
                           title="Enviar invitación por WhatsApp"
