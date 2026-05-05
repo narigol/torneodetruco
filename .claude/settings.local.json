@@ -38,7 +38,8 @@
       "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" node ../../node_modules/prisma/build/index.js db push --schema=prisma/schema.prisma --accept-data-loss)",
       "PowerShell(Get-ChildItem -Path \"c:\\\\torneodetruco\" | Where-Object { $_.PSIsContainer -eq $false } | Select-Object Name)",
       "Bash(grep -E \"\\\\.\\(yml|yaml|toml|json|dockerfile\\)$\")",
-      "Bash(grep -E \"\\\\.\\(yml|yaml|toml|json|config|Dockerfile\\)$\")"
+      "Bash(grep -E \"\\\\.\\(yml|yaml|toml|json|config|Dockerfile\\)$\")",
+      "Bash(node -e \"const b = require\\('bcryptjs'\\); b.hash\\('admin1234', 10\\).then\\(h => console.log\\(h\\)\\)\")"
     ]
   }
 }
