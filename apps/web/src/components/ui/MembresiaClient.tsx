@@ -111,8 +111,7 @@ export function MembresiaClient({ plan, planExpiresAt, precio }: Props) {
         <div className={`bg-white border rounded-2xl p-5 ${isPro ? "border-red-300 ring-2 ring-red-100" : "border-gray-100"}`}>
           <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Organizador</p>
           <p className="text-2xl font-bold text-gray-900 mb-4">
-            ${precio.toLocaleString("es-AR")}
-            <span className="text-sm font-normal text-gray-400"> /año</span>
+            <span className="text-sm font-normal text-gray-400">Consultá precio</span>
           </p>
           <ul className="space-y-2.5">
             {benefits.map((b) => (

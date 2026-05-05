@@ -26,7 +26,7 @@ export default async function TorneosPage() {
   const myTournamentCount = userId
     ? torneos.filter((t) => t.adminId === userId).length
     : 0;
-  const atLimit = !isSuperAdmin && myTournamentCount >= FREE_TOURNAMENT_LIMIT;
+  const atLimit = !canOrganize && myTournamentCount >= FREE_TOURNAMENT_LIMIT;
 
   return (
     <div>
@@ -57,7 +57,7 @@ export default async function TorneosPage() {
                 Nuevo torneo
               </Link>
             )}
-            {!isSuperAdmin && (
+            {!canOrganize && (
               <span className="text-xs text-gray-400">
                 {myTournamentCount}/{FREE_TOURNAMENT_LIMIT} torneos usados
               </span>
