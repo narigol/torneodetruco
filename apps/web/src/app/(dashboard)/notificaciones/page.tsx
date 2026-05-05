@@ -44,6 +44,7 @@ export default async function NotificacionesPage() {
           {notifications.map((n) => (
             <NotificationItem
               key={n.id}
+              id={n.id}
               type={n.type}
               read={n.read}
               createdAt={n.createdAt.toISOString()}

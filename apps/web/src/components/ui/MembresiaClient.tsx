@@ -87,7 +87,7 @@ export function MembresiaClient({ plan, planExpiresAt, precio }: Props) {
       )}
 
       {/* Comparación de planes */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Free */}
         <div className={`bg-white border rounded-2xl p-5 ${!isPro ? "border-gray-300 ring-2 ring-gray-200" : "border-gray-100"}`}>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Jugador</p>

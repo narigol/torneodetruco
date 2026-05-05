@@ -86,9 +86,10 @@ type Props = {
   unreadNotifications?: number;
   followingCount?: number;
   followersCount?: number;
+  onClose?: () => void;
 };
 
-export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCount = 0, followersCount = 0 }: Props) {
+export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCount = 0, followersCount = 0, onClose }: Props) {
   const pathname = usePathname();
   const isPro = plan === "PRO";
   const canOrganize = role === "ADMIN" || role === "ORGANIZER";
@@ -108,17 +109,28 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCo
   const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-100 flex flex-col shrink-0">
+    <aside className="w-64 h-full bg-white border-r border-gray-100 flex flex-col shrink-0">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-xs">TdT</span>
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="font-bold text-gray-900 text-sm leading-none">Torneos de Truco</p>
             <p className="text-xs text-gray-400 mt-0.5">Sistema de gestión</p>
           </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              aria-label="Cerrar menú"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 

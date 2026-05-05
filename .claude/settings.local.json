@@ -32,7 +32,10 @@
       "PowerShell(Get-Process | Where-Object { $_.Name -match \"node\" } | Stop-Process -Force 2>$null; Start-Sleep -Seconds 2; Write-Host \"done\")",
       "Bash(New-Item -Path \"c:\\\\torneodetruco\\\\apps\\\\web\\\\src\\\\app\\\\api\\\\equipos\\\\[id]\\\\route.ts\" -ItemType File -Force)",
       "Bash(Out-Null)",
-      "Bash(Write-Output \"created\")"
+      "Bash(Write-Output \"created\")",
+      "Bash(node node_modules/prisma/build/index.js migrate dev --schema=packages/db/prisma/schema.prisma)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" node ../../node_modules/prisma/build/index.js migrate dev --schema=prisma/schema.prisma --name auto)",
+      "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" node ../../node_modules/prisma/build/index.js db push --schema=prisma/schema.prisma --accept-data-loss)"
     ]
   }
 }

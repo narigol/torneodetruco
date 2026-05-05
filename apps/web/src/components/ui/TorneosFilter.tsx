@@ -84,16 +84,29 @@ export function TorneosFilter({ torneos, showRolFilter = false, showDraft = fals
   return (
     <div className="space-y-5">
       {/* Controles */}
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar torneo..."
-          className="min-w-[18rem] flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+          className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
         />
 
-        <div className="min-w-[28rem] flex-1">
+        {organizers.length > 0 && (
+          <select
+            value={organizerId}
+            onChange={(e) => setOrganizerId(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+          >
+            <option value="">Todos los organizadores</option>
+            {organizers.map((o) => (
+              <option key={o.id} value={o.id}>{o.name}</option>
+            ))}
+          </select>
+        )}
+
+        <div className="sm:col-span-2">
           <ArgentinaGeoSelect
             province={province}
             locality={locality}
@@ -104,20 +117,6 @@ export function TorneosFilter({ torneos, showRolFilter = false, showDraft = fals
             inline
           />
         </div>
-
-        {organizers.length > 0 && (
-          <select
-            value={organizerId}
-            onChange={(e) => setOrganizerId(e.target.value)}
-            className="min-w-[14rem] px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-          >
-            <option value="">Todos los organizadores</option>
-            {organizers.map((o) => (
-              <option key={o.id} value={o.id}>{o.name}</option>
-            ))}
-          </select>
-        )}
-
       </div>
 
       {showRolFilter && (

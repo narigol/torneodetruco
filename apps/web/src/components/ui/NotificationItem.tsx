@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 const TYPE_LABEL: Record<string, { text: string; color: string }> = {
   TOURNAMENT_CREATED:    { text: "Nuevo torneo",        color: "bg-blue-100 text-blue-700" },
@@ -12,6 +13,7 @@ const TYPE_LABEL: Record<string, { text: string; color: string }> = {
 };
 
 type Props = {
+  id: string;
   type: string;
   read: boolean;
   createdAt: string;
@@ -23,12 +25,20 @@ type Props = {
   } | null;
 };
 
-export function NotificationItem({ type, read, createdAt, message, tournament }: Props) {
+export function NotificationItem({ id, type, read: initialRead, createdAt, message, tournament }: Props) {
+  const [read, setRead] = useState(initialRead);
   const cfg = TYPE_LABEL[type] ?? { text: type, color: "bg-gray-100 text-gray-600" };
+
+  function markRead() {
+    if (read) return;
+    setRead(true);
+    fetch(`/api/notificaciones/${id}`, { method: "PATCH" }).catch(() => {});
+  }
 
   return (
     <div
-      className={`flex items-start gap-4 p-4 rounded-2xl border transition-colors ${
+      onClick={markRead}
+      className={`flex items-start gap-4 p-4 rounded-2xl border transition-colors cursor-pointer ${
         read ? "bg-white border-gray-100" : "bg-blue-50/40 border-blue-100"
       }`}
     >

@@ -123,7 +123,7 @@ export function PerfilForm({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">DNI</label>
               <input
@@ -241,7 +241,7 @@ export function PerfilForm({
         <button
           type="submit"
           disabled={loading}
-          className="px-5 py-2.5 bg-red-600 text-white rounded-xl font-semibold text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+          className="w-full sm:w-auto px-5 py-2.5 bg-red-600 text-white rounded-xl font-semibold text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
           {loading ? "Guardando..." : "Guardar cambios"}
         </button>

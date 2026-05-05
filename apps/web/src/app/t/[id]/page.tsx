@@ -21,7 +21,7 @@ export default async function PublicTournamentPage({ params }: Props) {
     },
   });
 
-  if (!tournament) notFound();
+  if (!tournament || tournament.status === "DRAFT") notFound();
 
   const headersList = await headers();
   const host = headersList.get("host") ?? "localhost:3001";
