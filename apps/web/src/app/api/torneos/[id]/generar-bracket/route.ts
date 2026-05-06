@@ -52,6 +52,13 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: "La llave ya fue generada" }, { status: 400 });
   }
 
+  const body = await req.json().catch(() => ({}));
+  const teamOrderIds: string[] | undefined = Array.isArray(body?.teamOrder) ? body.teamOrder : undefined;
+  const qualifyOverride: number | undefined =
+    typeof body?.qualifyPerGroup === "number" && body.qualifyPerGroup >= 1
+      ? body.qualifyPerGroup
+      : undefined;
+
   if (tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT) {
     const playedCount = await prisma.match.count({
       where: { tournamentId: id, groupId: { not: null }, status: "FINISHED" },
@@ -96,13 +103,6 @@ export async function POST(req: Request, { params }: Params) {
       { status: 400 }
     );
   }
-
-  const body = await req.json().catch(() => ({}));
-  const teamOrderIds: string[] | undefined = Array.isArray(body?.teamOrder) ? body.teamOrder : undefined;
-  const qualifyOverride: number | undefined =
-    typeof body?.qualifyPerGroup === "number" && body.qualifyPerGroup >= 1
-      ? body.qualifyPerGroup
-      : undefined;
 
   let ordered = teamsForBracket;
   if (teamOrderIds) {
