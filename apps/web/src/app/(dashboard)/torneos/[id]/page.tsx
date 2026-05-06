@@ -14,7 +14,7 @@ import { DeleteButton } from "@/components/ui/DeleteButton";
 import { FollowButton } from "@/components/ui/FollowButton";
 import { ReglamentoCollapsible } from "@/components/ui/ReglamentoCollapsible";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { canGenerateGroups, canManageTournament } from "@/lib/tournament-auth";
+import { canManageTournament } from "@/lib/tournament-auth";
 import { resolveContact } from "@/lib/resolve-player";
 import { PublicTournamentActions } from "@/components/tournament/PublicTournamentActions";
 import { PendingTeamsPanel } from "@/components/tournament/PendingTeamsPanel";
@@ -116,7 +116,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const myTeamIsPending = myPlayerId
     ? pendingTeams.some((t) => t.teamPlayers.some((tp) => tp.player.id === myPlayerId))
     : false;
-  const canGenerateGroupsPermission = canManage && canGenerateGroups(session);
+  const canGenerateGroupsPermission = canManage;
 
   // Fetch organizer contacts for Contactos tab (same sources as /contactos page)
   const [orgOtherTournaments, orgFollowers, orgManualContacts] = canManage
