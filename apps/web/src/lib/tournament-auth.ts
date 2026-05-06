@@ -24,3 +24,5 @@ export function canGenerateGroups(session: Session | null): boolean {
 
 export const FREE_TOURNAMENT_LIMIT = 5;
 export const FREE_PEOPLE_LIMIT = 10;
+export const PRO_TOURNAMENT_LIMIT = 100; // sin límite práctico
+export const PRO_PEOPLE_LIMIT = 1000; // sin límite práctico

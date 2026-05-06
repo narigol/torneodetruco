@@ -22,6 +22,7 @@ type TournamentInfo = {
   playersPerTeam: number;
   inscriptionFee: number | null;
   publicUrl: string;
+  canInvite: boolean;
 };
 
 type Props = {
@@ -80,28 +81,43 @@ export function ContactosTab({ contacts, tournament }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Template siempre visible */}
+      {!tournament.canInvite && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 text-sm text-amber-800">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            El torneo ya está en curso. No se pueden enviar nuevas invitaciones.
+          </div>
+        </div>
+      )}
+      {/* Template */}
       <div className="bg-white border border-gray-100 rounded-2xl p-5 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <WhatsAppIcon />
             Mensaje de invitación
           </div>
-          <button
-            onClick={() => setTemplate(buildDefaultTemplate(tournament))}
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            Restaurar original
-          </button>
+          {tournament.canInvite && (
+            <button
+              onClick={() => setTemplate(buildDefaultTemplate(tournament))}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Restaurar original
+            </button>
+          )}
         </div>
         <p className="text-xs text-gray-400">
           Usá <code className="bg-gray-100 px-1 rounded">[nombre]</code> para insertar el nombre del contacto.
         </p>
         <textarea
           value={template}
-          onChange={(e) => setTemplate(e.target.value)}
+          onChange={tournament.canInvite ? (e) => setTemplate(e.target.value) : undefined}
+          readOnly={!tournament.canInvite}
           rows={9}
-          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 font-mono focus:outline-none focus:ring-2 focus:ring-green-400 resize-y"
+          className={`w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 font-mono focus:outline-none resize-y ${
+            tournament.canInvite ? 'focus:ring-2 focus:ring-green-400' : 'bg-gray-50 text-gray-500 cursor-not-allowed'
+          }`}
         />
       </div>
 
@@ -118,7 +134,9 @@ export function ContactosTab({ contacts, tournament }: Props) {
       {pending.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-10">
           {contacts.filter((c) => !c.isRegistered).length === 0
-            ? "No tenés contactos para invitar. Agregá seguidores o contactos manuales."
+            ? tournament.canInvite
+              ? "No tenés contactos para invitar. Agregá seguidores o contactos manuales."
+              : "No hay contactos disponibles para este torneo."
             : "No hay contactos que coincidan con los filtros."}
         </p>
       ) : (
@@ -145,22 +163,32 @@ export function ContactosTab({ contacts, tournament }: Props) {
                   </a>
                 )}
                 {c.phone ? (
-                  <a
-                    href={waInviteLink(c.phone, c.name, template)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-lg transition-colors"
-                  >
-                    <WhatsAppIcon className="w-3.5 h-3.5" />
-                    Invitar
-                  </a>
+                  tournament.canInvite ? (
+                    <a
+                      href={waInviteLink(c.phone, c.name, template)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-lg transition-colors"
+                    >
+                      <WhatsAppIcon className="w-3.5 h-3.5" />
+                      Invitar
+                    </a>
+                  ) : (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-medium rounded-lg cursor-not-allowed"
+                      title="El torneo ya está en curso"
+                    >
+                      <WhatsAppIcon className="w-3.5 h-3.5" />
+                      Torneo en curso
+                    </span>
+                  )
                 ) : (
                   <span
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-medium rounded-lg cursor-not-allowed"
                     title="Sin número de teléfono"
                   >
                     <WhatsAppIcon className="w-3.5 h-3.5" />
-                    Invitar
+                    Sin teléfono
                   </span>
                 )}
               </div>

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
-import { FREE_TOURNAMENT_LIMIT, canCreateTournament, isOrganizer, isSuperAdmin } from "@/lib/tournament-auth";
+import { FREE_TOURNAMENT_LIMIT, PRO_TOURNAMENT_LIMIT, canCreateTournament, isOrganizer, isSuperAdmin } from "@/lib/tournament-auth";
 import { notifyFollowers } from "@/lib/notifications";
 
 const createSchema = z.object({
@@ -42,12 +42,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  // Usuarios FREE: máximo 5 torneos
+  // Validar límite de torneos según plan
   if (!isSuperAdmin(session.user.role)) {
+    const tournamentLimitByPlan = session.user.plan === "PRO" ? PRO_TOURNAMENT_LIMIT : FREE_TOURNAMENT_LIMIT;
     const count = await prisma.tournament.count({ where: { adminId: session.user.id } });
-    if (count >= FREE_TOURNAMENT_LIMIT) {
+    if (count >= tournamentLimitByPlan) {
+      const planName = session.user.plan === "PRO" ? "Pro" : "gratuito";
       return NextResponse.json(
-        { error: `El plan gratuito permite hasta ${FREE_TOURNAMENT_LIMIT} torneos. Suscribite al plan Organizador para crear más.` },
+        { error: `El plan ${planName} permite hasta ${tournamentLimitByPlan} torneos.` },
         { status: 403 }
       );
     }

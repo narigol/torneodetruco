@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
-import { canManageTournament, FREE_PEOPLE_LIMIT, isSuperAdmin } from "@/lib/tournament-auth";
+import { canManageTournament, FREE_PEOPLE_LIMIT, PRO_PEOPLE_LIMIT, isSuperAdmin } from "@/lib/tournament-auth";
 
 const createSchema = z.object({
   name: z.string().min(1).max(100),
@@ -75,11 +75,13 @@ export async function POST(req: Request) {
     }
   }
 
-  // Usuarios FREE: máximo 10 personas por torneo
+  // Validar límite de personas según plan
   if (!isSuperAdmin(session.user.role)) {
-    if (currentPeople + playerIds.length > FREE_PEOPLE_LIMIT) {
+    const peopleLimitByPlan = session.user.plan === "PRO" ? PRO_PEOPLE_LIMIT : FREE_PEOPLE_LIMIT;
+    if (currentPeople + playerIds.length > peopleLimitByPlan) {
+      const planName = session.user.plan === "PRO" ? "Pro" : "gratuito";
       return NextResponse.json(
-        { error: `El plan gratuito permite hasta ${FREE_PEOPLE_LIMIT} personas por torneo. Suscribite al plan Organizador para agregar más.` },
+        { error: `El plan ${planName} permite hasta ${peopleLimitByPlan} personas por torneo.` },
         { status: 403 }
       );
     }

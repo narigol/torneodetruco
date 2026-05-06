@@ -241,7 +241,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     ...(canManage ? ["confirmados" as Tab] : []),
     ...(hasGroupFormat ? ["grupos" as Tab] : []),
     "llave" as Tab,
-    ...(canManage && tournament.status === "REGISTRATION" ? ["contactos" as Tab] : []),
+    ...(canManage && (tournament.status === "REGISTRATION" || tournament.status === "IN_PROGRESS") ? ["contactos" as Tab] : []),
   ];
 
   const rawTab = rawTabParam as Tab | undefined;
@@ -581,6 +581,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
               playersPerTeam: tournament.playersPerTeam,
               inscriptionFee: tournament.inscriptionFee,
               publicUrl: publicTournamentUrl,
+              canInvite: tournament.status === "REGISTRATION",
             }}
           />
         </section>
