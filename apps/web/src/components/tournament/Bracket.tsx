@@ -44,7 +44,7 @@ const PHASE_LABEL: Record<Phase, string> = {
 };
 
 const BASE_H = 128; // slot height for the first phase
-const CARD_H = 84;  // estimated card height
+const CARD_H = 96;  // altura estimada de la card (2 filas ~44px c/u + divisor + margen)
 const CARD_W = 224;
 const COL_GAP = 48;
 const LABEL_H = 28;

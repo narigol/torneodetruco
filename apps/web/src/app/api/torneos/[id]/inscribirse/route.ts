@@ -159,8 +159,8 @@ export async function POST(req: Request, { params }: Params) {
     where: { userId: session.user.id, tournamentId },
   });
 
-  // Notificar al organizador (fire-and-forget, no bloquea la respuesta)
-  await prisma.notification.create({
+  // Fire-and-forget: no bloquea la respuesta
+  prisma.notification.create({
     data: {
       userId: tournament.adminId,
       tournamentId,
