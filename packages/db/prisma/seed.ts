@@ -78,7 +78,7 @@ async function main() {
   }
 
   function fakeEmail(name: string, index: number): string {
-    const slug = name.normalize("NFD").replace(/[Ì€-Í¯]/g, "")
+    const slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .toLowerCase().replace(/\s+/g, ".").replace(/[^a-z.]/g, "");
     return `${slug}${index}@mail.com`;
   }
