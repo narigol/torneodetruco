@@ -28,7 +28,7 @@ const updateSchema = z.object({
   dni: z.string().max(20).optional().nullable(),
   phone: z.string().max(30).optional().nullable(),
   locality: z.string().max(100).optional().nullable(),
-  province: z.string().max(100).optional().nullable(),
+  provincia: z.string().max(100).optional().nullable(),
   instagram: z.string().max(100).optional().nullable(),
 });
 
@@ -47,7 +47,7 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
   }
 
-  const { name, email, dni, phone, locality, province, instagram } = parsed.data;
+  const { name, email, dni, phone, locality, provincia, instagram } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
@@ -64,7 +64,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const updated = await prisma.user.update({
     where: { id },
-    data: { name, email, dni: dni ?? null, phone: phone ?? null, locality: locality ?? null, province: province ?? null, country: "Argentina", instagram: instagram ?? null },
+    data: { name, email, dni: dni ?? null, phone: phone ?? null, locality: locality ?? null, provincia: provincia ?? null, country: "Argentina", instagram: instagram ?? null },
   });
 
   return NextResponse.json(updated);

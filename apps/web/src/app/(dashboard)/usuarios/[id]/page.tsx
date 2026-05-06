@@ -39,7 +39,7 @@ export default async function UsuarioDetailPage({ params }: Props) {
       name: true,
       email: true,
       locality: true,
-      province: true,
+      provincia: true,
       role: true,
       plan: true,
       pendingActivation: true,
@@ -198,10 +198,10 @@ export default async function UsuarioDetailPage({ params }: Props) {
         </div>
 
         <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
-          {(usuario.locality || usuario.province) && (
+          {(usuario.locality || usuario.provincia) && (
             <>
               <dt className="text-gray-400">Localidad</dt>
-              <dd className="text-gray-700">{[usuario.locality, usuario.province].filter(Boolean).join(", ")}</dd>
+              <dd className="text-gray-700">{[usuario.locality, usuario.provincia].filter(Boolean).join(", ")}</dd>
             </>
           )}
           <dt className="text-gray-400">Miembro desde</dt>

@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth";
+﻿import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { redirect } from "next/navigation";
@@ -19,7 +19,7 @@ export default async function UsuariosPage() {
         id: true,
         name: true,
         locality: true,
-        province: true,
+        provincia: true,
         role: true,
         plan: true,
         pendingActivation: true,

@@ -70,7 +70,7 @@ function LoginPageContent() {
         dni: form.get("dni"),
         phone: form.get("phone"),
         locality: form.get("locality") || null,
-        province: form.get("province") || null,
+        provincia: form.get("provincia") || null,
         country: "Argentina",
       }),
     });

@@ -41,7 +41,7 @@ export function NuevoEquipoForm({ tournamentId, players: initialPlayers, players
   const [newDni, setNewDni] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newLocality, setNewLocality] = useState("");
-  const [newProvince, setNewProvince] = useState("");
+  const [newProvincia, setNewProvincia] = useState("");
   const [newLoading, setNewLoading] = useState(false);
   const [newError, setNewError] = useState("");
   const [newSuccess, setNewSuccess] = useState("");
@@ -86,7 +86,7 @@ export function NuevoEquipoForm({ tournamentId, players: initialPlayers, players
         email: newEmail.trim(),
         dni: newDni.trim() || null,
         locality: newLocality.trim() || null,
-        province: newProvince || null,
+        provincia: newProvincia || null,
       }),
     });
     setNewLoading(false);
@@ -111,7 +111,7 @@ export function NuevoEquipoForm({ tournamentId, players: initialPlayers, players
     setNewDni("");
     setNewEmail("");
     setNewLocality("");
-    setNewProvince("");
+    setNewProvincia("");
     setTimeout(() => setNewSuccess(""), 3000);
   }
 
@@ -288,9 +288,9 @@ export function NuevoEquipoForm({ tournamentId, players: initialPlayers, players
 
         <ArgentinaGeoSelect
           locality={newLocality}
-          province={newProvince}
+          provincia={newProvincia}
           onLocalityChange={setNewLocality}
-          onProvinceChange={setNewProvince}
+          onProvinciaChange={setNewProvincia}
         />
 
         {newError && (

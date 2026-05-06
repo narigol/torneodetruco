@@ -76,11 +76,11 @@ model User {
   dni                    String?   @unique
   phone                  String?
   locality               String?
-  province               String?
+  provincia               String?
   country                String?
   instagram              String?   // Solo para ORGANIZER
   acceptsLocalityInvites    Boolean  @default(false)
-  acceptsProvinceInvites    Boolean  @default(false)
+  acceptsProvinciaInvites    Boolean  @default(false)
   acceptsCountryInvites     Boolean  @default(false)
   acceptsEmailNotifications Boolean  @default(true)
   acceptsContactByEmail     Boolean  @default(true)
@@ -137,7 +137,7 @@ model Tournament {
   startTime       String?
   location        String?
   locality        String?
-  province        String?
+  provincia        String?
   qualifyPerGroup Int              @default(2)
   playersPerTeam  Int              @default(2)
   maxPlayers      Int?
@@ -369,7 +369,7 @@ model OrganizerContact {
   email     String?
   dni       String?
   locality  String?
-  province  String?
+  provincia  String?
   createdAt DateTime @default(now())
 
   organizerId String

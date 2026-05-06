@@ -11,7 +11,7 @@ export type RawPlayer = {
     email: string | null;
     phone: string | null;
     locality: string | null;
-    province: string | null;
+    provincia: string | null;
     dni?: string | null;
   } | null;
 };
@@ -25,7 +25,7 @@ export function resolveContact(player: RawPlayer) {
     email: u?.email ?? player.email,
     phone: u?.phone ?? player.phone,
     locality: u?.locality ?? player.locality,
-    provincia: u?.province ?? player.provincia,
+    provincia: u?.provincia ?? player.provincia,
     dni: u?.dni ?? player.dni ?? null,
   };
 }

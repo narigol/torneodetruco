@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth";
+﻿import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import Link from "next/link";
@@ -20,7 +20,7 @@ export default async function JugadoresPage() {
       locality: true,
       provincia: true,
       userId: true,
-      user: { select: { email: true, phone: true, locality: true, province: true } },
+      user: { select: { email: true, phone: true, locality: true, provincia: true } },
       teamPlayers: {
         include: {
           team: {

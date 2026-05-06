@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -9,7 +9,7 @@ type Organizador = {
   id: string;
   name: string;
   locality: string | null;
-  province: string | null;
+  provincia: string | null;
   role: string;
 };
 
@@ -33,7 +33,7 @@ export function BuscarOrganizadoresClient({ organizadores, currentUserId }: Prop
     const loc = localidad.trim().toLowerCase();
     return organizadores.filter((o) => {
       if (q && !o.name.toLowerCase().includes(q)) return false;
-      if (provincia && o.province !== provincia) return false;
+      if (provincia && o.provincia !== provincia) return false;
       if (loc && !(o.locality ?? "").toLowerCase().includes(loc)) return false;
       return true;
     });
@@ -87,7 +87,7 @@ export function BuscarOrganizadoresClient({ organizadores, currentUserId }: Prop
                   </Link>
                   <p className="text-xs text-gray-400">
                     {roleLabel(o.role)}
-                    {(o.locality || o.province) && ` · ${[o.locality, o.province].filter(Boolean).join(", ")}`}
+                    {(o.locality || o.provincia) && ` Â· ${[o.locality, o.provincia].filter(Boolean).join(", ")}`}
                   </p>
                 </div>
                 {o.id !== currentUserId && (

@@ -19,7 +19,7 @@ type Props = {
     startTime: string | null;
     location: string | null;
     locality: string | null;
-    province: string | null;
+    provincia: string | null;
     playersPerTeam: number;
     maxPlayers: number | null;
     inscriptionFee: number | null;
@@ -38,7 +38,7 @@ export function EditarTorneoForm({ torneo, reglamentos }: Props) {
   const [format, setFormat] = useState(torneo.format);
   const [location, setLocation] = useState(torneo.location ?? "");
   const [locality, setLocality] = useState(torneo.locality ?? "");
-  const [province, setProvince] = useState(torneo.province ?? "");
+  const [provincia, setProvincia] = useState(torneo.provincia ?? "");
   const [reglamentoId, setReglamentoId] = useState(torneo.reglamentoId ?? "");
 
   const startDateValue = torneo.startDate
@@ -59,7 +59,7 @@ export function EditarTorneoForm({ torneo, reglamentos }: Props) {
       startTime: form.get("startTime") || null,
       location: location.trim() || null,
       locality: locality.trim() || null,
-      province: province || null,
+      provincia: provincia || null,
       maxPlayers: form.get("maxPlayers") ? Number(form.get("maxPlayers")) : null,
       inscriptionFee: form.get("inscriptionFee") ? Number(form.get("inscriptionFee")) : null,
       reglamentoId: reglamentoId || null,
@@ -152,12 +152,12 @@ export function EditarTorneoForm({ torneo, reglamentos }: Props) {
 
           <ArgentinaGeoSelect
             locality={locality}
-            province={province}
+            provincia={provincia}
             onLocalityChange={setLocality}
-            onProvinceChange={setProvince}
+            onProvinciaChange={setProvincia}
           />
 
-          <MapaPreview location={location} onLocationChange={setLocation} onProvinceChange={setProvince} onLocalityChange={setLocality} />
+          <MapaPreview location={location} onLocationChange={setLocation} onProvinciaChange={setProvincia} onLocalityChange={setLocality} />
 
         </div>
 

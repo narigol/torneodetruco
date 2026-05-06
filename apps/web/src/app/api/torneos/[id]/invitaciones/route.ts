@@ -21,7 +21,7 @@ export async function GET(_req: Request, { params }: Params) {
   const invitations = await prisma.invitation.findMany({
     where: { tournamentId: id },
     include: {
-      user: { select: { id: true, name: true, email: true, locality: true, province: true } },
+      user: { select: { id: true, name: true, email: true, locality: true, provincia: true } },
     },
     orderBy: { createdAt: "desc" },
   });

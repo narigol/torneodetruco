@@ -5,42 +5,42 @@ import { PROVINCES, LOCALITIES } from "@/lib/argentina-geo";
 
 type Props = {
   locality?: string;
-  province?: string;
+  provincia?: string;
   onLocalityChange?: (v: string) => void;
-  onProvinceChange?: (v: string) => void;
+  onProvinciaChange?: (v: string) => void;
   nameLocality?: string;
-  nameProvince?: string;
+  nameProvincia?: string;
   nameCountry?: string;
   inline?: boolean;
 };
 
 export function ArgentinaGeoSelect({
   locality: localityProp,
-  province: provinceProp,
+  provincia: provinciaProp,
   onLocalityChange,
-  onProvinceChange,
+  onProvinciaChange,
   nameLocality = "locality",
-  nameProvince = "province",
+  nameProvincia = "provincia",
   nameCountry = "country",
   inline = false,
 }: Props) {
-  const [province, setProvince] = useState(provinceProp ?? "");
+  const [provincia, setProvincia] = useState(provinciaProp ?? "");
   const [locality, setLocality] = useState(localityProp ?? "");
 
   useEffect(() => {
-    setProvince(provinceProp ?? "");
-  }, [provinceProp]);
+    setProvincia(provinciaProp ?? "");
+  }, [provinciaProp]);
 
   useEffect(() => {
     setLocality(localityProp ?? "");
   }, [localityProp]);
 
-  const localities = province ? (LOCALITIES[province] ?? []) : [];
+  const localities = provincia ? (LOCALITIES[provincia] ?? []) : [];
 
-  function handleProvinceChange(v: string) {
-    setProvince(v);
+  function handleProvinciaChange(v: string) {
+    setProvincia(v);
     setLocality("");
-    onProvinceChange?.(v);
+    onProvinciaChange?.(v);
     onLocalityChange?.("");
   }
 
@@ -61,9 +61,9 @@ export function ArgentinaGeoSelect({
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Provincia</label>
         )}
         <select
-          name={nameProvince}
-          value={province}
-          onChange={(e) => handleProvinceChange(e.target.value)}
+          name={nameProvincia}
+          value={provincia}
+          onChange={(e) => handleProvinciaChange(e.target.value)}
           className={inputClass}
         >
           <option value="">Seleccioná una provincia</option>
@@ -87,7 +87,7 @@ export function ArgentinaGeoSelect({
               className={inputClass}
               placeholder="Escribí o seleccioná una localidad"
               aria-label="Localidad"
-              disabled={!province}
+              disabled={!provincia}
             />
             <datalist id="localities-list">
               {localities.map((l) => (
@@ -101,9 +101,9 @@ export function ArgentinaGeoSelect({
             value={locality}
             onChange={(e) => handleLocalityChange(e.target.value)}
             className={inputClass}
-            placeholder={province ? "Escribí la localidad" : "Primero seleccioná una provincia"}
+            placeholder={provincia ? "Escribí la localidad" : "Primero seleccioná una provincia"}
             aria-label="Localidad"
-            disabled={!province}
+            disabled={!provincia}
           />
         )}
       </div>

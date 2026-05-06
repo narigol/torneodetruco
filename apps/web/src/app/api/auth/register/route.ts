@@ -10,7 +10,7 @@ const schema = z.object({
   dni: z.string().min(6).max(20),
   phone: z.string().min(6).max(30),
   locality: z.string().max(100).optional().nullable(),
-  province: z.string().max(100).optional().nullable(),
+  provincia: z.string().max(100).optional().nullable(),
   country: z.string().max(100).optional().nullable(),
 });
 
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
 
-  const { name, email, password, dni, phone, locality, province, country } = parsed.data;
+  const { name, email, password, dni, phone, locality, provincia, country } = parsed.data;
   const hashed = await bcrypt.hash(password, 10);
 
   // Check if there's a pending user with the same email or DNI (created by an organizer)
@@ -49,14 +49,14 @@ export async function POST(req: Request) {
           dni,
           phone,
           locality: locality || null,
-          province: province || null,
+          provincia: provincia || null,
           country: country || "Argentina",
         },
       });
       if (pendingUser.player) {
         await tx.player.update({
           where: { id: pendingUser.player.id },
-          data: { name, email, phone, confirmed: true, dni: dni || null, locality: locality || null, provincia: province || null },
+          data: { name, email, phone, confirmed: true, dni: dni || null, locality: locality || null, provincia: provincia || null },
         });
       }
     });
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
         dni,
         phone,
         locality: locality || null,
-        province: province || null,
+        provincia: provincia || null,
         country: country || "Argentina",
         pendingActivation: false,
         player: existingPlayer

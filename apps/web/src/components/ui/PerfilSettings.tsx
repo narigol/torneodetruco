@@ -5,7 +5,7 @@ import { useState } from "react";
 type Props = {
   role: string;
   acceptsLocalityInvites: boolean;
-  acceptsProvinceInvites: boolean;
+  acceptsProvinciaInvites: boolean;
   acceptsCountryInvites: boolean;
   acceptsEmailNotifications: boolean;
   acceptsContactByEmail: boolean;
@@ -46,7 +46,7 @@ function Toggle({
 export function PerfilSettings({
   role,
   acceptsLocalityInvites: ili,
-  acceptsProvinceInvites: ipi,
+  acceptsProvinciaInvites: ipi,
   acceptsCountryInvites: ici,
   acceptsEmailNotifications: ien,
   acceptsContactByEmail: ice,
@@ -57,7 +57,7 @@ export function PerfilSettings({
   const isOrganizer = role === "ORGANIZER" || role === "ADMIN";
   const [values, setValues] = useState({
     acceptsLocalityInvites: ili,
-    acceptsProvinceInvites: ipi,
+    acceptsProvinciaInvites: ipi,
     acceptsCountryInvites: ici,
     acceptsEmailNotifications: ien,
     acceptsContactByEmail: ice,
@@ -97,7 +97,7 @@ export function PerfilSettings({
           description: "Recibís notificaciones cuando se abra la inscripción de un torneo en tu localidad.",
         },
         {
-          field: "acceptsProvinceInvites" as Field,
+          field: "acceptsProvinciaInvites" as Field,
           label: "Torneos en mi provincia",
           description: "Recibís notificaciones cuando se abra la inscripción de un torneo en tu provincia.",
         },

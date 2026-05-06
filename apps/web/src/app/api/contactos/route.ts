@@ -10,7 +10,7 @@ const schema = z.object({
   email: z.string().email().optional().nullable(),
   dni: z.string().min(6).max(20).optional().nullable(),
   locality: z.string().max(100).optional().nullable(),
-  province: z.string().max(100).optional().nullable(),
+  provincia: z.string().max(100).optional().nullable(),
 });
 
 export async function POST(req: Request) {

@@ -115,9 +115,9 @@ export function JugadorForm({ initial }: Props) {
 
       <ArgentinaGeoSelect
         locality={locality}
-        province={provincia}
+        provincia={provincia}
         onLocalityChange={setLocality}
-        onProvinceChange={setProvincia}
+        onProvinciaChange={setProvincia}
       />
 
       {error && (

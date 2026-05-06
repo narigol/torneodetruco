@@ -7,11 +7,14 @@ type Props = {
   matchId: string;
   homeTeam: string;
   awayTeam: string;
+  initialHomeScore?: number | null;
+  initialAwayScore?: number | null;
+  isEdit?: boolean;
 };
 
 type GameScore = { home: string; away: string };
 
-export function ResultadoModal({ matchId, homeTeam, awayTeam }: Props) {
+export function ResultadoModal({ matchId, homeTeam, awayTeam, initialHomeScore, initialAwayScore, isEdit = false }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -39,8 +42,8 @@ export function ResultadoModal({ matchId, homeTeam, awayTeam }: Props) {
     setMatchPoints("30");
     setRegularGamePoints("24");
     setTiebreakerPoints("30");
-    setHomeScore("");
-    setAwayScore("");
+    setHomeScore(initialHomeScore != null ? String(initialHomeScore) : "");
+    setAwayScore(initialAwayScore != null ? String(initialAwayScore) : "");
     setGames([{ home: "", away: "" }, { home: "", away: "" }, { home: "", away: "" }]);
     setError("");
     setSaved(false);
@@ -136,9 +139,9 @@ export function ResultadoModal({ matchId, homeTeam, awayTeam }: Props) {
     <>
       <button
         onClick={handleOpen}
-        className="text-xs text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap"
+        className={`text-xs font-medium whitespace-nowrap ${isEdit ? "text-gray-400 hover:text-gray-600" : "text-blue-600 hover:text-blue-800"}`}
       >
-        Cargar resultado
+        {isEdit ? "Editar resultado" : "Cargar resultado"}
       </button>
 
       {open && (
@@ -156,7 +159,7 @@ export function ResultadoModal({ matchId, homeTeam, awayTeam }: Props) {
               </div>
             ) : (
               <>
-                <h3 className="font-semibold text-gray-900 mb-1">Cargar resultado</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">{isEdit ? "Editar resultado" : "Cargar resultado"}</h3>
                 <p className="text-xs text-gray-400 mb-5">{homeTeam} vs {awayTeam}</p>
 
                 {/* Formato */}

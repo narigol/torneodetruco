@@ -52,9 +52,21 @@ export async function PATCH(req: Request, { params }: Params) {
     include: { tournament: { select: { adminId: true } } },
   });
   if (!match) return NextResponse.json({ error: "Partido no encontrado" }, { status: 404 });
-  if (match.status === "FINISHED") return NextResponse.json({ error: "El partido ya fue finalizado" }, { status: 400 });
   if (!canManageTournament(session, match.tournament.adminId)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
+  const isEdit = match.status === "FINISHED";
+  if (isEdit) {
+    if (!match.groupId) {
+      return NextResponse.json({ error: "No se puede editar un partido de eliminatoria" }, { status: 400 });
+    }
+    const bracketExists = await prisma.match.count({
+      where: { tournamentId: match.tournamentId, groupId: null },
+    });
+    if (bracketExists > 0) {
+      return NextResponse.json({ error: "No se puede editar el resultado una vez generada la eliminatoria" }, { status: 400 });
+    }
   }
 
   let homeScore: number;
@@ -155,7 +167,7 @@ export async function PATCH(req: Request, { params }: Params) {
       data: {
         matchId: match.id,
         userId: session.user.id,
-        action: "RESULT_UPDATED",
+        action: isEdit ? "RESULT_EDITED" : "RESULT_UPDATED",
         previousData,
         newData: {
           homeScore,
@@ -168,6 +180,31 @@ export async function PATCH(req: Request, { params }: Params) {
     });
 
     if (match.groupId) {
+      // Si es edición, revertir el resultado anterior antes de aplicar el nuevo
+      if (isEdit && match.homeScore !== null && match.awayScore !== null) {
+        const prevHomeWin = match.homeScore > match.awayScore;
+        await tx.groupStanding.update({
+          where: { groupId_teamId: { groupId: match.groupId, teamId: match.homeTeamId } },
+          data: {
+            wins: { decrement: prevHomeWin ? 1 : 0 },
+            losses: { decrement: prevHomeWin ? 0 : 1 },
+            scored: { decrement: match.homeScore },
+            against: { decrement: match.awayScore },
+          },
+        });
+        if (match.awayTeamId) {
+          await tx.groupStanding.update({
+            where: { groupId_teamId: { groupId: match.groupId, teamId: match.awayTeamId } },
+            data: {
+              wins: { decrement: prevHomeWin ? 0 : 1 },
+              losses: { decrement: prevHomeWin ? 1 : 0 },
+              scored: { decrement: match.awayScore },
+              against: { decrement: match.homeScore },
+            },
+          });
+        }
+      }
+
       const homeWin = homeScore > awayScore;
 
       await tx.groupStanding.update({
@@ -197,6 +234,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
     const phaseMatches = await tx.match.findMany({
       where: { tournamentId: match.tournamentId, phase: match.phase, groupId: null },
+      orderBy: { round: "asc" },
     });
 
     const allFinished = phaseMatches.every((m) => m.status === "FINISHED");

@@ -8,7 +8,7 @@ type Contact = {
   phone: string | null;
   email: string | null;
   locality: string | null;
-  province: string | null;
+  provincia: string | null;
   isRegistered: boolean;
 };
 
@@ -18,7 +18,7 @@ type TournamentInfo = {
   startTime: string | null;
   location: string | null;
   locality: string | null;
-  province: string | null;
+  provincia: string | null;
   playersPerTeam: number;
   inscriptionFee: number | null;
   publicUrl: string;
@@ -37,7 +37,7 @@ function buildDefaultTemplate(t: TournamentInfo): string {
     ? new Date(t.startDate).toLocaleDateString("es-AR", { day: "numeric", month: "long" })
     : null;
   if (dateStr || t.startTime) lines.push(`Fecha: ${[dateStr, t.startTime].filter(Boolean).join(" - ")}`);
-  const lugar = t.location || [t.locality, t.province].filter(Boolean).join(", ");
+  const lugar = t.location || [t.locality, t.provincia].filter(Boolean).join(", ");
   if (lugar) lines.push(`Lugar: ${lugar}`);
   const modalidad = MODALIDAD[t.playersPerTeam] ?? `${t.playersPerTeam} vs ${t.playersPerTeam}`;
   lines.push(`Modalidad: ${modalidad}`);
@@ -74,7 +74,7 @@ export function ContactosTab({ contacts, tournament }: Props) {
     return (
       c.name.toLowerCase().includes(q) ||
       (c.locality ?? "").toLowerCase().includes(q) ||
-      (c.province ?? "").toLowerCase().includes(q)
+      (c.provincia ?? "").toLowerCase().includes(q)
     );
   });
 
@@ -130,8 +130,8 @@ export function ContactosTab({ contacts, tournament }: Props) {
             <div key={c.id} className="flex items-center gap-4 bg-white border border-gray-100 rounded-xl px-5 py-3">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-900 truncate">{c.name}</p>
-                {(c.locality || c.province) && (
-                  <p className="text-xs text-gray-400 truncate">{[c.locality, c.province].filter(Boolean).join(", ")}</p>
+                {(c.locality || c.provincia) && (
+                  <p className="text-xs text-gray-400 truncate">{[c.locality, c.provincia].filter(Boolean).join(", ")}</p>
                 )}
               </div>
 

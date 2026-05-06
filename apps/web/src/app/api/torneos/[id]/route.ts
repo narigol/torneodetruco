@@ -66,7 +66,7 @@ const updateSchema = z.object({
   startTime: z.string().max(50).nullable().optional(),
   location: z.string().max(500).nullable().optional(),
   locality: z.string().max(100).nullable().optional(),
-  province: z.string().max(100).nullable().optional(),
+  provincia: z.string().max(100).nullable().optional(),
   playersPerTeam: z.number().int().min(1).max(3).optional(),
   maxPlayers: z.number().int().min(2).max(10000).nullable().optional(),
   inscriptionFee: z.number().int().min(0).nullable().optional(),
@@ -92,7 +92,7 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
   }
 
-  const { startDate, endDate, startTime, location, locality, province, reglamentoId, ...rest } = parsed.data;
+  const { startDate, endDate, startTime, location, locality, provincia, reglamentoId, ...rest } = parsed.data;
 
   const updated = await prisma.tournament.update({
     where: { id },
@@ -103,7 +103,7 @@ export async function PATCH(req: Request, { params }: Params) {
       ...(startTime !== undefined ? { startTime: startTime ?? null } : {}),
       ...(location !== undefined ? { location: location ?? null } : {}),
       ...(locality !== undefined ? { locality: locality ?? null } : {}),
-      ...(province !== undefined ? { province: province ?? null } : {}),
+      ...(provincia !== undefined ? { provincia: provincia ?? null } : {}),
       ...(reglamentoId !== undefined ? { reglamentoId: reglamentoId ?? null } : {}),
     },
   });

@@ -10,7 +10,7 @@ type Usuario = {
   dni: string | null;
   phone: string | null;
   locality: string | null;
-  province: string | null;
+  provincia: string | null;
 };
 
 type Props = { usuario: Usuario };
@@ -23,7 +23,7 @@ export function EditarUsuarioForm({ usuario }: Props) {
     dni: usuario.dni ?? "",
     phone: usuario.phone ?? "",
     locality: usuario.locality ?? "",
-    province: usuario.province ?? "",
+    provincia: usuario.provincia ?? "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -45,7 +45,7 @@ export function EditarUsuarioForm({ usuario }: Props) {
         dni: form.dni || null,
         phone: form.phone || null,
         locality: form.locality || null,
-        province: form.province || null,
+        provincia: form.provincia || null,
       }),
     });
     setLoading(false);
@@ -118,8 +118,8 @@ export function EditarUsuarioForm({ usuario }: Props) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Provincia</label>
           <input
-            value={form.province}
-            onChange={(e) => set("province", e.target.value)}
+            value={form.provincia}
+            onChange={(e) => set("provincia", e.target.value)}
             placeholder="Provincia"
             className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
           />

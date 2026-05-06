@@ -23,7 +23,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(req: Request, { params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
 
@@ -82,8 +82,9 @@ export async function POST(_req: Request, { params }: Params) {
       groupMap.set(s.groupId, arr);
     }
 
+    const qualify = qualifyOverride ?? tournament.qualifyPerGroup;
     for (const [, arr] of groupMap) {
-      arr.slice(0, tournament.qualifyPerGroup).forEach((s) => qualifiedIds.add(s.teamId));
+      arr.slice(0, qualify).forEach((s) => qualifiedIds.add(s.teamId));
     }
 
     teamsForBracket = tournament.teams.filter((t) => qualifiedIds.has(t.id));
@@ -96,10 +97,30 @@ export async function POST(_req: Request, { params }: Params) {
     );
   }
 
-  const shuffled = shuffle(teamsForBracket);
-  const phase = phaseForTeamCount(shuffled.length);
+  const body = await req.json().catch(() => ({}));
+  const teamOrderIds: string[] | undefined = Array.isArray(body?.teamOrder) ? body.teamOrder : undefined;
+  const qualifyOverride: number | undefined =
+    typeof body?.qualifyPerGroup === "number" && body.qualifyPerGroup >= 1
+      ? body.qualifyPerGroup
+      : undefined;
 
-  await createPhaseMatches(prisma.match, id, phase, shuffled.map((t) => t.id));
+  let ordered = teamsForBracket;
+  if (teamOrderIds) {
+    const eligible = new Map(teamsForBracket.map((t) => [t.id, t]));
+    const valid =
+      teamOrderIds.length === teamsForBracket.length &&
+      teamOrderIds.every((tid) => eligible.has(tid));
+    if (!valid) {
+      return NextResponse.json({ error: "Orden de equipos inválido" }, { status: 400 });
+    }
+    ordered = teamOrderIds.map((tid) => eligible.get(tid)!);
+  } else {
+    ordered = shuffle(teamsForBracket);
+  }
 
-  return NextResponse.json({ created: Math.ceil(shuffled.length / 2) });
+  const phase = phaseForTeamCount(ordered.length);
+
+  await createPhaseMatches(prisma.match, id, phase, ordered.map((t) => t.id));
+
+  return NextResponse.json({ created: Math.ceil(ordered.length / 2) });
 }

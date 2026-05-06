@@ -15,7 +15,7 @@ type Props = {
   dni: string | null;
   phone: string | null;
   locality: string | null;
-  province: string | null;
+  provincia: string | null;
 };
 
 export function PerfilForm({
@@ -27,7 +27,7 @@ export function PerfilForm({
   dni: initialDni,
   phone: initialPhone,
   locality: initialLocality,
-  province: initialProvince,
+  provincia: initialProvincia,
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
@@ -35,7 +35,7 @@ export function PerfilForm({
   const [dni, setDni] = useState(initialDni ?? "");
   const [phone, setPhone] = useState(initialPhone ?? "");
   const [locality, setLocality] = useState(initialLocality ?? "");
-  const [province, setProvince] = useState(initialProvince ?? "");
+  const [provincia, setProvincia] = useState(initialProvincia ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -66,7 +66,7 @@ export function PerfilForm({
         dni: dni || null,
         phone: phone || null,
         locality: locality || null,
-        province: province || null,
+        provincia: provincia || null,
         ...(newPassword ? { currentPassword, newPassword } : {}),
       }),
     });
@@ -149,9 +149,9 @@ export function PerfilForm({
 
           <ArgentinaGeoSelect
             locality={locality}
-            province={province}
+            provincia={provincia}
             onLocalityChange={setLocality}
-            onProvinceChange={setProvince}
+            onProvinciaChange={setProvincia}
           />
 
           <div>

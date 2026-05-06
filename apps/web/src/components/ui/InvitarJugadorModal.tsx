@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 
@@ -8,7 +8,7 @@ type Usuario = {
   email: string;
   dni: string | null;
   locality: string | null;
-  province: string | null;
+  provincia: string | null;
 };
 
 type InvitedUser = { userId: string; status: string };
@@ -116,7 +116,7 @@ export function InvitarJugadorModal({ tournamentId, alreadyInvited, currentUserI
                     <p className="text-sm font-medium text-gray-900 truncate">{u.name}</p>
                     <p className="text-xs text-gray-400 truncate">
                       {u.dni && <span className="font-mono mr-1.5">DNI {u.dni}</span>}
-                      {[u.locality, u.province].filter(Boolean).join(", ") || u.email}
+                      {[u.locality, u.provincia].filter(Boolean).join(", ") || u.email}
                     </p>
                   </div>
                   <button

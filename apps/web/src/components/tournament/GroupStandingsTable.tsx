@@ -30,6 +30,7 @@ type Props = {
   groups: Group[];
   isAdmin?: boolean;
   qualifyPerGroup?: number;
+  hasBracket?: boolean;
 };
 
 function sortStandings(standings: Standing[], matches: MatchWithWinner[]): { standing: Standing; h2h: boolean }[] {
@@ -81,6 +82,7 @@ export function GroupStandingsTable({
   groups,
   isAdmin,
   qualifyPerGroup = 2,
+  hasBracket = false,
 }: Props) {
   if (groups.length === 0) {
     return (
@@ -177,7 +179,7 @@ export function GroupStandingsTable({
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Partidos</p>
                 {group.matches.map((m) => (
-                  <MatchRow key={m.id} match={m} isAdmin={isAdmin} />
+                  <MatchRow key={m.id} match={m} isAdmin={isAdmin} hasBracket={hasBracket} />
                 ))}
               </div>
             )}
@@ -188,7 +190,7 @@ export function GroupStandingsTable({
   );
 }
 
-function MatchRow({ match, isAdmin }: { match: MatchWithWinner; isAdmin?: boolean }) {
+function MatchRow({ match, isAdmin, hasBracket }: { match: MatchWithWinner; isAdmin?: boolean; hasBracket?: boolean }) {
   const finished = match.status === "FINISHED";
 
   return (
@@ -202,16 +204,26 @@ function MatchRow({ match, isAdmin }: { match: MatchWithWinner; isAdmin?: boolea
           {match.awayTeam?.name ?? "Equipo libre"}
         </span>
         {isAdmin && !finished && (
-          <div className="flex items-center gap-3">
-            <ResultadoModal
-              matchId={match.id}
-              homeTeam={match.homeTeam.name}
-              awayTeam={match.awayTeam?.name ?? ""}
-            />
-          </div>
+          <ResultadoModal
+            matchId={match.id}
+            homeTeam={match.homeTeam.name}
+            awayTeam={match.awayTeam?.name ?? ""}
+          />
         )}
         {isAdmin && finished && (
-          <MatchAuditModal matchId={match.id} />
+          <div className="flex items-center gap-3">
+            {!hasBracket && (
+              <ResultadoModal
+                matchId={match.id}
+                homeTeam={match.homeTeam.name}
+                awayTeam={match.awayTeam?.name ?? ""}
+                initialHomeScore={match.homeScore}
+                initialAwayScore={match.awayScore}
+                isEdit
+              />
+            )}
+            <MatchAuditModal matchId={match.id} />
+          </div>
         )}
       </div>
     </div>

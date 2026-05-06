@@ -20,7 +20,7 @@ export function NuevoTorneoForm({ reglamentos }: Props) {
   const [format, setFormat] = useState("GROUPS_AND_KNOCKOUT");
   const [location, setLocation] = useState("");
   const [locality, setLocality] = useState("");
-  const [province, setProvince] = useState("");
+  const [provincia, setProvincia] = useState("");
   const [reglamentoId, setReglamentoId] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -40,7 +40,7 @@ export function NuevoTorneoForm({ reglamentos }: Props) {
         startTime: form.get("startTime") || null,
         location: location.trim() || null,
         locality: locality.trim() || null,
-        province: province || null,
+        provincia: provincia || null,
         playersPerTeam: Number(form.get("playersPerTeam")),
         maxPlayers: form.get("maxPlayers") ? Number(form.get("maxPlayers")) : null,
         inscriptionFee: form.get("inscriptionFee") ? Number(form.get("inscriptionFee")) : null,
@@ -123,12 +123,12 @@ export function NuevoTorneoForm({ reglamentos }: Props) {
 
           <ArgentinaGeoSelect
             locality={locality}
-            province={province}
+            provincia={provincia}
             onLocalityChange={setLocality}
-            onProvinceChange={setProvince}
+            onProvinciaChange={setProvincia}
           />
 
-          <MapaPreview location={location} onLocationChange={setLocation} onProvinceChange={setProvince} onLocalityChange={setLocality} />
+          <MapaPreview location={location} onLocationChange={setLocation} onProvinciaChange={setProvincia} onLocalityChange={setLocality} />
 
         </div>
 

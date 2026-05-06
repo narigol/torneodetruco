@@ -22,13 +22,13 @@ export default async function ComunidadPage({ searchParams }: Props) {
         following: {
           orderBy: { createdAt: "desc" },
           select: {
-            following: { select: { id: true, name: true, locality: true, province: true, role: true } },
+            following: { select: { id: true, name: true, locality: true, provincia: true, role: true } },
           },
         },
         followers: {
           orderBy: { createdAt: "desc" },
           select: {
-            follower: { select: { id: true, name: true, locality: true, province: true, role: true } },
+            follower: { select: { id: true, name: true, locality: true, provincia: true, role: true } },
           },
         },
       },
@@ -37,7 +37,7 @@ export default async function ComunidadPage({ searchParams }: Props) {
       ? prisma.user.findMany({
           where: { role: "ORGANIZER", id: { not: session.user.id } },
           orderBy: { name: "asc" },
-          select: { id: true, name: true, locality: true, province: true, role: true },
+          select: { id: true, name: true, locality: true, provincia: true, role: true },
         })
       : Promise.resolve([]),
   ]);
@@ -132,7 +132,7 @@ function UserRow({
   user,
   currentUserId,
 }: {
-  user: { id: string; name: string; locality: string | null; province: string | null; role: string };
+  user: { id: string; name: string; locality: string | null; provincia: string | null; role: string };
   currentUserId: string;
 }) {
   const initials = user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
@@ -147,7 +147,7 @@ function UserRow({
         </Link>
         <p className="text-xs text-gray-400">
           {roleLabel(user.role)}
-          {(user.locality || user.province) && ` · ${[user.locality, user.province].filter(Boolean).join(", ")}`}
+          {(user.locality || user.provincia) && ` · ${[user.locality, user.provincia].filter(Boolean).join(", ")}`}
         </p>
       </div>
       {user.id !== currentUserId && user.role !== "ADMIN" && (

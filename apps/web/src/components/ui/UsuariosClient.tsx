@@ -9,7 +9,7 @@ type Usuario = {
   id: string;
   name: string;
   locality: string | null;
-  province: string | null;
+  provincia: string | null;
   role: string;
   plan: string;
   pendingActivation: boolean;
@@ -108,7 +108,7 @@ export function UsuariosClient({ usuarios, currentUserId, contactIds }: Props) {
                     <Link href={`/usuarios/${u.id}`} className="hover:text-red-600 transition-colors">{u.name}</Link>
                   </td>
                   <td className="px-5 py-3 text-gray-500">
-                    {[u.locality, u.province].filter(Boolean).join(", ") || <span className="text-gray-300">—</span>}
+                    {[u.locality, u.provincia].filter(Boolean).join(", ") || <span className="text-gray-300">—</span>}
                   </td>
                   <td className="px-5 py-3"><RolBadge role={u.role} /></td>
                   <td className="px-5 py-3"><EstadoBadge pendingActivation={u.pendingActivation} /></td>

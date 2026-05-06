@@ -1,6 +1,6 @@
 "use client";
 
-import * as XLSX from "xlsx";
+import { downloadXlsx } from "@/lib/xlsx";
 
 type Player = {
   id: string;
@@ -36,18 +36,18 @@ function waLink(phone: string) {
 }
 
 function exportXlsx(teams: Team[]) {
-  const data = teams.flatMap((team) =>
-    team.players.map((p) => ({
-      Equipo: team.name,
-      Jugador: p.name,
-      Teléfono: p.phone ?? "",
-      Email: p.email ?? "",
-    }))
+  downloadXlsx(
+    teams.flatMap((team) =>
+      team.players.map((p) => ({
+        Equipo: team.name,
+        Jugador: p.name,
+        Teléfono: p.phone ?? "",
+        Email: p.email ?? "",
+      }))
+    ),
+    "confirmados.xlsx",
+    "Confirmados"
   );
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Confirmados");
-  XLSX.writeFile(wb, "confirmados.xlsx");
 }
 
 export function ConfirmadosTab({ teams, hasFee }: Props) {

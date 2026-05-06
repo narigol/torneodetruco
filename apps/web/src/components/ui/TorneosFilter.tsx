@@ -12,7 +12,7 @@ type Torneo = {
   format: string;
   adminId: string;
   locality: string | null;
-  province: string | null;
+  provincia: string | null;
   startDate: Date | string | null;
   admin: { id: string; name: string };
   _count: { teams: number; matches: number };
@@ -54,7 +54,7 @@ export function TorneosFilter({ torneos, showRolFilter = false, showDraft = fals
   const [statusFilter, setStatusFilter] = useState("");
   const [rolFilter, setRolFilter] = useState<"" | "jugador" | "organizador">("");
   const [locality, setLocality] = useState("");
-  const [province, setProvince] = useState("");
+  const [provincia, setProvincia] = useState("");
   const [organizerId, setOrganizerId] = useState("");
 
   const organizers = useMemo(() => {
@@ -68,18 +68,18 @@ export function TorneosFilter({ torneos, showRolFilter = false, showDraft = fals
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const loc = locality.trim().toLowerCase();
-    const prov = province.toLowerCase();
+    const prov = provincia.toLowerCase();
 
     return torneos.filter((t) => {
       if (q && !t.name.toLowerCase().includes(q)) return false;
       if (statusFilter && t.status !== statusFilter) return false;
       if (rolFilter && t._rol !== rolFilter) return false;
       if (loc && !(t.locality ?? "").toLowerCase().includes(loc)) return false;
-      if (prov && !(t.province ?? "").toLowerCase().includes(prov)) return false;
+      if (prov && !(t.provincia ?? "").toLowerCase().includes(prov)) return false;
       if (organizerId && t.admin.id !== organizerId) return false;
       return true;
     });
-  }, [torneos, search, statusFilter, rolFilter, locality, province, organizerId]);
+  }, [torneos, search, statusFilter, rolFilter, locality, provincia, organizerId]);
 
   return (
     <div className="space-y-5">
@@ -108,11 +108,11 @@ export function TorneosFilter({ torneos, showRolFilter = false, showDraft = fals
 
         <div className="sm:col-span-2">
           <ArgentinaGeoSelect
-            province={province}
+            provincia={provincia}
             locality={locality}
-            onProvinceChange={(value) => setProvince(value)}
+            onProvinciaChange={(value) => setProvincia(value)}
             onLocalityChange={(value) => setLocality(value)}
-            nameProvince="province"
+            nameProvincia="provincia"
             nameLocality="locality"
             inline
           />
@@ -183,9 +183,9 @@ export function TorneosFilter({ torneos, showRolFilter = false, showDraft = fals
                 <h2 className="font-semibold text-gray-900 group-hover:text-red-700 transition-colors mb-1 leading-snug">
                   {t.name}
                 </h2>
-                {(t.locality || t.province) && (
+                {(t.locality || t.provincia) && (
                   <p className="text-xs text-gray-400 mb-3">
-                    {[t.locality, t.province].filter(Boolean).join(", ")}
+                    {[t.locality, t.provincia].filter(Boolean).join(", ")}
                   </p>
                 )}
                 <div className="flex items-center gap-4 text-sm text-gray-400 border-t border-gray-50 pt-3">

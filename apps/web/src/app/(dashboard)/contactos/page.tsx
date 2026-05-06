@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
@@ -31,7 +31,7 @@ export default async function ContactosPage() {
                   locality: true,
                   provincia: true,
                   userId: true,
-                  user: { select: { email: true, phone: true, locality: true, province: true, dni: true } },
+                  user: { select: { email: true, phone: true, locality: true, provincia: true, dni: true } },
                 },
               },
             },
@@ -44,13 +44,13 @@ export default async function ContactosPage() {
       where: { followingId: session.user.id },
       select: {
         follower: {
-          select: { id: true, name: true, email: true, phone: true, locality: true, province: true, dni: true },
+          select: { id: true, name: true, email: true, phone: true, locality: true, provincia: true, dni: true },
         },
       },
     }),
     prisma.organizerContact.findMany({
       where: { organizerId: session.user.id },
-      select: { id: true, name: true, phone: true, email: true, dni: true, locality: true, province: true },
+      select: { id: true, name: true, phone: true, email: true, dni: true, locality: true, provincia: true },
       orderBy: { createdAt: "asc" },
     }),
   ]);
@@ -96,7 +96,7 @@ export default async function ContactosPage() {
       email: follower.email,
       phone: follower.phone,
       locality: follower.locality,
-      provincia: follower.province,
+      provincia: follower.provincia,
       dni: follower.dni,
       userId: follower.id,
       torneos: [],
@@ -111,7 +111,7 @@ export default async function ContactosPage() {
       email: mc.email ?? null,
       phone: mc.phone ?? null,
       locality: mc.locality ?? null,
-      provincia: mc.province ?? null,
+      provincia: mc.provincia ?? null,
       dni: mc.dni ?? null,
       userId: null,
       torneos: [],
@@ -129,7 +129,7 @@ export default async function ContactosPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Contactos</h1>
           <p className="text-gray-400 text-sm mt-0.5">
-            Jugadores de tus torneos y seguidores · {contactos.length} contacto{contactos.length !== 1 ? "s" : ""}
+            Jugadores de tus torneos y seguidores Â· {contactos.length} contacto{contactos.length !== 1 ? "s" : ""}
           </p>
         </div>
       </div>

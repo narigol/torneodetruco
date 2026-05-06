@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth";
+﻿import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { notFound } from "next/navigation";
@@ -21,9 +21,9 @@ export default async function PerfilPage() {
       dni: true,
       phone: true,
       locality: true,
-      province: true,
+      provincia: true,
       acceptsLocalityInvites: true,
-      acceptsProvinceInvites: true,
+      acceptsProvinciaInvites: true,
       acceptsCountryInvites: true,
       acceptsEmailNotifications: true,
       acceptsContactByEmail: true,
@@ -55,13 +55,13 @@ export default async function PerfilPage() {
           dni={user.dni ?? null}
           phone={user.phone ?? null}
           locality={user.locality ?? user.player?.locality ?? null}
-          province={user.province ?? user.player?.provincia ?? null}
+          provincia={user.provincia ?? user.player?.provincia ?? null}
         />
 
         <PerfilSettings
           role={user.role}
           acceptsLocalityInvites={user.acceptsLocalityInvites}
-          acceptsProvinceInvites={user.acceptsProvinceInvites}
+          acceptsProvinciaInvites={user.acceptsProvinciaInvites}
           acceptsCountryInvites={user.acceptsCountryInvites}
           acceptsEmailNotifications={user.acceptsEmailNotifications}
           acceptsContactByEmail={user.acceptsContactByEmail}

@@ -6,7 +6,7 @@ import { PROVINCES } from "@/lib/argentina-geo";
 type Props = {
   location: string;
   onLocationChange?: (address: string) => void;
-  onProvinceChange?: (province: string) => void;
+  onProvinciaChange?: (provincia: string) => void;
   onLocalityChange?: (locality: string) => void;
 };
 
@@ -17,7 +17,7 @@ function normalize(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
-function matchProvince(state: string): string {
+function matchProvincia(state: string): string {
   const norm = normalize(state);
   return PROVINCES.find((p) => normalize(p) === norm) ?? "";
 }
@@ -48,16 +48,16 @@ function loadLeaflet(): Promise<any> {
   });
 }
 
-export function MapaPreview({ location, onLocationChange, onProvinceChange, onLocalityChange }: Props) {
+export function MapaPreview({ location, onLocationChange, onProvinciaChange, onLocalityChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const onChangeRef = useRef(onLocationChange);
-  const onProvinceRef = useRef(onProvinceChange);
+  const onProvinciaRef = useRef(onProvinciaChange);
   const onLocalityRef = useRef(onLocalityChange);
 
   useEffect(() => { onChangeRef.current = onLocationChange; }, [onLocationChange]);
-  useEffect(() => { onProvinceRef.current = onProvinceChange; }, [onProvinceChange]);
+  useEffect(() => { onProvinciaRef.current = onProvinciaChange; }, [onProvinciaChange]);
   useEffect(() => { onLocalityRef.current = onLocalityChange; }, [onLocalityChange]);
 
   useEffect(() => {
@@ -95,9 +95,9 @@ export function MapaPreview({ location, onLocationChange, onProvinceChange, onLo
           if (data.display_name) onChangeRef.current?.(data.display_name);
           if (data.address) {
             const addr = data.address;
-            const province = matchProvince(addr.state ?? "");
+            const provincia = matchProvincia(addr.state ?? "");
             const locality = addr.city ?? addr.town ?? addr.municipality ?? addr.village ?? addr.county ?? "";
-            if (province) onProvinceRef.current?.(province);
+            if (provincia) onProvinciaRef.current?.(provincia);
             if (locality) onLocalityRef.current?.(locality);
           }
         } catch {}

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -23,7 +23,7 @@ export default async function MisTorneosPage() {
     format: true,
     adminId: true,
     locality: true,
-    province: true,
+    provincia: true,
     startDate: true,
     admin: { select: { id: true, name: true } },
     _count: { select: { teams: true, matches: true } },
@@ -68,7 +68,7 @@ export default async function MisTorneosPage() {
           </p>
         </div>
         <Link href="/torneos" className="text-sm text-red-600 hover:underline font-medium">
-          Ver todos los torneos →
+          Ver todos los torneos &rarr;
         </Link>
       </div>
 

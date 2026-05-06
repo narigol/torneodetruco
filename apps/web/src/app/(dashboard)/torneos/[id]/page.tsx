@@ -47,7 +47,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       teams: {
         include: {
           teamPlayers: {
-            include: { player: { select: { id: true, name: true, email: true, dni: true, phone: true, locality: true, provincia: true, userId: true, user: { select: { email: true, phone: true, locality: true, province: true } } } } },
+            include: { player: { select: { id: true, name: true, email: true, dni: true, phone: true, locality: true, provincia: true, userId: true, user: { select: { email: true, phone: true, locality: true, provincia: true } } } } },
           },
         },
         orderBy: { name: "asc" },
@@ -133,7 +133,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                       select: {
                         id: true, name: true, email: true, phone: true,
                         locality: true, provincia: true, userId: true,
-                        user: { select: { email: true, phone: true, locality: true, province: true, dni: true } },
+                        user: { select: { email: true, phone: true, locality: true, provincia: true, dni: true } },
                       },
                     },
                   },
@@ -144,11 +144,11 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
         }),
         prisma.follow.findMany({
           where: { followingId: tournament.adminId },
-          select: { follower: { select: { id: true, name: true, phone: true, email: true, locality: true, province: true } } },
+          select: { follower: { select: { id: true, name: true, phone: true, email: true, locality: true, provincia: true } } },
         }),
         prisma.organizerContact.findMany({
           where: { organizerId: tournament.adminId },
-          select: { id: true, name: true, phone: true, email: true, locality: true, province: true },
+          select: { id: true, name: true, phone: true, email: true, locality: true, provincia: true },
           orderBy: { createdAt: "asc" },
         }),
       ])
@@ -162,7 +162,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     approvedTeams.flatMap((t) => t.teamPlayers.map((tp) => tp.player.id))
   );
 
-  type TournamentContact = { id: string; name: string; phone: string | null; email: string | null; locality: string | null; province: string | null; isRegistered: boolean };
+  type TournamentContact = { id: string; name: string; phone: string | null; email: string | null; locality: string | null; provincia: string | null; isRegistered: boolean };
   const contactMap = new Map<string, TournamentContact>();
 
   // Players from other organizer tournaments
@@ -177,7 +177,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             phone: r.phone,
             email: r.email,
             locality: r.locality,
-            province: r.provincia,
+            provincia: r.provincia,
             isRegistered: registeredPlayerIds.has(r.id) || (!!r.userId && registeredUserIds.has(r.userId)),
           });
         }
@@ -195,7 +195,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       phone: follower.phone,
       email: follower.email,
       locality: follower.locality,
-      province: follower.province,
+      provincia: follower.provincia,
       isRegistered: registeredUserIds.has(follower.id),
     });
   }
@@ -208,7 +208,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
       phone: mc.phone,
       email: mc.email,
       locality: mc.locality,
-      province: mc.province,
+      provincia: mc.provincia,
       isRegistered: false,
     });
   }
@@ -223,6 +223,17 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const hasPlayedGroupMatches = hasGroupFormat && tournament.groups.some((g) =>
     g.matches.some((m) => m.status === "FINISHED")
   );
+
+  // groupsSorted: each group's standings in wins-desc order (already ordered by DB query)
+  const groupsSorted = hasGroupFormat
+    ? tournament.groups.map((g) => ({
+        teams: g.standings.map((s) => ({ id: s.team.id, name: s.team.name })),
+      }))
+    : [];
+
+  const bracketTeams: { id: string; name: string }[] = hasGroupFormat
+    ? groupsSorted.flatMap((g) => g.teams.slice(0, tournament.qualifyPerGroup))
+    : approvedTeams.map((t) => ({ id: t.id, name: t.name }));
 
   const availableTabs: Tab[] = [
     ...(canManage ? ["resumen" as Tab] : []),
@@ -375,6 +386,9 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 hasBracket={hasBracket}
                 hasPlayedGroupMatches={hasPlayedGroupMatches}
                 canGenerateGroups={canGenerateGroupsPermission}
+                bracketTeams={bracketTeams}
+                groupsSorted={groupsSorted}
+                initialQualifyPerGroup={tournament.qualifyPerGroup}
               />
             </div>
           )}
@@ -522,6 +536,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             groups={tournament.groups}
             isAdmin={canManage}
             qualifyPerGroup={tournament.qualifyPerGroup}
+            hasBracket={hasBracket}
           />
         </section>
       )}
@@ -562,7 +577,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
               startTime: tournament.startTime,
               location: tournament.location,
               locality: tournament.locality,
-              province: tournament.province,
+              provincia: tournament.provincia,
               playersPerTeam: tournament.playersPerTeam,
               inscriptionFee: tournament.inscriptionFee,
               publicUrl: publicTournamentUrl,

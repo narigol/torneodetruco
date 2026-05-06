@@ -11,7 +11,7 @@ const schema = z.object({
   dni: z.string().max(20).optional().nullable(),
   phone: z.string().max(30).optional().nullable(),
   locality: z.string().max(100).optional().nullable(),
-  province: z.string().max(100).optional().nullable(),
+  provincia: z.string().max(100).optional().nullable(),
   currentPassword: z.string().optional(),
   newPassword: z.string().min(6).optional(),
 }).refine(
@@ -32,7 +32,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
-  const { name, email, dni, phone, locality, province, currentPassword, newPassword } = parsed.data;
+  const { name, email, dni, phone, locality, provincia, currentPassword, newPassword } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
@@ -62,7 +62,7 @@ export async function PATCH(req: Request) {
       dni: dni ?? null,
       phone: phone ?? null,
       locality: locality ?? null,
-      province: province ?? null,
+      provincia: provincia ?? null,
       country: "Argentina",
       ...(hashedPassword ? { password: hashedPassword } : {}),
     },
