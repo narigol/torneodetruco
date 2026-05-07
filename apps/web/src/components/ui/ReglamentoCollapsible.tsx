@@ -2,12 +2,33 @@
 
 import { useState } from "react";
 
+type Articulo = {
+  id: string;
+  titulo: string;
+  contenido: string;
+  mandatory: boolean;
+};
+
+type ReglamentoArticulo = {
+  articuloId: string;
+  visible: boolean;
+  contenidoOverride: string | null;
+  articulo: Articulo;
+};
+
 type Props = {
-  reglamento: { id: string; nombre: string; descripcion: string | null; contenido: string };
+  reglamento: {
+    id: string;
+    nombre: string;
+    descripcion: string | null;
+    articulos: ReglamentoArticulo[];
+  };
 };
 
 export function ReglamentoCollapsible({ reglamento }: Props) {
   const [open, setOpen] = useState(false);
+
+  const visibles = reglamento.articulos.filter((ra) => ra.visible);
 
   return (
     <div className="mt-3 border border-gray-100 rounded-xl overflow-hidden">
@@ -26,6 +47,9 @@ export function ReglamentoCollapsible({ reglamento }: Props) {
               — {reglamento.descripcion}
             </span>
           )}
+          <span className="text-xs text-gray-400 ml-1">
+            ({visibles.length} art.)
+          </span>
         </div>
         <svg
           className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
@@ -38,8 +62,22 @@ export function ReglamentoCollapsible({ reglamento }: Props) {
       </button>
 
       {open && (
-        <div className="px-4 py-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed bg-white">
-          {reglamento.contenido}
+        <div className="px-4 py-4 bg-white space-y-5">
+          {visibles.length === 0 ? (
+            <p className="text-sm text-gray-400">Este reglamento no tiene artículos.</p>
+          ) : (
+            visibles.map((ra, idx) => {
+              const contenido = ra.contenidoOverride ?? ra.articulo.contenido;
+              return (
+                <div key={ra.articuloId}>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Art. {idx + 1} — {ra.articulo.titulo}
+                  </h4>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{contenido}</p>
+                </div>
+              );
+            })
+          )}
         </div>
       )}
     </div>

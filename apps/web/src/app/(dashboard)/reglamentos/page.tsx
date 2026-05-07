@@ -22,6 +22,7 @@ export default async function ReglamentosPage() {
     include: {
       admin: { select: { id: true, name: true } },
       torneos: { select: { id: true, name: true } },
+      articulos: { select: { visible: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -35,12 +36,20 @@ export default async function ReglamentosPage() {
             {reglamentos.length} reglamento{reglamentos.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link
-          href="/reglamentos/nuevo"
-          className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-        >
-          + Nuevo reglamento
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/reglamentos/articulos"
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors border border-gray-200 px-3 py-2 rounded-lg hover:bg-gray-50"
+          >
+            Artículos
+          </Link>
+          <Link
+            href="/reglamentos/nuevo"
+            className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+          >
+            + Nuevo reglamento
+          </Link>
+        </div>
       </div>
 
       <ReglamentosClient

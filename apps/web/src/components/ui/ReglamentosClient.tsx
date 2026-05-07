@@ -7,15 +7,17 @@ import Link from "next/link";
 
 type Admin = { id: string; name: string };
 type Torneo = { id: string; name: string };
+type ArticuloItem = { visible: boolean };
 
 type Reglamento = {
   id: string;
   nombre: string;
   descripcion: string | null;
-  contenido: string;
+  isPublic: boolean;
   createdAt: string | Date;
   admin: Admin;
   torneos: Torneo[];
+  articulos: ArticuloItem[];
 };
 
 type Props = {
@@ -27,7 +29,23 @@ type Props = {
 export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props) {
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  async function handleTogglePublic(id: string, current: boolean) {
+    await fetch(`/api/reglamentos/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPublic: !current }),
+    });
+    router.refresh();
+  }
+
+  function handleCopyLink(id: string) {
+    const url = `${window.location.origin}/r/${id}`;
+    navigator.clipboard.writeText(url);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 2000);
+  }
 
   async function handleDelete(id: string) {
     await fetch(`/api/reglamentos/${id}`, { method: "DELETE" });
@@ -45,19 +63,22 @@ export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props
     <div className="space-y-3">
       {reglamentos.map((r) => {
         const canEdit = isAdmin || r.admin.id === currentUserId;
-        const isExpanded = expanded === r.id;
+        const visibleCount = r.articulos.filter((a) => a.visible).length;
 
         return (
-          <div key={r.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div key={r.id} className="bg-white border border-gray-100 rounded-xl">
             <div className="flex items-start gap-4 px-5 py-4">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                   <h3 className="font-semibold text-gray-900 text-sm">{r.nombre}</h3>
                   {r.torneos.length > 0 && (
                     <span className="text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full">
                       {r.torneos.length} torneo{r.torneos.length !== 1 ? "s" : ""}
                     </span>
                   )}
+                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                    {visibleCount} art.
+                  </span>
                 </div>
                 {r.descripcion && (
                   <p className="text-sm text-gray-500 line-clamp-1">{r.descripcion}</p>
@@ -67,15 +88,27 @@ export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={() => setExpanded(isExpanded ? null : r.id)}
-                  className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
-                >
-                  {isExpanded ? "Ocultar" : "Ver"}
-                </button>
+              <div className="flex items-center gap-3 shrink-0 flex-wrap justify-end">
+                {r.isPublic && (
+                  <button
+                    onClick={() => handleCopyLink(r.id)}
+                    className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                  >
+                    {copied === r.id ? "¡Copiado!" : "Copiar link"}
+                  </button>
+                )}
                 {canEdit && (
                   <>
+                    <button
+                      onClick={() => handleTogglePublic(r.id, r.isPublic)}
+                      className={`text-xs transition-colors ${
+                        r.isPublic
+                          ? "text-green-600 hover:text-gray-500"
+                          : "text-gray-400 hover:text-green-600"
+                      }`}
+                    >
+                      {r.isPublic ? "Público ✓" : "Hacer público"}
+                    </button>
                     <Link
                       href={`/reglamentos/${r.id}/editar`}
                       className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
@@ -111,27 +144,17 @@ export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props
               </div>
             </div>
 
-            {isExpanded && (
-              <div className="border-t border-gray-100 px-5 py-4 bg-gray-50">
-                <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                  {r.contenido}
-                </p>
-                {r.torneos.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs text-gray-400 mb-1">Usado en:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {r.torneos.map((t) => (
-                        <Link
-                          key={t.id}
-                          href={`/torneos/${t.id}`}
-                          className="text-xs bg-white border border-gray-200 text-gray-600 px-2 py-0.5 rounded hover:border-red-300 hover:text-red-600 transition-colors"
-                        >
-                          {t.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
+            {r.torneos.length > 0 && (
+              <div className="px-5 pb-4 flex flex-wrap gap-1">
+                {r.torneos.map((t) => (
+                  <Link
+                    key={t.id}
+                    href={`/torneos/${t.id}`}
+                    className="text-xs bg-white border border-gray-200 text-gray-600 px-2 py-0.5 rounded hover:border-red-300 hover:text-red-600 transition-colors"
+                  >
+                    {t.name}
+                  </Link>
+                ))}
               </div>
             )}
           </div>
