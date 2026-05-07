@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TournamentStatus, TournamentFormat } from "@tdt/db";
+import { Sheet } from "@/components/ui/Sheet";
 
 type TeamItem = { id: string; name: string };
 
@@ -229,7 +230,7 @@ export function TournamentActions({
           </button>
         )}
 
-        {status === "DRAFT" && (
+        {status === "DRAFT" && !showDeleteConfirm && (
           <button
             onClick={() => setShowDeleteConfirm(true)}
             disabled={deleteLoading}
@@ -238,213 +239,179 @@ export function TournamentActions({
             Eliminar torneo
           </button>
         )}
+        {showDeleteConfirm && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+            <span className="text-xs text-red-700 font-medium">¿Eliminar torneo?</span>
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-white transition-colors"
+            >
+              No
+            </button>
+            <button
+              onClick={deleteTournament}
+              disabled={deleteLoading}
+              className="text-xs text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded disabled:opacity-50 transition-colors font-medium"
+            >
+              {deleteLoading ? "..." : "Sí, eliminar"}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Modal: confirmar eliminar */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-80 shadow-xl">
-            <h3 className="font-semibold text-gray-900 mb-1">Eliminar torneo</h3>
-            <p className="text-sm text-gray-500 mb-5">
-              Esta acción es irreversible. Se eliminarán el torneo y todos sus datos.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={deleteTournament}
-                disabled={deleteLoading}
-                className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                {deleteLoading ? "Eliminando..." : "Eliminar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: generar grupos */}
-      {showGroupModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-80 shadow-xl">
-            <h3 className="font-semibold text-gray-900 mb-1">Generar grupos</h3>
-            <p className="text-xs text-gray-400 mb-4">
-              Esta acción es irreversible. Los grupos se fijarán con los equipos actuales.
-            </p>
-            <label className="block text-sm text-gray-600 mb-2">
-              Cantidad de grupos
-            </label>
+      {/* Sheet: generar grupos */}
+      <Sheet
+        open={showGroupModal}
+        onClose={() => setShowGroupModal(false)}
+        title="Generar grupos"
+        description="Los grupos se fijarán con los equipos actuales."
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-2">Cantidad de grupos</label>
             <input
               type="text"
               inputMode="numeric"
               value={numGroupsStr}
               onChange={(e) => handleNumGroupsChange(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
-            <p className="text-xs text-gray-400 mb-4">
+            <p className="text-xs text-gray-400 mt-1">
               {teamCount} equipos → {teamsPerGroup > 0 ? `~${teamsPerGroup}` : "—"} por grupo
             </p>
-            <label className="block text-sm text-gray-600 mb-2">
-              Clasificados por grupo
-            </label>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-2">Clasificados por grupo</label>
             <input
               type="text"
               inputMode="numeric"
               value={qualifyPerGroupStr}
               onChange={(e) => setQualifyPerGroupStr(e.target.value)}
-              className={`w-full border rounded-lg px-3 py-2 text-sm mb-1 ${!groupConfigValid ? "border-red-300 bg-red-50" : "border-gray-300"}`}
+              className={`w-full border rounded-lg px-3 py-2 text-sm ${!groupConfigValid ? "border-red-300 bg-red-50" : "border-gray-300"}`}
             />
             {!groupConfigValid ? (
-              <p className="text-xs text-red-500 mb-4">
+              <p className="text-xs text-red-500 mt-1">
                 Con {teamsPerGroup} equipo{teamsPerGroup !== 1 ? "s" : ""} por grupo, el máximo es {maxQualify} clasificado{maxQualify !== 1 ? "s" : ""} por grupo
               </p>
             ) : (
-              <p className="text-xs text-gray-400 mb-4">
+              <p className="text-xs text-gray-400 mt-1">
                 Clasifican {qualifyPerGroup * numGroups} equipos en total a la eliminatoria
               </p>
             )}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowGroupModal(false)}
-                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={generateGroups}
-                disabled={!groupConfigValid}
-                className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                Generar
-              </button>
-            </div>
           </div>
+          <p className="text-xs text-amber-600">Esta acción es irreversible.</p>
+          <button
+            onClick={generateGroups}
+            disabled={!groupConfigValid}
+            className="w-full px-3 py-2.5 text-sm bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 font-semibold transition-colors"
+          >
+            Generar grupos
+          </button>
         </div>
-      )}
+      </Sheet>
 
-      {/* Modal: generar bracket */}
-      {showBracketModal && (
-        <div
-          className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
-          onClick={(e) => e.target === e.currentTarget && setShowBracketModal(false)}
-        >
-          <div className="bg-white rounded-xl p-6 w-96 shadow-xl max-h-[90vh] overflow-y-auto">
-            <h3 className="font-semibold text-gray-900 mb-1">Generar eliminatoria</h3>
-            <p className="text-xs text-gray-400 mb-4">
-              Ordená los equipos para definir los cruces, o sorteá al azar.
-            </p>
-
-            {format === TournamentFormat.GROUPS_AND_KNOCKOUT && groupsSorted.length > 0 && (
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                  Clasificados por grupo
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={localQualifyStr}
-                    onChange={(e) => handleLocalQualifyChange(e.target.value)}
-                    className={`w-24 border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 ${!localQualifyValid ? "border-red-300 bg-red-50" : "border-gray-200"}`}
-                  />
-                  {localQualifyValid && (
-                    <span className="text-xs text-gray-400">
-                      {localQualify * groupsSorted.length} equipos clasifican
-                    </span>
-                  )}
-                </div>
-                {!localQualifyValid && localQualify > 0 && (
-                  <p className="text-xs text-red-500 mt-1">
-                    El grupo más pequeño tiene {minGroupSize} equipo{minGroupSize !== 1 ? "s" : ""}
-                  </p>
+      {/* Sheet: generar bracket */}
+      <Sheet
+        open={showBracketModal}
+        onClose={() => setShowBracketModal(false)}
+        title="Generar eliminatoria"
+        description="Ordená los equipos para definir los cruces, o sorteá al azar."
+      >
+        <div className="space-y-4">
+          {format === TournamentFormat.GROUPS_AND_KNOCKOUT && groupsSorted.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                Clasificados por grupo
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={localQualifyStr}
+                  onChange={(e) => handleLocalQualifyChange(e.target.value)}
+                  className={`w-24 border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 ${!localQualifyValid ? "border-red-300 bg-red-50" : "border-gray-200"}`}
+                />
+                {localQualifyValid && (
+                  <span className="text-xs text-gray-400">
+                    {localQualify * groupsSorted.length} equipos clasifican
+                  </span>
                 )}
               </div>
-            )}
+              {!localQualifyValid && localQualify > 0 && (
+                <p className="text-xs text-red-500 mt-1">
+                  El grupo más pequeño tiene {minGroupSize} equipo{minGroupSize !== 1 ? "s" : ""}
+                </p>
+              )}
+            </div>
+          )}
 
-            {teamOrder.length > 0 ? (
-              <>
-                {/* Reorderable team list */}
-                <div className="space-y-1.5 mb-4">
-                  {teamOrder.map((team, idx) => (
-                    <div key={team.id} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                      <span className="text-xs font-bold text-gray-400 w-5 text-center">{idx + 1}</span>
-                      <span className="flex-1 text-sm font-medium text-gray-800 truncate">{team.name}</span>
-                      <div className="flex gap-0.5">
-                        <button
-                          onClick={() => moveTeam(idx, -1)}
-                          disabled={idx === 0}
-                          className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-700 disabled:opacity-20 rounded"
-                        >
-                          ↑
-                        </button>
-                        <button
-                          onClick={() => moveTeam(idx, 1)}
-                          disabled={idx === teamOrder.length - 1}
-                          className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-700 disabled:opacity-20 rounded"
-                        >
-                          ↓
-                        </button>
-                      </div>
+          {teamOrder.length > 0 ? (
+            <>
+              <div className="space-y-1.5">
+                {teamOrder.map((team, idx) => (
+                  <div key={team.id} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                    <span className="text-xs font-bold text-gray-400 w-5 text-center">{idx + 1}</span>
+                    <span className="flex-1 text-sm font-medium text-gray-800 truncate">{team.name}</span>
+                    <div className="flex gap-0.5">
+                      <button
+                        onClick={() => moveTeam(idx, -1)}
+                        disabled={idx === 0}
+                        className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-700 disabled:opacity-20 rounded"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => moveTeam(idx, 1)}
+                        disabled={idx === teamOrder.length - 1}
+                        className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-700 disabled:opacity-20 rounded"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Cruces</p>
+                <div className="space-y-1">
+                  {matchupPairs.map(([a, b], i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-gray-600">
+                      <span className="text-gray-400 w-4">P{i + 1}</span>
+                      <span className="font-medium truncate max-w-[120px]">{a.name}</span>
+                      <span className="text-gray-300">vs</span>
+                      <span className={`truncate max-w-[120px] ${b ? "font-medium" : "text-gray-300 italic"}`}>
+                        {b?.name ?? "Pase libre"}
+                      </span>
                     </div>
                   ))}
                 </div>
+              </div>
 
-                {/* Matchup preview */}
-                <div className="mb-4">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                    Cruces
-                  </p>
-                  <div className="space-y-1">
-                    {matchupPairs.map(([a, b], i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-gray-600">
-                        <span className="text-gray-400 w-4">P{i + 1}</span>
-                        <span className="font-medium truncate max-w-[120px]">{a.name}</span>
-                        <span className="text-gray-300">vs</span>
-                        <span className={`truncate max-w-[120px] ${b ? "font-medium" : "text-gray-300 italic"}`}>
-                          {b?.name ?? "Pase libre"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setTeamOrder(clientShuffle(teamOrder))}
-                  className="w-full px-3 py-2 mb-4 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  Sortear al azar
-                </button>
-              </>
-            ) : (
-              <p className="text-sm text-gray-400 mb-4">
-                Se sortearán los {teamCount} equipos para armar la llave.
-              </p>
-            )}
-
-            <p className="text-xs text-gray-400 mb-4">Esta acción es irreversible.</p>
-
-            <div className="flex gap-2">
               <button
-                onClick={() => setShowBracketModal(false)}
-                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50"
+                onClick={() => setTeamOrder(clientShuffle(teamOrder))}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
               >
-                Cancelar
+                Sortear al azar
               </button>
-              <button
-                onClick={generateBracket}
-                disabled={groupsSorted.length > 0 && !localQualifyValid}
-                className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
+            </>
+          ) : (
+            <p className="text-sm text-gray-400">
+              Se sortearán los {teamCount} equipos para armar la llave.
+            </p>
+          )}
+
+          <p className="text-xs text-amber-600">Esta acción es irreversible.</p>
+
+          <button
+            onClick={generateBracket}
+            disabled={groupsSorted.length > 0 && !localQualifyValid}
+            className="w-full px-3 py-2.5 text-sm bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 font-semibold transition-colors"
+          >
+            Confirmar
+          </button>
         </div>
-      )}
+      </Sheet>
     </>
   );
 }
