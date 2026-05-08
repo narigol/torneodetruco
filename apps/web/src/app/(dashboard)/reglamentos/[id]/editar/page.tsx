@@ -44,7 +44,7 @@ export default async function EditarReglamentoPage({ params }: { params: Promise
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full">
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Editar reglamento</h1>
       <ReglamentoForm reglamento={reglamento} articulos={articulos} isAdminUser={isAdminUser} />
     </div>

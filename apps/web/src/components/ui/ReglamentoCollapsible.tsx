@@ -73,7 +73,14 @@ export function ReglamentoCollapsible({ reglamento }: Props) {
                   <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
                     Art. {idx + 1} — {ra.articulo.titulo}
                   </h4>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{contenido}</p>
+                  {/<[^>]+>/.test(contenido) ? (
+                    <div
+                      className="prose prose-sm max-w-none text-gray-700"
+                      dangerouslySetInnerHTML={{ __html: contenido }}
+                    />
+                  ) : (
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{contenido}</p>
+                  )}
                 </div>
               );
             })

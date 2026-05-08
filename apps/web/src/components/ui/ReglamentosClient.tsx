@@ -110,6 +110,12 @@ export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props
                       {r.isPublic ? "Público ✓" : "Hacer público"}
                     </button>
                     <Link
+                      href={`/reglamentos/${r.id}/preview`}
+                      className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                    >
+                      Preview
+                    </Link>
+                    <Link
                       href={`/reglamentos/${r.id}/editar`}
                       className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
                     >

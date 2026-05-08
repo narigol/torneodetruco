@@ -23,7 +23,7 @@ export default async function NuevoReglamentoPage() {
   });
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full">
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Nuevo reglamento</h1>
       <ReglamentoForm articulos={articulos} isAdminUser={isAdminUser} />
     </div>

@@ -52,9 +52,16 @@ export default async function PublicReglamentoPage({ params }: { params: Promise
                     <h2 className="text-sm font-semibold text-gray-900 mb-2">
                       Art. {idx + 1} — {ra.articulo.titulo}
                     </h2>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
-                      {contenido}
-                    </p>
+                    {/<[^>]+>/.test(contenido) ? (
+                      <div
+                        className="prose prose-sm max-w-none text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: contenido }}
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
+                        {contenido}
+                      </p>
+                    )}
                   </div>
                 );
               })}

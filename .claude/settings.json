@@ -64,7 +64,8 @@
       "Bash(sed -i 's/Province/Provincia/g; s/province/provincia/g' packages/db/prisma/schema.prisma)",
       "PowerShell(cd \"c:\\\\Users\\\\PC\\\\Desktop\\\\tdt\\\\packages\\\\db\"; $env:PRISMA_MIGRATE_SKIP_GENERATE = \"0\"; npx prisma db push 2>&1)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\PC\\\\Desktop\\\\tdt\" -Recurse -Include \"*reglament*\" -ErrorAction SilentlyContinue)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\PC\\\\Desktop\\\\tdt\" -Recurse -Directory)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\Desktop\\tdt\\apps\\web\\src\\app\\(dashboard)\\usuarios\\[id]"

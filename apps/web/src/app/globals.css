@@ -13,3 +13,25 @@
   ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 }
+
+@media print {
+  .no-print { display: none !important; }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+
+  .print-article {
+    break-inside: avoid;
+  }
+
+  .print-cover {
+    page-break-after: always;
+  }
+
+  @page {
+    margin: 2cm;
+  }
+}
