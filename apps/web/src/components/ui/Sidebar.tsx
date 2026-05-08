@@ -98,11 +98,11 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCo
     { href: "/torneos", label: "Torneos", icon: <TrophyIcon /> },
     { href: "/torneos/mis", label: "Mis torneos", icon: <MyTournamentsIcon /> },
     { href: "/ranking", label: "Ranking", icon: <RankingIcon /> },
+    { href: "/reglamentos", label: "Reglamentos", icon: <DocIcon /> },
     ...(canOrganize ? [
       { href: "/organizador/ranking", label: "Mi Ranking", icon: <MyRankingIcon /> },
       ...(role === "ADMIN" ? [{ href: "/usuarios", label: "Usuarios", icon: <UsersIcon /> }] : []),
       { href: "/contactos", label: "Contactos", icon: <ContactsIcon /> },
-      { href: "/reglamentos", label: "Reglamentos", icon: <DocIcon /> },
     ] : []),
   ];
 

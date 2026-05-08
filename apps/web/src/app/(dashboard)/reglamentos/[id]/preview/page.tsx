@@ -8,8 +8,9 @@ import { ReglamentoPreviewClient } from "@/components/ui/ReglamentoPreviewClient
 export default async function PreviewReglamentoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (!session?.user || !isOrganizer(session.user.role)) redirect("/torneos");
+  if (!session?.user) redirect("/login");
 
+  const canOrganize = isOrganizer(session.user.role);
   const isAdminUser = isSuperAdmin(session.user.role);
 
   const reglamento = await prisma.reglamento.findUnique({
@@ -29,7 +30,9 @@ export default async function PreviewReglamentoPage({ params }: { params: Promis
   });
 
   if (!reglamento) notFound();
-  if (!isAdminUser && reglamento.adminId !== session.user.id) redirect("/reglamentos");
+  if (!reglamento.isPublic && !isAdminUser && reglamento.adminId !== session.user.id) {
+    redirect("/reglamentos");
+  }
 
   return (
     <ReglamentoPreviewClient

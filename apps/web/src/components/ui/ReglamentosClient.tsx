@@ -24,12 +24,14 @@ type Props = {
   reglamentos: Reglamento[];
   currentUserId: string;
   isAdmin: boolean;
+  readOnly?: boolean;
 };
 
-export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props) {
+export function ReglamentosClient({ reglamentos, currentUserId, isAdmin, readOnly = false }: Props) {
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   async function handleTogglePublic(id: string, current: boolean) {
     await fetch(`/api/reglamentos/${id}`, {
@@ -53,16 +55,38 @@ export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props
     router.refresh();
   }
 
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? reglamentos.filter(
+        (r) =>
+          r.nombre.toLowerCase().includes(q) ||
+          r.admin.name.toLowerCase().includes(q)
+      )
+    : reglamentos;
+
   if (reglamentos.length === 0) {
     return (
-      <EmptyState message="No hay reglamentos" submessage="Creá el primero desde el botón de arriba." />
+      <EmptyState
+        message="No hay reglamentos"
+        submessage={readOnly ? "No hay reglamentos publicados." : "Creá el primero desde el botón de arriba."}
+      />
     );
   }
 
   return (
     <div className="space-y-3">
-      {reglamentos.map((r) => {
-        const canEdit = isAdmin || r.admin.id === currentUserId;
+      <input
+        type="text"
+        placeholder="Buscar por reglamento u organizador..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+      />
+      {filtered.length === 0 && (
+        <EmptyState message="Sin resultados" submessage="No hay reglamentos que coincidan con la búsqueda." />
+      )}
+      {filtered.map((r) => {
+        const canEdit = !readOnly && (isAdmin || r.admin.id === currentUserId);
         const visibleCount = r.articulos.filter((a) => a.visible).length;
 
         return (
@@ -97,6 +121,14 @@ export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props
                     {copied === r.id ? "¡Copiado!" : "Copiar link"}
                   </button>
                 )}
+                {(r.isPublic || canEdit) && (
+                  <Link
+                    href={`/reglamentos/${r.id}/preview`}
+                    className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                  >
+                    Ver
+                  </Link>
+                )}
                 {canEdit && (
                   <>
                     <button
@@ -109,16 +141,7 @@ export function ReglamentosClient({ reglamentos, currentUserId, isAdmin }: Props
                     >
                       {r.isPublic ? "Público ✓" : "Hacer público"}
                     </button>
-                    <Link
-                      href={`/reglamentos/${r.id}/preview`}
-                      className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
-                    >
-                      Preview
-                    </Link>
-                    <Link
-                      href={`/reglamentos/${r.id}/editar`}
-                      className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
-                    >
+                    <Link href={`/reglamentos/${r.id}/editar`} className="text-xs text-gray-400 hover:text-gray-700 transition-colors">
                       Editar
                     </Link>
                     {confirmDelete === r.id ? (
