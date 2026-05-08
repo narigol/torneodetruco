@@ -43,7 +43,22 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     where: { id },
     include: {
       admin: { select: { id: true, name: true, role: true, phone: true, acceptsWhatsAppContact: true } },
-      reglamento: { select: { id: true, nombre: true, descripcion: true, contenido: true } },
+      reglamento: {
+        select: {
+          id: true,
+          nombre: true,
+          descripcion: true,
+          articulos: {
+            select: {
+              articuloId: true,
+              visible: true,
+              contenidoOverride: true,
+              articulo: { select: { id: true, titulo: true, contenido: true, mandatory: true } },
+            },
+            orderBy: { articulo: { orden: "asc" } },
+          },
+        },
+      },
       teams: {
         include: {
           teamPlayers: {

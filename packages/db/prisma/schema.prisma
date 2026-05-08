@@ -60,6 +60,17 @@ enum InvitationStatus {
   REJECTED
 }
 
+enum SeccionArticulo {
+  GENERAL
+  FLOR
+  TRUCO
+  ENVIDO
+  ANEXO
+  PENALIDADES
+  PUNTAJES
+  JERARQUIA
+}
+
 enum TeamRegistrationStatus {
   PENDING
   APPROVED
@@ -99,6 +110,7 @@ model User {
   notifications Notification[]
   interests     TournamentInterest[]
   reglamentos   Reglamento[]
+  articulos     Articulo[]
 
   invitationsSent       Invitation[] @relation("InvitationsSent")
   invitationsReceived   Invitation[] @relation("InvitationsReceived")
@@ -164,14 +176,45 @@ model Reglamento {
   id          String   @id @default(cuid())
   nombre      String
   descripcion String?
-  contenido   String
+  isPublic    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   adminId String
   admin   User   @relation(fields: [adminId], references: [id])
 
-  torneos Tournament[]
+  torneos   Tournament[]
+  articulos ReglamentoArticulo[]
+}
+
+model Articulo {
+  id        String          @id @default(cuid())
+  titulo    String          @db.VarChar(200)
+  contenido String
+  seccion   SeccionArticulo @default(GENERAL)
+  mandatory Boolean         @default(false)
+  orden     Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  adminId String
+  admin   User   @relation(fields: [adminId], references: [id])
+
+  reglamentoArticulos ReglamentoArticulo[]
+}
+
+model ReglamentoArticulo {
+  id                String  @id @default(cuid())
+  visible           Boolean @default(true)
+  contenidoOverride String?
+
+  reglamentoId String
+  reglamento   Reglamento @relation(fields: [reglamentoId], references: [id], onDelete: Cascade)
+
+  articuloId String
+  articulo   Articulo @relation(fields: [articuloId], references: [id], onDelete: Cascade)
+
+  @@unique([reglamentoId, articuloId])
 }
 
 model Invitation {

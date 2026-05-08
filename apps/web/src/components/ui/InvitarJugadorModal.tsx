@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Sheet } from "@/components/ui/Sheet";
 
 type Usuario = {
   id: string;
@@ -60,32 +61,23 @@ export function InvitarJugadorModal({ tournamentId, alreadyInvited, currentUserI
     }
   }
 
-  if (!open) {
-    return (
+  function handleClose() {
+    setOpen(false);
+    setSearch("");
+    setResults([]);
+    setError("");
+  }
+
+  return (
+    <>
       <button
         onClick={() => setOpen(true)}
         className="px-3 py-1.5 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
       >
         Invitar jugadores
       </button>
-    );
-  }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900">Invitar jugador</h2>
-          <button
-            onClick={() => { setOpen(false); setSearch(""); setResults([]); setError(""); }}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
+      <Sheet open={open} onClose={handleClose} title="Invitar jugador">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -135,7 +127,7 @@ export function InvitarJugadorModal({ tournamentId, alreadyInvited, currentUserI
             })}
           </div>
         )}
-      </div>
-    </div>
+      </Sheet>
+    </>
   );
 }

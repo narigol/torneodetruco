@@ -53,6 +53,8 @@ export async function POST(req: Request) {
   const { subject, message, contactos } = parsed.data;
   const messageHtml = message.replace(/\n/g, "<br>");
 
+  console.info(`[enviar-mail] user=${session.user.id} destinatarios=${contactos.length} asunto="${subject}"`);
+
   const results = await Promise.allSettled(
     contactos.map((c) =>
       sendEmail({
@@ -65,6 +67,10 @@ export async function POST(req: Request) {
   );
 
   const sent = results.filter((r) => r.status === "fulfilled").length;
+  const failed = results.length - sent;
+  if (failed > 0) {
+    console.warn(`[enviar-mail] ${failed} envíos fallidos de ${results.length}`);
+  }
 
   return NextResponse.json({ sent });
 }

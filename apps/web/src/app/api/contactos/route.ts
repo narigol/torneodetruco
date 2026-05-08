@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
+import { isOrganizer } from "@/lib/tournament-auth";
 import { z } from "zod";
 
 const schema = z.object({
@@ -15,7 +16,7 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  if (!session?.user?.id || !isOrganizer(session.user.role)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 

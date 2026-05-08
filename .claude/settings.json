@@ -62,7 +62,10 @@
       "Bash(DATABASE_URL=\"postgresql://tdt:tdt1234@localhost:5433/tdt\" ./node_modules/.bin/prisma generate --schema packages/db/prisma/schema.prisma)",
       "Bash(git checkout *)",
       "Bash(sed -i 's/Province/Provincia/g; s/province/provincia/g' packages/db/prisma/schema.prisma)",
-      "PowerShell(cd \"c:\\\\Users\\\\PC\\\\Desktop\\\\tdt\\\\packages\\\\db\"; $env:PRISMA_MIGRATE_SKIP_GENERATE = \"0\"; npx prisma db push 2>&1)"
+      "PowerShell(cd \"c:\\\\Users\\\\PC\\\\Desktop\\\\tdt\\\\packages\\\\db\"; $env:PRISMA_MIGRATE_SKIP_GENERATE = \"0\"; npx prisma db push 2>&1)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\PC\\\\Desktop\\\\tdt\" -Recurse -Include \"*reglament*\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\PC\\\\Desktop\\\\tdt\" -Recurse -Directory)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\Desktop\\tdt\\apps\\web\\src\\app\\(dashboard)\\usuarios\\[id]"
