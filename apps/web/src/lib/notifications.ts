@@ -1,4 +1,4 @@
-﻿import { prisma } from "@tdt/db";
+import { prisma } from "@tdt/db";
 import type { NotificationType } from "@tdt/db";
 
 export async function notifyFollowers(
