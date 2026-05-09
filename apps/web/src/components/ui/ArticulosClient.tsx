@@ -142,6 +142,10 @@ export function ArticulosClient({ articulos: initial }: Props) {
   const [editing, setEditing] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [sectionFilter, setSectionFilter] = useState<Seccion | null>(null);
+
+  const availableSections = Array.from(new Set(articulos.map((a) => a.seccion))) as Seccion[];
+  const filtered = sectionFilter ? articulos.filter((a) => a.seccion === sectionFilter) : articulos;
 
   async function handleCreate(data: { titulo: string; contenido: string; seccion: Seccion; mandatory: boolean; orden: number }) {
     const res = await fetch("/api/articulos", {
@@ -182,7 +186,7 @@ export function ArticulosClient({ articulos: initial }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <p className="text-sm text-gray-500">
           {articulos.length} artículo{articulos.length !== 1 ? "s" : ""}
         </p>
@@ -193,6 +197,36 @@ export function ArticulosClient({ articulos: initial }: Props) {
           + Nuevo artículo
         </button>
       </div>
+
+      {availableSections.length > 1 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          <button
+            type="button"
+            onClick={() => setSectionFilter(null)}
+            className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+              sectionFilter === null
+                ? "bg-gray-700 text-white"
+                : "bg-white text-gray-500 border border-gray-200 hover:border-gray-400"
+            }`}
+          >
+            Todos
+          </button>
+          {availableSections.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSectionFilter(sectionFilter === s ? null : s)}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+                sectionFilter === s
+                  ? "bg-red-600 text-white"
+                  : "bg-white text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-600"
+              }`}
+            >
+              {SECCION_LABEL[s]}
+            </button>
+          ))}
+        </div>
+      )}
 
       {articulos.length === 0 && !showNew && (
         <p className="text-sm text-gray-400 text-center py-8">
@@ -211,7 +245,7 @@ export function ArticulosClient({ articulos: initial }: Props) {
           </div>
         )}
 
-        {articulos.map((a) => (
+        {filtered.map((a) => (
           <div key={a.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
             {editing === a.id ? (
               <div className="p-4">

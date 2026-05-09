@@ -1,6 +1,7 @@
 import { prisma } from "@tdt/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { PrintButton } from "./PrintButton";
 
 export default async function PublicReglamentoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,10 +23,11 @@ export default async function PublicReglamentoPage({ params }: { params: Promise
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-10">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between no-print">
           <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
             ← Torneos de Truco
           </Link>
+          <PrintButton />
         </div>
 
         <div className="bg-white border border-gray-100 rounded-xl p-6 mb-4">

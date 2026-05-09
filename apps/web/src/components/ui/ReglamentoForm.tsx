@@ -142,8 +142,15 @@ export function ReglamentoForm({ reglamento, articulos, isAdminUser = false }: P
     router.refresh();
   }
 
-  const adminArticles = articleStates.filter((a) => a.isAdminArticle);
-  const ownArticles = articleStates.filter((a) => !a.isAdminArticle);
+  const [sectionFilter, setSectionFilter] = useState<string | null>(null);
+
+  const availableSections = Array.from(new Set(articleStates.map((a) => a.seccion)));
+  const filteredStates = sectionFilter
+    ? articleStates.filter((a) => a.seccion === sectionFilter)
+    : articleStates;
+
+  const adminArticles = filteredStates.filter((a) => a.isAdminArticle);
+  const ownArticles = filteredStates.filter((a) => !a.isAdminArticle);
   const visibleArticles = articleStates.filter((a) => a.visible);
 
   function renderLeftArticle(a: ArticleState) {
@@ -267,10 +274,41 @@ export function ReglamentoForm({ reglamento, articulos, isAdminUser = false }: P
         {/* Panel izquierdo: selección de artículos */}
         <div className="w-72 flex-shrink-0 bg-white border border-gray-100 rounded-xl overflow-hidden flex flex-col">
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Artículos</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {visibleArticles.length} incluido{visibleArticles.length !== 1 ? "s" : ""}
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Artículos</p>
+              <p className="text-xs text-gray-400">
+                {visibleArticles.length} incluido{visibleArticles.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            {availableSections.length > 1 && (
+              <div className="flex flex-wrap gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSectionFilter(null)}
+                  className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                    sectionFilter === null
+                      ? "bg-gray-700 text-white"
+                      : "bg-white text-gray-500 border border-gray-200 hover:border-gray-400"
+                  }`}
+                >
+                  Todos
+                </button>
+                {availableSections.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSectionFilter(sectionFilter === s ? null : s)}
+                    className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                      sectionFilter === s
+                        ? "bg-red-600 text-white"
+                        : "bg-white text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-600"
+                    }`}
+                  >
+                    {SECCION_LABEL[s] ?? s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="overflow-y-auto flex-1 divide-y divide-gray-50">
