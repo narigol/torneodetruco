@@ -4,24 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-const TrophyIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-  </svg>
-);
-
 const UsersIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
       d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-  </svg>
-);
-
-const DocIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
   </svg>
 );
 
@@ -60,12 +46,6 @@ const BellIcon = () => (
   </svg>
 );
 
-const RankingIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 17l4-4 4 4 7-9 3 3" />
-  </svg>
-);
-
 const ContactsIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -95,10 +75,7 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCo
   const canOrganize = role === "ADMIN" || role === "ORGANIZER";
 
   const links = [
-    { href: "/torneos", label: "Torneos", icon: <TrophyIcon /> },
     { href: "/torneos/mis", label: "Mis torneos", icon: <MyTournamentsIcon /> },
-    { href: "/ranking", label: "Ranking", icon: <RankingIcon /> },
-    { href: "/reglamentos", label: "Reglamentos", icon: <DocIcon /> },
     ...(canOrganize ? [
       { href: "/organizador/ranking", label: "Mi Ranking", icon: <MyRankingIcon /> },
       ...(role === "ADMIN" ? [{ href: "/usuarios", label: "Usuarios", icon: <UsersIcon /> }] : []),
@@ -156,31 +133,6 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCo
             </Link>
           );
         })}
-
-        {/* Notificaciones */}
-        {(() => {
-          const active = pathname.startsWith("/notificaciones");
-          return (
-            <Link
-              href="/notificaciones"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                active
-                  ? "bg-red-50 text-red-700"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-              }`}
-            >
-              <span className={active ? "text-red-500" : "text-gray-400"}>
-                <BellIcon />
-              </span>
-              Notificaciones
-              {unreadNotifications > 0 && (
-                <span className="ml-auto text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center">
-                  {unreadNotifications > 99 ? "99+" : unreadNotifications}
-                </span>
-              )}
-            </Link>
-          );
-        })()}
 
         {/* Comunidad */}
         {(() => {
