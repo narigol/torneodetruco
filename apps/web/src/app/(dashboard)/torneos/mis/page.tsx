@@ -67,8 +67,11 @@ export default async function MisTorneosPage() {
             {torneos.length} torneo{torneos.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link href="/torneos" className="text-sm text-red-600 hover:underline font-medium">
-          Ver todos los torneos &rarr;
+        <Link
+          href="/torneos/nuevo"
+          className="inline-flex items-center rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+        >
+          Nuevo torneo
         </Link>
       </div>
 

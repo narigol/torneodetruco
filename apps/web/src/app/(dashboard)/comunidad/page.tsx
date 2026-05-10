@@ -55,9 +55,12 @@ export default async function ComunidadPage({ searchParams }: Props) {
     <div className="max-w-2xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Comunidad</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Cuando seguís a organizadores, recibís notificaciones de los torneos que organizan. Podés configurar tus
+          notificaciones desde tu perfil.
+        </p>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-white border border-gray-100 rounded-xl p-1 w-fit flex-wrap">
         {tabs.map((t) => {
           const isActive = t.key === activeTab;
@@ -73,9 +76,11 @@ export default async function ComunidadPage({ searchParams }: Props) {
             >
               {t.label}
               {t.count !== null && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                  isActive ? "bg-red-500 text-white" : "bg-gray-100 text-gray-500"
-                }`}>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
+                    isActive ? "bg-red-500 text-white" : "bg-gray-100 text-gray-500"
+                  }`}
+                >
                   {t.count}
                 </span>
               )}
@@ -84,10 +89,11 @@ export default async function ComunidadPage({ searchParams }: Props) {
         })}
       </div>
 
-      {activeTab === "siguiendo" && (
-        following.length === 0 ? (
+      {activeTab === "siguiendo" &&
+        (following.length === 0 ? (
           <p className="text-sm text-gray-400 bg-white border border-gray-100 rounded-xl px-5 py-6">
-            No seguís a nadie todavía. Buscá organizadores en la pestaña &quot;Buscar organizadores&quot;.
+            No seguís a nadie todavía. Buscá organizadores en la pestaña &quot;Buscar organizadores&quot; para recibir
+            notificaciones de los torneos que organizan.
           </p>
         ) : (
           <div className="bg-white border border-gray-100 rounded-xl divide-y divide-gray-50">
@@ -95,11 +101,10 @@ export default async function ComunidadPage({ searchParams }: Props) {
               <UserRow key={u.id} user={u} currentUserId={session.user.id} />
             ))}
           </div>
-        )
-      )}
+        ))}
 
-      {activeTab === "seguidores" && (
-        followers.length === 0 ? (
+      {activeTab === "seguidores" &&
+        (followers.length === 0 ? (
           <p className="text-sm text-gray-400 bg-white border border-gray-100 rounded-xl px-5 py-6">
             Todavía nadie te sigue.
           </p>
@@ -109,14 +114,10 @@ export default async function ComunidadPage({ searchParams }: Props) {
               <UserRow key={u.id} user={u} currentUserId={session.user.id} />
             ))}
           </div>
-        )
-      )}
+        ))}
 
       {activeTab === "buscar" && (
-        <BuscarOrganizadoresClient
-          organizadores={organizadores}
-          currentUserId={session.user.id}
-        />
+        <BuscarOrganizadoresClient organizadores={organizadores} currentUserId={session.user.id} />
       )}
     </div>
   );
@@ -135,7 +136,13 @@ function UserRow({
   user: { id: string; name: string; locality: string | null; provincia: string | null; role: string };
   currentUserId: string;
 }) {
-  const initials = user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const initials = user.name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className="flex items-center gap-3 px-5 py-3">
       <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
