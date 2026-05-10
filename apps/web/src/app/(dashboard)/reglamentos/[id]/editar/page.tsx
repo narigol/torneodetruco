@@ -4,6 +4,7 @@ import { prisma } from "@tdt/db";
 import { redirect, notFound } from "next/navigation";
 import { isOrganizer, isSuperAdmin } from "@/lib/tournament-auth";
 import { ReglamentoForm } from "@/components/ui/ReglamentoForm";
+import { compareArticlesBySectionAndOrder } from "@/lib/reglamento-sections";
 
 export default async function EditarReglamentoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -36,6 +37,8 @@ export default async function EditarReglamentoPage({ params }: { params: Promise
       orderBy: [{ admin: { role: "asc" } }, { orden: "asc" }],
     }),
   ]);
+
+  articulos.sort(compareArticlesBySectionAndOrder);
 
   if (!reglamento) notFound();
 

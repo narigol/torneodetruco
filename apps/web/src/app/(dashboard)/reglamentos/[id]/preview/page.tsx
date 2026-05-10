@@ -4,6 +4,7 @@ import { prisma } from "@tdt/db";
 import { redirect, notFound } from "next/navigation";
 import { isOrganizer, isSuperAdmin } from "@/lib/tournament-auth";
 import { ReglamentoPreviewClient } from "@/components/ui/ReglamentoPreviewClient";
+import { compareSections } from "@/lib/reglamento-sections";
 
 export default async function PreviewReglamentoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,6 +35,14 @@ export default async function PreviewReglamentoPage({ params }: { params: Promis
     redirect("/reglamentos");
   }
 
+  const orderedArticles = reglamento.articulos
+    .slice()
+    .sort(
+      (a, b) =>
+        compareSections(a.articulo.seccion, b.articulo.seccion) ||
+        a.articulo.orden - b.articulo.orden
+    );
+
   return (
     <ReglamentoPreviewClient
       reglamento={{
@@ -42,7 +51,7 @@ export default async function PreviewReglamentoPage({ params }: { params: Promis
         descripcion: reglamento.descripcion,
         adminName: reglamento.admin.name,
         createdAt: reglamento.createdAt.toISOString(),
-        articulos: reglamento.articulos.map((ra) => ({
+        articulos: orderedArticles.map((ra) => ({
           articuloId: ra.articuloId,
           titulo: ra.articulo.titulo,
           seccion: ra.articulo.seccion,

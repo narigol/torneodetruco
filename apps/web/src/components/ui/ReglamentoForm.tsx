@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RichTextEditor } from "./RichTextEditor";
+import {
+  compareArticlesBySectionAndOrder,
+  orderSections,
+} from "@/lib/reglamento-sections";
 
 const SECCION_LABEL: Record<string, string> = {
   GENERAL: "General", FLOR: "Flor", TRUCO: "Truco", ENVIDO: "Envido",
@@ -52,20 +56,23 @@ type Props = {
 };
 
 function initArticleStates(articulos: ArticuloWithAdmin[], reglamento?: Reglamento): ArticleState[] {
-  return articulos.map((a) => {
-    const isAdminArticle = a.admin.role === "ADMIN";
-    const existing = reglamento?.articulos.find((ra) => ra.articuloId === a.id);
-    return {
-      articuloId: a.id,
-      titulo: a.titulo,
-      seccion: a.seccion,
-      contenidoBase: a.contenido,
-      mandatory: a.mandatory,
-      isAdminArticle,
-      visible: existing ? existing.visible : (isAdminArticle ? true : a.mandatory),
-      contenidoOverride: existing?.contenidoOverride ?? null,
-    };
-  });
+  return articulos
+    .slice()
+    .sort(compareArticlesBySectionAndOrder)
+    .map((a) => {
+      const isAdminArticle = a.admin.role === "ADMIN";
+      const existing = reglamento?.articulos.find((ra) => ra.articuloId === a.id);
+      return {
+        articuloId: a.id,
+        titulo: a.titulo,
+        seccion: a.seccion,
+        contenidoBase: a.contenido,
+        mandatory: a.mandatory,
+        isAdminArticle,
+        visible: existing ? existing.visible : (isAdminArticle ? true : a.mandatory),
+        contenidoOverride: existing?.contenidoOverride ?? null,
+      };
+    });
 }
 
 export function ReglamentoForm({ reglamento, articulos, isAdminUser = false }: Props) {
@@ -144,7 +151,7 @@ export function ReglamentoForm({ reglamento, articulos, isAdminUser = false }: P
 
   const [sectionFilter, setSectionFilter] = useState<string | null>(null);
 
-  const availableSections = Array.from(new Set(articleStates.map((a) => a.seccion)));
+  const availableSections = orderSections(Array.from(new Set(articleStates.map((a) => a.seccion))));
   const filteredStates = sectionFilter
     ? articleStates.filter((a) => a.seccion === sectionFilter)
     : articleStates;

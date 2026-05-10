@@ -4,6 +4,7 @@ import { prisma } from "@tdt/db";
 import { redirect } from "next/navigation";
 import { isOrganizer, isSuperAdmin } from "@/lib/tournament-auth";
 import { ReglamentoForm } from "@/components/ui/ReglamentoForm";
+import { compareArticlesBySectionAndOrder } from "@/lib/reglamento-sections";
 
 export default async function NuevoReglamentoPage() {
   const session = await getServerSession(authOptions);
@@ -21,6 +22,8 @@ export default async function NuevoReglamentoPage() {
     include: { admin: { select: { id: true, role: true } } },
     orderBy: [{ admin: { role: "asc" } }, { orden: "asc" }],
   });
+
+  articulos.sort(compareArticlesBySectionAndOrder);
 
   return (
     <div className="w-full">
