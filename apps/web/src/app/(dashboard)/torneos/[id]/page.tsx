@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { canManageTournament } from "@/lib/tournament-auth";
 import { resolveContact } from "@/lib/resolve-player";
 import { PublicTournamentActions } from "@/components/tournament/PublicTournamentActions";
+import { InteresadoButton } from "@/components/tournament/InteresadoButton";
 import { PendingTeamsPanel } from "@/components/tournament/PendingTeamsPanel";
 import { EquipoDetailModal } from "@/components/ui/EquipoDetailModal";
 import { ContactosTab } from "@/components/tournament/ContactosTab";
@@ -129,6 +130,9 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
     : false;
   const myTeamIsPending = myPlayerId
     ? pendingTeams.some((t) => t.teamPlayers.some((tp) => tp.player.id === myPlayerId))
+    : false;
+  const initialInteresado = session?.user?.id
+    ? tournament.interests.some((i) => i.userId === session.user.id)
     : false;
   const canGenerateGroupsPermission = canManage;
 
@@ -426,6 +430,17 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
               >
                 + Agregar equipo
               </Link>
+            </div>
+          )}
+
+          {/* Me interesa — visible en ANNOUNCED y REGISTRATION para usuarios no-admin */}
+          {!canManage && (tournament.status === "ANNOUNCED" || tournament.status === "REGISTRATION") && session?.user?.id && !alreadyInscripto && (
+            <div className="mb-6">
+              <InteresadoButton
+                tournamentId={tournament.id}
+                initialInteresado={initialInteresado}
+                status={tournament.status as "ANNOUNCED" | "REGISTRATION"}
+              />
             </div>
           )}
 

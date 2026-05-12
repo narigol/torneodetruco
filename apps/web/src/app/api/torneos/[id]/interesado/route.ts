@@ -17,8 +17,8 @@ export async function POST(_req: Request, { params }: Params) {
   if (!tournament || tournament.status === "DRAFT") {
     return NextResponse.json({ error: "Torneo no encontrado" }, { status: 404 });
   }
-  if (tournament.status === "FINISHED") {
-    return NextResponse.json({ error: "El torneo ya finalizó" }, { status: 400 });
+  if (tournament.status === "IN_PROGRESS" || tournament.status === "FINISHED") {
+    return NextResponse.json({ error: "El torneo ya está en curso o finalizó" }, { status: 400 });
   }
 
   await prisma.tournamentInterest.upsert({

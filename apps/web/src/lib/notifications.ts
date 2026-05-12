@@ -9,6 +9,18 @@ export async function notifyFollowers(
   // Follow system removed — no followers to notify
 }
 
+export async function notifyInterested(tournamentId: string, type: NotificationType) {
+  const interests = await prisma.tournamentInterest.findMany({
+    where: { tournamentId },
+    select: { userId: true },
+  });
+  if (interests.length === 0) return;
+  await prisma.notification.createMany({
+    data: interests.map((i) => ({ userId: i.userId, tournamentId, type })),
+    skipDuplicates: true,
+  });
+}
+
 export async function notifyByLocation(organizerId: string, tournamentId: string) {
   // Prefer tournament location; fall back to organizer's location
   const tournament = await prisma.tournament.findUnique({

@@ -25,6 +25,7 @@ enum TournamentFormat {
 
 enum TournamentStatus {
   DRAFT
+  ANNOUNCED
   REGISTRATION
   IN_PROGRESS
   FINISHED

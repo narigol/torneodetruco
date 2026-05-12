@@ -27,12 +27,14 @@ type Props = {
 
 const NEXT_STATUS: Partial<Record<TournamentStatus, TournamentStatus>> = {
   DRAFT: "REGISTRATION",
+  ANNOUNCED: "REGISTRATION",
   REGISTRATION: "IN_PROGRESS",
   IN_PROGRESS: "FINISHED",
 };
 
 const NEXT_STATUS_LABEL: Partial<Record<TournamentStatus, string>> = {
   DRAFT: "Abrir inscripción",
+  ANNOUNCED: "Abrir inscripción",
   REGISTRATION: "Iniciar torneo",
   IN_PROGRESS: "Finalizar torneo",
 };
@@ -221,6 +223,25 @@ export function TournamentActions({
               <p className="text-xs text-amber-600 pl-1">Debe cargarse al menos un resultado</p>
             )}
           </div>
+        )}
+
+        {status === "DRAFT" && !showFinishConfirm && (
+          <button
+            onClick={async () => {
+              setLoading(true);
+              await fetch(`/api/torneos/${tournamentId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: "ANNOUNCED" }),
+              });
+              setLoading(false);
+              router.refresh();
+            }}
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors"
+          >
+            {loading ? "..." : "Anunciar torneo"}
+          </button>
         )}
 
         {nextStatus && !showFinishConfirm && (

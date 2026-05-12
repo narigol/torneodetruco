@@ -1,10 +1,11 @@
 import { TournamentStatus } from "@tdt/db";
 
 const config: Record<TournamentStatus, { label: string; dot: string; text: string; bg: string }> = {
-  DRAFT:        { label: "Borrador",    dot: "bg-gray-400",  text: "text-gray-600",  bg: "bg-gray-100" },
-  REGISTRATION: { label: "Inscripción", dot: "bg-blue-400",  text: "text-blue-700",  bg: "bg-blue-50" },
-  IN_PROGRESS:  { label: "En curso",    dot: "bg-green-400", text: "text-green-700", bg: "bg-green-50" },
-  FINISHED:     { label: "Finalizado",  dot: "bg-gray-300",  text: "text-gray-500",  bg: "bg-gray-100" },
+  DRAFT:        { label: "Borrador",    dot: "bg-gray-400",   text: "text-gray-600",   bg: "bg-gray-100" },
+  ANNOUNCED:    { label: "Anunciado",   dot: "bg-violet-400", text: "text-violet-700", bg: "bg-violet-50" },
+  REGISTRATION: { label: "Inscripción", dot: "bg-blue-400",   text: "text-blue-700",   bg: "bg-blue-50" },
+  IN_PROGRESS:  { label: "En curso",    dot: "bg-green-400",  text: "text-green-700",  bg: "bg-green-50" },
+  FINISHED:     { label: "Finalizado",  dot: "bg-gray-300",   text: "text-gray-500",   bg: "bg-gray-100" },
 };
 
 export function TournamentStatusBadge({ status }: { status: TournamentStatus }) {

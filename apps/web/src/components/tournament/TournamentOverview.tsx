@@ -262,6 +262,8 @@ function statusDetail(status: TournamentStatus) {
   switch (status) {
     case "DRAFT":
       return "Configuracion inicial";
+    case "ANNOUNCED":
+      return "Inscripcion proximamente";
     case "REGISTRATION":
       return "Aceptando inscripciones";
     case "IN_PROGRESS":

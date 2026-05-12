@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@tdt/db";
 import { z } from "zod";
 import { canManageTournament } from "@/lib/tournament-auth";
-import { notifyFollowers, notifyByLocation } from "@/lib/notifications";
+import { notifyFollowers, notifyByLocation, notifyInterested } from "@/lib/notifications";
 import { sendTournamentStartedEmails, sendRegistrationOpenEmails } from "@/lib/email-notifications";
 import type { NotificationType } from "@tdt/db";
 
@@ -60,7 +60,7 @@ export async function GET(_req: Request, { params }: Params) {
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
-  status: z.enum(["DRAFT", "REGISTRATION", "IN_PROGRESS", "FINISHED"]).optional(),
+  status: z.enum(["DRAFT", "ANNOUNCED", "REGISTRATION", "IN_PROGRESS", "FINISHED"]).optional(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   startTime: z.string().max(50).nullable().optional(),
@@ -125,9 +125,10 @@ export async function PATCH(req: Request, { params }: Params) {
     }
   }
 
-  // Al abrir inscripción, notificar a usuarios de la misma zona + email a seguidores
+  // Al abrir inscripción, notificar interesados + usuarios de la misma zona
   const becomesRegistration = rest.status === "REGISTRATION" && tournament.status !== "REGISTRATION";
   if (becomesRegistration) {
+    notifyInterested(id, "REGISTRATION_OPEN").catch(() => {});
     notifyByLocation(tournament.adminId, id).catch(() => {});
     sendRegistrationOpenEmails(id).catch((error) => {
       console.error("[registration-open-email]", error);
