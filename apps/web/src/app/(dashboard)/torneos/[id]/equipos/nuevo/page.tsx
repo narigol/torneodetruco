@@ -12,7 +12,7 @@ export default async function NuevoEquipoPage({ params }: Params) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
 
-  const [tournament, assignedPlayerIds, followedUsers] = await Promise.all([
+  const [tournament, assignedPlayerIds] = await Promise.all([
     prisma.tournament.findUnique({
       where: { id },
       select: { id: true, name: true, status: true, playersPerTeam: true, adminId: true },
@@ -21,30 +21,16 @@ export default async function NuevoEquipoPage({ params }: Params) {
       where: { team: { tournamentId: id } },
       select: { playerId: true },
     }),
-    session?.user?.id
-      ? prisma.follow.findMany({
-          where: { followerId: session.user.id },
-          select: { followingId: true },
-        })
-      : Promise.resolve([]),
   ]);
 
   if (!tournament) notFound();
   if (!canManageTournament(session, tournament.adminId)) redirect(`/torneos/${id}`);
 
   const assignedIds = new Set(assignedPlayerIds.map((tp) => tp.playerId));
-  const followedIds = new Set(followedUsers.map((follow) => follow.followingId));
-  const players = await prisma.player.findMany({
+  const sortedPlayers = await prisma.player.findMany({
     where: { id: { notIn: [...assignedIds] } },
     orderBy: { name: "asc" },
     select: { id: true, name: true, dni: true, userId: true },
-  });
-
-  const sortedPlayers = [...players].sort((a, b) => {
-    const aFollowed = a.userId ? followedIds.has(a.userId) : false;
-    const bFollowed = b.userId ? followedIds.has(b.userId) : false;
-    if (aFollowed !== bFollowed) return aFollowed ? -1 : 1;
-    return a.name.localeCompare(b.name, "es", { sensitivity: "base" });
   });
 
   if (tournament.status === "FINISHED") redirect(`/torneos/${id}`);
@@ -70,11 +56,11 @@ export default async function NuevoEquipoPage({ params }: Params) {
 
       <NuevoEquipoForm
         tournamentId={id}
-        players={sortedPlayers.map(({ id, name, dni, userId }) => ({
+        players={sortedPlayers.map(({ id, name, dni }) => ({
           id,
           name,
           dni: dni ?? null,
-          isFollowed: userId ? followedIds.has(userId) : false,
+          isFollowed: false,
         }))}
         playersPerTeam={tournament.playersPerTeam}
       />

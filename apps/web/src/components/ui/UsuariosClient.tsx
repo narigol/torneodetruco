@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FollowButton } from "@/components/ui/FollowButton";
 
 type Usuario = {
   id: string;
@@ -98,7 +97,6 @@ export function UsuariosClient({ usuarios, currentUserId, contactIds }: Props) {
                 <th className="text-left px-5 py-3 font-medium">Localidad</th>
                 <th className="text-left px-5 py-3 font-medium">Rol</th>
                 <th className="text-left px-5 py-3 font-medium">Estado</th>
-                <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -112,11 +110,6 @@ export function UsuariosClient({ usuarios, currentUserId, contactIds }: Props) {
                   </td>
                   <td className="px-5 py-3"><RolBadge role={u.role} /></td>
                   <td className="px-5 py-3"><EstadoBadge pendingActivation={u.pendingActivation} /></td>
-                  <td className="px-5 py-3 text-right">
-                    {u.id !== currentUserId && (
-                      <FollowButton organizerId={u.id} organizerName={u.name} />
-                    )}
-                  </td>
                 </tr>
               ))}
             </tbody>

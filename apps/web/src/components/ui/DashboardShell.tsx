@@ -8,8 +8,6 @@ type Props = {
   name: string;
   plan: string;
   unreadNotifications: number;
-  followingCount: number;
-  followersCount: number;
   children: React.ReactNode;
 };
 
@@ -19,8 +17,6 @@ export function DashboardShell({
   name,
   plan,
   unreadNotifications,
-  followingCount,
-  followersCount,
 }: Props) {
   const [open, setOpen] = useState(false);
 
@@ -45,8 +41,6 @@ export function DashboardShell({
           name={name}
           plan={plan}
           unreadNotifications={unreadNotifications}
-          followingCount={followingCount}
-          followersCount={followersCount}
           onClose={() => setOpen(false)}
         />
       </div>

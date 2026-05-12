@@ -249,42 +249,8 @@ export async function sendTournamentFinishedEmails(tournamentId: string) {
   );
 }
 
-export async function sendRegistrationOpenEmails(tournamentId: string) {
-  const tournament = await prisma.tournament.findUnique({
-    where: { id: tournamentId },
-    select: {
-      id: true,
-      name: true,
-      admin: {
-        select: {
-          followers: {
-            select: {
-              follower: {
-                select: { email: true, name: true, acceptsEmailNotifications: true },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!tournament) return;
-
-  const recipients = tournament.admin.followers
-    .map((f) => f.follower)
-    .filter((u) => u.acceptsEmailNotifications);
-
-  const unique = dedupeRecipients(recipients);
-  if (unique.length === 0) return;
-
-  await sendBulkEmails(
-    unique,
-    `Inscripción abierta: ${tournament.name}`,
-    (name) => `Hola ${name}, se abrió la inscripción para el torneo "${tournament.name}". ¡Anotate ahora antes de que se llenen los cupos!`,
-    `${getAppUrl()}/torneos/${tournament.id}`,
-    "Ver torneo"
-  );
+export async function sendRegistrationOpenEmails(_tournamentId: string) {
+  // Follow system removed — no followers to notify
 }
 
 export async function sendInvitationEmail(invitationId: string) {

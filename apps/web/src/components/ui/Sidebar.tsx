@@ -84,12 +84,10 @@ type Props = {
   name: string;
   plan: string;
   unreadNotifications?: number;
-  followingCount?: number;
-  followersCount?: number;
   onClose?: () => void;
 };
 
-export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCount = 0, followersCount = 0, onClose }: Props) {
+export function Sidebar({ role, name, plan, unreadNotifications = 0, onClose }: Props) {
   const pathname = usePathname();
   const isPro = plan === "PRO";
   const canOrganize = role === "ADMIN" || role === "ORGANIZER";
@@ -176,30 +174,6 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, followingCo
               {unreadNotifications > 0 && (
                 <span className="ml-auto text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center">
                   {unreadNotifications > 99 ? "99+" : unreadNotifications}
-                </span>
-              )}
-            </Link>
-          );
-        })()}
-
-        {/* Comunidad */}
-        {(() => {
-          const active = pathname.startsWith("/comunidad");
-          const total = followingCount + followersCount;
-          return (
-            <Link
-              href="/comunidad"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                active
-                  ? "bg-red-50 text-red-700"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-              }`}
-            >
-              <span className={active ? "text-red-500" : "text-gray-400"}><UsersIcon /></span>
-              Comunidad
-              {total > 0 && (
-                <span className="ml-auto text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center">
-                  {total}
                 </span>
               )}
             </Link>

@@ -11,7 +11,6 @@ import { TournamentActions } from "@/components/tournament/TournamentActions";
 import { TournamentOverview } from "@/components/tournament/TournamentOverview";
 import { TournamentShareCard } from "@/components/tournament/TournamentShareCard";
 import { DeleteButton } from "@/components/ui/DeleteButton";
-import { FollowButton } from "@/components/ui/FollowButton";
 import { ReglamentoCollapsible } from "@/components/ui/ReglamentoCollapsible";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { canManageTournament } from "@/lib/tournament-auth";
@@ -134,7 +133,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const canGenerateGroupsPermission = canManage;
 
   // Fetch organizer contacts for Contactos tab (same sources as /contactos page)
-  const [orgOtherTournaments, orgFollowers, orgManualContacts] = canManage
+  const [orgOtherTournaments, orgManualContacts] = canManage
     ? await Promise.all([
         prisma.tournament.findMany({
           where: { adminId: tournament.adminId, id: { not: id } },
@@ -157,17 +156,13 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
             },
           },
         }),
-        prisma.follow.findMany({
-          where: { followingId: tournament.adminId },
-          select: { follower: { select: { id: true, name: true, phone: true, email: true, locality: true, provincia: true } } },
-        }),
         prisma.organizerContact.findMany({
           where: { organizerId: tournament.adminId },
           select: { id: true, name: true, phone: true, email: true, locality: true, provincia: true },
           orderBy: { createdAt: "asc" },
         }),
       ])
-    : [[], [], []];
+    : [[], []];
 
   // Build deduplicated contact map (same logic as /contactos page)
   const registeredUserIds = new Set(
@@ -198,21 +193,6 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
         }
       }
     }
-  }
-
-  // Followers (skip if already in map by userId)
-  const linkedUserIds = new Set([...contactMap.values()].map((c) => c.id));
-  for (const { follower } of orgFollowers) {
-    if (linkedUserIds.has(follower.id)) continue;
-    contactMap.set(`u:${follower.id}`, {
-      id: `u:${follower.id}`,
-      name: follower.name,
-      phone: follower.phone,
-      email: follower.email,
-      locality: follower.locality,
-      provincia: follower.provincia,
-      isRegistered: registeredUserIds.has(follower.id),
-    });
   }
 
   // Manual contacts
@@ -344,12 +324,6 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                   </svg>
                   WhatsApp
                 </a>
-              )}
-              {!canManage && tournament.admin.role !== "ADMIN" && (
-                <FollowButton
-                  organizerId={tournament.admin.id}
-                  organizerName={tournament.admin.name}
-                />
               )}
             </div>
 

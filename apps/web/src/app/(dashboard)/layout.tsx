@@ -12,20 +12,9 @@ export default async function DashboardLayout({
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const [unreadCount, followData] = await Promise.all([
-    prisma.notification.count({
-      where: { userId: session.user.id, read: false },
-    }),
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        _count: { select: { followers: true, following: true } },
-      },
-    }),
-  ]);
-
-  const followingCount = followData?._count.following ?? 0;
-  const followersCount = followData?._count.followers ?? 0;
+  const unreadCount = await prisma.notification.count({
+    where: { userId: session.user.id, read: false },
+  });
 
   return (
     <DashboardShell
@@ -33,8 +22,6 @@ export default async function DashboardLayout({
       name={session.user.name ?? "Usuario"}
       plan={session.user.plan ?? "FREE"}
       unreadNotifications={unreadCount}
-      followingCount={followingCount}
-      followersCount={followersCount}
     >
       {children}
     </DashboardShell>

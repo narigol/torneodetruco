@@ -105,8 +105,6 @@ model User {
   player      Player?
   tournaments Tournament[] @relation("TournamentAdmin")
 
-  followers     Follow[]              @relation("Following")
-  following     Follow[]              @relation("Follower")
   notifications Notification[]
   interests     TournamentInterest[]
   reglamentos   Reglamento[]
@@ -260,18 +258,6 @@ model TournamentInterest {
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tournamentId])
-}
-
-model Follow {
-  id          String   @id @default(cuid())
-  followerId  String
-  followingId String
-  createdAt   DateTime @default(now())
-
-  follower  User @relation("Follower",  fields: [followerId],  references: [id], onDelete: Cascade)
-  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
-
-  @@unique([followerId, followingId])
 }
 
 model Notification {

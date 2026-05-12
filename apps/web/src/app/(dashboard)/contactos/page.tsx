@@ -10,7 +10,7 @@ export default async function ContactosPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user || !isOrganizer(session.user.role)) redirect("/torneos");
 
-  const [torneos, seguidores, manualContacts] = await Promise.all([
+  const [torneos, manualContacts] = await Promise.all([
     prisma.tournament.findMany({
     where: { adminId: session.user.id },
     select: {
@@ -39,14 +39,6 @@ export default async function ContactosPage() {
         },
       },
     },
-    }),
-    prisma.follow.findMany({
-      where: { followingId: session.user.id },
-      select: {
-        follower: {
-          select: { id: true, name: true, email: true, phone: true, locality: true, provincia: true, dni: true },
-        },
-      },
     }),
     prisma.organizerContact.findMany({
       where: { organizerId: session.user.id },
@@ -84,25 +76,6 @@ export default async function ContactosPage() {
     }
   }
 
-  // Add followers who aren't already in the map as tournament players
-  const linkedUserIds = new Set(
-    [...playerMap.values()].map((c) => c.userId).filter(Boolean)
-  );
-  for (const { follower } of seguidores) {
-    if (linkedUserIds.has(follower.id)) continue;
-    playerMap.set(`u:${follower.id}`, {
-      id: follower.id,
-      name: follower.name,
-      email: follower.email,
-      phone: follower.phone,
-      locality: follower.locality,
-      provincia: follower.provincia,
-      dni: follower.dni,
-      userId: follower.id,
-      torneos: [],
-    });
-  }
-
   // Add manual contacts that aren't already tracked
   for (const mc of manualContacts) {
     playerMap.set(`mc:${mc.id}`, {
@@ -129,7 +102,7 @@ export default async function ContactosPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Contactos</h1>
           <p className="text-gray-400 text-sm mt-0.5">
-            Jugadores de tus torneos y seguidores Â· {contactos.length} contacto{contactos.length !== 1 ? "s" : ""}
+            Jugadores de tus torneos · {contactos.length} contacto{contactos.length !== 1 ? "s" : ""}
           </p>
         </div>
       </div>

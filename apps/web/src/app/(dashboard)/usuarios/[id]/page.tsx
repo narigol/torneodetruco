@@ -5,7 +5,6 @@ import { prisma } from "@tdt/db";
 import Link from "next/link";
 import { isOrganizer } from "@/lib/tournament-auth";
 import { getRankingConfig } from "@/lib/ranking";
-import { FollowButton } from "@/components/ui/FollowButton";
 import { UsuarioAdminActions } from "@/components/ui/UsuarioAdminActions";
 
 type Props = { params: Promise<{ id: string }> };
@@ -190,9 +189,6 @@ export default async function UsuarioDetailPage({ params }: Props) {
             )}
             {usuario.plan === "PRO" && (
               <span className="text-xs bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full font-medium">PRO</span>
-            )}
-            {session.user.id !== usuario.id && usuario.role !== "ADMIN" && (
-              <FollowButton organizerId={usuario.id} organizerName={usuario.name ?? ""} />
             )}
           </div>
         </div>
