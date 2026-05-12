@@ -18,6 +18,7 @@ type Props = {
   hasGroups: boolean;
   hasBracket: boolean;
   hasPlayedGroupMatches: boolean;
+  hasWinner?: boolean;
   canGenerateGroups?: boolean;
   bracketTeams?: TeamItem[];
   groupsSorted?: GroupStanding[];
@@ -53,6 +54,7 @@ export function TournamentActions({
   hasGroups,
   hasBracket,
   hasPlayedGroupMatches,
+  hasWinner = false,
   canGenerateGroups = true,
   bracketTeams = [],
   groupsSorted = [],
@@ -62,6 +64,7 @@ export function TournamentActions({
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [showBracketModal, setShowBracketModal] = useState(false);
   const [numGroupsStr, setNumGroupsStr] = useState("2");
@@ -220,14 +223,50 @@ export function TournamentActions({
           </div>
         )}
 
-        {nextStatus && (
+        {nextStatus && !showFinishConfirm && (
           <button
-            onClick={advanceStatus}
+            onClick={() => {
+              if (nextStatus === "FINISHED" && !hasWinner) {
+                setShowFinishConfirm(true);
+              } else {
+                advanceStatus();
+              }
+            }}
             disabled={loading}
             className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
           >
             {loading ? "..." : nextLabel}
           </button>
+        )}
+
+        {showFinishConfirm && (
+          <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl max-w-sm">
+            <svg className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-amber-800">No hay ganador registrado</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                La final no tiene resultado cargado. ¿Querés finalizar el torneo igual?
+              </p>
+              <div className="flex gap-2 mt-2.5">
+                <button
+                  onClick={() => setShowFinishConfirm(false)}
+                  className="text-xs px-3 py-1.5 border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => { setShowFinishConfirm(false); advanceStatus(); }}
+                  disabled={loading}
+                  className="text-xs px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-medium"
+                >
+                  Finalizar igual
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {status === "DRAFT" && !showDeleteConfirm && (

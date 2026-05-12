@@ -20,7 +20,7 @@ export default async function ReglamentosPage() {
     include: {
       admin: { select: { id: true, name: true } },
       torneos: { select: { id: true, name: true } },
-      articulos: { select: { visible: true } },
+      articulos: { where: { visible: true }, select: { visible: true } },
     },
     orderBy: { createdAt: "desc" },
   });

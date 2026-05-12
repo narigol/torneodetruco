@@ -2,82 +2,72 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
-
-const TrophyIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-  </svg>
-);
 
 const UsersIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-  </svg>
-);
-
-const DocIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+    />
   </svg>
 );
 
 const StarIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+    />
   </svg>
 );
 
 const MyTournamentsIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M5 12h4m-4 4h4m-4-8h10m2 4h2m-2 4h2M3 6h18v12H3V6z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M5 12h4m-4 4h4m-4-8h10m2 4h2m-2 4h2M3 6h18v12H3V6z"
+    />
   </svg>
 );
 
 const MyRankingIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-  </svg>
-);
-
-const LogoutIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+    />
   </svg>
 );
 
 const BellIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-  </svg>
-);
-
-const RankingIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 17l4-4 4 4 7-9 3 3" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+    />
   </svg>
 );
 
 const ContactsIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"
+    />
   </svg>
 );
-
-function roleLabel(role: string) {
-  if (role === "ADMIN") return "Super Admin";
-  if (role === "ORGANIZER") return "Organizador";
-  return "Jugador";
-}
 
 type Props = {
   role: string;
@@ -85,44 +75,38 @@ type Props = {
   plan: string;
   unreadNotifications?: number;
   onClose?: () => void;
+  collapsed?: boolean;
 };
 
-export function Sidebar({ role, name, plan, unreadNotifications = 0, onClose }: Props) {
+export function Sidebar({ role, name, plan, unreadNotifications = 0, onClose, collapsed }: Props) {
   const pathname = usePathname();
   const isPro = plan === "PRO";
   const canOrganize = role === "ADMIN" || role === "ORGANIZER";
 
   const links = [
-    { href: "/torneos", label: "Torneos", icon: <TrophyIcon /> },
     { href: "/torneos/mis", label: "Mis torneos", icon: <MyTournamentsIcon /> },
-    { href: "/ranking", label: "Ranking", icon: <RankingIcon /> },
-    { href: "/reglamentos", label: "Reglamentos", icon: <DocIcon /> },
-    ...(canOrganize ? [
-      { href: "/organizador/ranking", label: "Mi Ranking", icon: <MyRankingIcon /> },
-      ...(role === "ADMIN" ? [{ href: "/usuarios", label: "Usuarios", icon: <UsersIcon /> }] : []),
-      { href: "/contactos", label: "Contactos", icon: <ContactsIcon /> },
-    ] : []),
+    ...(canOrganize
+      ? [
+          { href: "/organizador/ranking", label: "Mi Ranking", icon: <MyRankingIcon /> },
+          ...(role === "ADMIN" ? [{ href: "/usuarios", label: "Usuarios", icon: <UsersIcon /> }] : []),
+          { href: "/contactos", label: "Contactos", icon: <ContactsIcon /> },
+        ]
+      : []),
   ];
 
-  const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-
   return (
-    <aside className="w-64 h-full bg-white border-r border-gray-100 flex flex-col shrink-0">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-gray-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-xs">TdT</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-gray-900 text-sm leading-none">Torneos de Truco</p>
-            <p className="text-xs text-gray-400 mt-0.5">Sistema de gestión</p>
-          </div>
+    <aside
+      className={`h-full bg-white border-r border-gray-100 flex flex-col shrink-0 transition-[width] duration-200 ${
+        collapsed ? "w-20" : "w-64"
+      }`}
+    >
+      <div className="px-3 py-4 border-b border-gray-100 lg:hidden">
+        <div className="flex justify-end">
           {onClose && (
             <button
               onClick={onClose}
-              className="lg:hidden p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-              aria-label="Cerrar menú"
+              className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              aria-label="Cerrar menu"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -132,7 +116,6 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, onClose }: 
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         {links.map(({ href, label, icon }) => {
           const active =
@@ -143,14 +126,13 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, onClose }: 
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                active
-                  ? "bg-red-50 text-red-700"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-              }`}
+              title={collapsed ? label : undefined}
+              className={`flex items-center rounded-xl text-sm font-medium transition-all ${
+                collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-2.5"
+              } ${active ? "bg-red-50 text-red-700" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"}`}
             >
               <span className={active ? "text-red-500" : "text-gray-400"}>{icon}</span>
-              {label}
+              {!collapsed && label}
             </Link>
           );
         })}
@@ -186,19 +168,22 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, onClose }: 
           return (
             <Link
               href="/membresia"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              title={collapsed ? "Membresia" : undefined}
+              className={`flex items-center rounded-xl text-sm font-medium transition-all ${
+                collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-2.5"
+              } ${
                 active
                   ? "bg-red-50 text-red-700"
                   : isPro
-                  ? "text-amber-600 hover:bg-amber-50"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    ? "text-amber-600 hover:bg-amber-50"
+                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
               <span className={active ? "text-red-500" : isPro ? "text-amber-500" : "text-gray-400"}>
                 <StarIcon />
               </span>
-              Membresía
-              {isPro && (
+              {!collapsed && "Membresia"}
+              {!collapsed && isPro && (
                 <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-semibold">
                   PRO
                 </span>
@@ -208,27 +193,6 @@ export function Sidebar({ role, name, plan, unreadNotifications = 0, onClose }: 
         })()}
       </nav>
 
-      {/* User */}
-      <div className="px-3 py-4 border-t border-gray-100">
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
-          <Link href="/perfil" className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-              <span className="text-red-700 text-xs font-bold">{initials}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
-              <p className="text-xs text-gray-400 leading-none mt-0.5">{roleLabel(role)}</p>
-            </div>
-          </Link>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            title="Cerrar sesión"
-            className="text-gray-400 hover:text-red-600 transition-colors shrink-0"
-          >
-            <LogoutIcon />
-          </button>
-        </div>
-      </div>
     </aside>
   );
 }

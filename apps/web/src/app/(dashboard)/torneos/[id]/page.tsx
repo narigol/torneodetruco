@@ -215,6 +215,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
   const hasGroupFormat = tournament.format === TournamentFormat.GROUPS_AND_KNOCKOUT;
   const hasGroups = tournament.groups.length > 0;
   const hasBracket = tournament.matches.length > 0;
+  const hasWinner = tournament.matches.some((m) => m.phase === "FINAL" && m.winnerId != null);
   const hasPlayedGroupMatches = hasGroupFormat && tournament.groups.some((g) =>
     g.matches.some((m) => m.status === "FINISHED")
   );
@@ -374,6 +375,7 @@ export default async function TorneoDetailPage({ params, searchParams }: Props) 
                 hasGroups={hasGroups}
                 hasBracket={hasBracket}
                 hasPlayedGroupMatches={hasPlayedGroupMatches}
+                hasWinner={hasWinner}
                 canGenerateGroups={canGenerateGroupsPermission}
                 bracketTeams={bracketTeams}
                 groupsSorted={groupsSorted}

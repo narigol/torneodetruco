@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { isOrganizer } from "@/lib/tournament-auth";
 import { ArticulosClient } from "@/components/ui/ArticulosClient";
 import Link from "next/link";
+import { compareArticlesBySectionAndOrder } from "@/lib/reglamento-sections";
 
 export default async function ArticulosPage() {
   const session = await getServerSession(authOptions);
@@ -14,6 +15,8 @@ export default async function ArticulosPage() {
     where: { adminId: session.user.id },
     orderBy: { orden: "asc" },
   });
+
+  articulos.sort(compareArticlesBySectionAndOrder);
 
   return (
     <div className="max-w-2xl">

@@ -2,20 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const SECCIONES = ["GENERAL","FLOR","TRUCO","ENVIDO","ANEXO","PENALIDADES","PUNTAJES","JERARQUIA"] as const;
-type Seccion = typeof SECCIONES[number];
-
-const SECCION_LABEL: Record<Seccion, string> = {
-  GENERAL: "General",
-  FLOR: "Flor",
-  TRUCO: "Truco",
-  ENVIDO: "Envido",
-  ANEXO: "Anexo",
-  PENALIDADES: "Penalidades",
-  PUNTAJES: "Puntajes",
-  JERARQUIA: "Jerarquía",
-};
+import {
+  SECTION_LABEL,
+  SECTION_ORDER,
+  type ReglamentoSection as Seccion,
+  compareArticlesBySectionAndOrder,
+  orderSections,
+} from "@/lib/reglamento-sections";
 
 type Articulo = {
   id: string;
@@ -50,7 +43,7 @@ function ArticuloForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!titulo.trim() || !contenido.trim()) {
-      setError("Título y contenido son requeridos");
+      setError("Titulo y contenido son requeridos");
       return;
     }
     setError("");
@@ -62,7 +55,7 @@ function ArticuloForm({
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1">Título *</label>
+        <label className="block text-xs font-medium text-gray-500 mb-1">Titulo *</label>
         <input
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
@@ -71,14 +64,14 @@ function ArticuloForm({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1">Sección</label>
+        <label className="block text-xs font-medium text-gray-500 mb-1">Seccion</label>
         <select
           value={seccion}
           onChange={(e) => setSeccion(e.target.value as Seccion)}
           className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
         >
-          {SECCIONES.map((s) => (
-            <option key={s} value={s}>{SECCION_LABEL[s]}</option>
+          {SECTION_ORDER.map((s) => (
+            <option key={s} value={s}>{SECTION_LABEL[s]}</option>
           ))}
         </select>
       </div>
@@ -89,7 +82,7 @@ function ArticuloForm({
           onChange={(e) => setContenido(e.target.value)}
           rows={5}
           className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-y"
-          placeholder="Texto del artículo..."
+          placeholder="Texto del articulo..."
         />
       </div>
       <div className="flex items-center gap-4">
@@ -142,6 +135,12 @@ export function ArticulosClient({ articulos: initial }: Props) {
   const [editing, setEditing] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [sectionFilter, setSectionFilter] = useState<Seccion | null>(null);
+
+  const availableSections = orderSections(
+    Array.from(new Set(articulos.map((a) => a.seccion))) as Seccion[]
+  );
+  const filtered = sectionFilter ? articulos.filter((a) => a.seccion === sectionFilter) : articulos;
 
   async function handleCreate(data: { titulo: string; contenido: string; seccion: Seccion; mandatory: boolean; orden: number }) {
     const res = await fetch("/api/articulos", {
@@ -151,7 +150,7 @@ export function ArticulosClient({ articulos: initial }: Props) {
     });
     if (res.ok) {
       const nuevo = await res.json();
-      setArticulos((prev) => [...prev, nuevo].sort((a, b) => a.orden - b.orden));
+      setArticulos((prev) => [...prev, nuevo].sort(compareArticlesBySectionAndOrder));
       setShowNew(false);
     }
   }
@@ -165,7 +164,7 @@ export function ArticulosClient({ articulos: initial }: Props) {
     if (res.ok) {
       const updated = await res.json();
       setArticulos((prev) =>
-        prev.map((a) => (a.id === id ? updated : a)).sort((a, b) => a.orden - b.orden)
+        prev.map((a) => (a.id === id ? updated : a)).sort(compareArticlesBySectionAndOrder)
       );
       setEditing(null);
     }
@@ -182,28 +181,58 @@ export function ArticulosClient({ articulos: initial }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <p className="text-sm text-gray-500">
-          {articulos.length} artículo{articulos.length !== 1 ? "s" : ""}
+          {articulos.length} articulo{articulos.length !== 1 ? "s" : ""}
         </p>
         <button
           onClick={() => setShowNew(true)}
           className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
         >
-          + Nuevo artículo
+          + Nuevo articulo
         </button>
       </div>
 
+      {availableSections.length > 1 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          <button
+            type="button"
+            onClick={() => setSectionFilter(null)}
+            className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+              sectionFilter === null
+                ? "bg-gray-700 text-white"
+                : "bg-white text-gray-500 border border-gray-200 hover:border-gray-400"
+            }`}
+          >
+            Todos
+          </button>
+          {availableSections.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSectionFilter(sectionFilter === s ? null : s)}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+                sectionFilter === s
+                  ? "bg-red-600 text-white"
+                  : "bg-white text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-600"
+              }`}
+            >
+              {SECTION_LABEL[s]}
+            </button>
+          ))}
+        </div>
+      )}
+
       {articulos.length === 0 && !showNew && (
         <p className="text-sm text-gray-400 text-center py-8">
-          Todavía no hay artículos. Creá el primero.
+          Todavia no hay articulos. Crea el primero.
         </p>
       )}
 
       <div className="space-y-3">
         {showNew && (
           <div className="bg-white border border-gray-200 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Nuevo artículo</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Nuevo articulo</h3>
             <ArticuloForm
               onSave={handleCreate}
               onCancel={() => setShowNew(false)}
@@ -211,7 +240,7 @@ export function ArticulosClient({ articulos: initial }: Props) {
           </div>
         )}
 
-        {articulos.map((a) => (
+        {filtered.map((a) => (
           <div key={a.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
             {editing === a.id ? (
               <div className="p-4">
@@ -229,7 +258,7 @@ export function ArticulosClient({ articulos: initial }: Props) {
                       <span className="text-xs text-gray-400 font-mono">#{a.orden}</span>
                       <h3 className="text-sm font-semibold text-gray-900">{a.titulo}</h3>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-                        {SECCION_LABEL[a.seccion]}
+                        {SECTION_LABEL[a.seccion]}
                       </span>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         a.mandatory

@@ -1,11 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-
-const SECCION_LABEL: Record<string, string> = {
-  GENERAL: "General", FLOR: "Flor", TRUCO: "Truco", ENVIDO: "Envido",
-  ANEXO: "Anexo", PENALIDADES: "Penalidades", PUNTAJES: "Puntajes", JERARQUIA: "Jerarquía",
-};
+import { SECTION_LABEL, orderSections } from "@/lib/reglamento-sections";
 
 type ArticuloPreview = {
   articuloId: string;
@@ -49,18 +45,17 @@ export function ReglamentoPreviewClient({ reglamento }: Props) {
     return acc;
   }, {});
 
-  const secciones = Object.keys(grouped);
+  const secciones = orderSections(Object.keys(grouped));
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Barra de controles — oculta al imprimir */}
       <div className="no-print sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
             className="text-sm text-gray-500 hover:text-gray-800 transition-colors flex items-center gap-1"
           >
-            ← Volver
+            Volver
           </button>
           <span className="text-gray-300">|</span>
           <span className="text-sm font-semibold text-gray-800 truncate max-w-xs">
@@ -80,10 +75,7 @@ export function ReglamentoPreviewClient({ reglamento }: Props) {
         </button>
       </div>
 
-      {/* Documento */}
       <div className="max-w-3xl mx-auto px-8 py-10 print:px-0 print:py-0">
-
-        {/* Portada */}
         <div className="print-cover bg-white rounded-2xl border border-gray-100 p-10 mb-6 text-center print:rounded-none print:border-none print:shadow-none">
           <div className="mb-6">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-red-50 rounded-full mb-4 no-print">
@@ -100,17 +92,15 @@ export function ReglamentoPreviewClient({ reglamento }: Props) {
           <div className="border-t border-gray-100 pt-4 text-sm text-gray-400 space-y-0.5">
             <p>Por {reglamento.adminName}</p>
             <p>{new Date(reglamento.createdAt).toLocaleDateString("es-AR", { year: "numeric", month: "long", day: "numeric" })}</p>
-            <p>{reglamento.articulos.length} artículo{reglamento.articulos.length !== 1 ? "s" : ""}</p>
+            <p>{reglamento.articulos.length} articulo{reglamento.articulos.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
 
-        {/* Artículos */}
         {reglamento.articulos.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 px-6 py-10 text-center no-print">
-            <p className="text-sm text-gray-400">Este reglamento no tiene artículos.</p>
+            <p className="text-sm text-gray-400">Este reglamento no tiene articulos.</p>
           </div>
         ) : secciones.length > 1 ? (
-          // Agrupado por sección si hay más de una
           <div className="space-y-6">
             {secciones.map((seccion) => {
               const arts = grouped[seccion];
@@ -119,14 +109,14 @@ export function ReglamentoPreviewClient({ reglamento }: Props) {
                 <div key={seccion} className="bg-white rounded-2xl border border-gray-100 overflow-hidden print:rounded-none print:border-none print:shadow-none print-article">
                   <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 print:bg-white">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                      {SECCION_LABEL[seccion] ?? seccion}
+                      {SECTION_LABEL[seccion as keyof typeof SECTION_LABEL] ?? seccion}
                     </p>
                   </div>
                   <div className="divide-y divide-gray-100">
                     {arts.map((a, i) => (
                       <div key={a.articuloId} className="px-6 py-5 print-article">
                         <h2 className="text-sm font-bold text-gray-900 mb-2">
-                          Art. {startIdx + i + 1} — {a.titulo}
+                          Art. {startIdx + i + 1} - {a.titulo}
                         </h2>
                         <RenderContenido contenido={a.contenido} />
                       </div>
@@ -137,13 +127,12 @@ export function ReglamentoPreviewClient({ reglamento }: Props) {
             })}
           </div>
         ) : (
-          // Sin agrupación si todos son de la misma sección
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden print:rounded-none print:border-none print:shadow-none">
             <div className="divide-y divide-gray-100">
               {reglamento.articulos.map((a, idx) => (
                 <div key={a.articuloId} className="px-6 py-5 print-article">
                   <h2 className="text-sm font-bold text-gray-900 mb-2">
-                    Art. {idx + 1} — {a.titulo}
+                    Art. {idx + 1} - {a.titulo}
                   </h2>
                   <RenderContenido contenido={a.contenido} />
                 </div>
